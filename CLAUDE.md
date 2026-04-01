@@ -45,11 +45,19 @@ src/mcp_toolbox/
 - **SDK:** `sendgrid` v6.x (sync SDK, wrapped with `asyncio.to_thread()`)
 - **Note:** pyright excludes this file due to SendGrid's dynamic fluent API being untyped
 
-### ClickUp (clickup_tool.py) — 25 tools
-- **Tier 1 (Core Tasks):** clickup_get_workspaces, clickup_get_spaces, clickup_get_lists, clickup_create_task, clickup_get_task, clickup_update_task, clickup_get_tasks, clickup_search_tasks, clickup_delete_task
-- **Tier 2 (Details):** clickup_add_comment, clickup_get_comments, clickup_create_checklist, clickup_add_checklist_item, clickup_add_tag, clickup_remove_tag
-- **Tier 3 (Time):** clickup_log_time, clickup_get_time_entries, clickup_start_timer, clickup_stop_timer
-- **Tier 4 (Org):** clickup_create_space, clickup_create_list, clickup_create_folder, clickup_get_members, clickup_get_custom_fields, clickup_set_custom_field
+### ClickUp (clickup_tool.py) — 81 tools
+- **Core Tasks (9):** get_workspaces, get_spaces, get_lists, create/get/update/delete task, get_tasks, search_tasks
+- **Task Details (6):** add/get comments, create checklist, add checklist item, add/remove tag
+- **Time Tracking (9):** log/get/delete time, start/stop/get running timer, update/delete time entry
+- **Space/Folder/List CRUD (10):** get/update/delete space, get/get_one/update/delete folder, get/update/delete list
+- **Comments & Checklists (6):** update/delete comment, update/delete checklist, update/delete checklist item
+- **Tags (4):** get/create/update/delete space tags
+- **Goals (8):** CRUD goals + create/update/delete key results (Business+)
+- **Time Entry Tags (4):** get/add/remove/rename time entry tags
+- **Time Entry Details (2):** get time entry, get time entry history
+- **Views (12):** get/create views at workspace/space/folder/list level, get/update/delete view, get view tasks
+- **Webhooks (4):** get/create/update/delete webhooks
+- **Custom Fields (2):** get fields, set/remove field values
 - **Config:** `CLICKUP_API_TOKEN`, `CLICKUP_TEAM_ID`
 - **HTTP:** Direct `httpx.AsyncClient` (no SDK, native async)
 - **Note:** Timestamps in milliseconds; fully typed (pyright enabled)
