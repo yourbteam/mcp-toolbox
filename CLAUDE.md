@@ -52,7 +52,7 @@ src/mcp_toolbox/
 - **Tier 4 (Org):** clickup_create_space, clickup_create_list, clickup_create_folder, clickup_get_members, clickup_get_custom_fields, clickup_set_custom_field
 - **Config:** `CLICKUP_API_TOKEN`, `CLICKUP_TEAM_ID`
 - **HTTP:** Direct `httpx.AsyncClient` (no SDK, native async)
-- **Note:** pyright excludes this file; timestamps in milliseconds
+- **Note:** Timestamps in milliseconds; fully typed (pyright enabled)
 
 ## Tool Module Convention
 Each integration file in `tools/` must:
