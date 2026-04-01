@@ -5,6 +5,7 @@ import base64
 import json
 import logging
 from datetime import datetime, timezone
+from pathlib import Path
 
 from mcp.server.fastmcp import FastMCP
 from mcp.server.fastmcp.exceptions import ToolError
@@ -77,7 +78,7 @@ def _parse_send_at(send_at: str | int) -> int:
     return int(dt.timestamp())
 
 
-def _parse_response(response) -> dict:
+def _parse_response(response) -> dict | list:
     """Parse a SendGrid API response into a dict."""
     body = response.body
     if isinstance(body, bytes):
@@ -255,11 +256,11 @@ def register_tools(mcp: FastMCP) -> None:
                 with open(file_path, "rb") as f:
                     encoded = base64.b64encode(f.read()).decode()
             except FileNotFoundError:
-                raise ToolError(f"Attachment file not found: {file_path}")
+                raise ToolError(f"Attachment file not found: {file_path}") from None
             except OSError as e:
-                raise ToolError(f"Error reading attachment {file_path}: {e}")
+                raise ToolError(f"Error reading attachment {file_path}: {e}") from e
 
-            file_name = att.get("file_name", file_path.split("/")[-1])
+            file_name = att.get("file_name", Path(file_path).name)
             mime_type = att.get("mime_type", "application/octet-stream")
 
             attachment = Attachment(
