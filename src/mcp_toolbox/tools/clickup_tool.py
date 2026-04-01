@@ -51,7 +51,13 @@ def _to_ms(value: str | int | None) -> int | None:
         if value < 10_000_000_000:
             return value * 1000
         return value
-    dt = datetime.fromisoformat(value)
+    try:
+        dt = datetime.fromisoformat(value)
+    except ValueError:
+        raise ToolError(
+            f"Invalid datetime format: '{value}'. "
+            "Use ISO format (e.g., '2025-01-15T10:00:00+00:00')."
+        ) from None
     if dt.tzinfo is None:
         dt = dt.replace(tzinfo=timezone.utc)
     return int(dt.timestamp() * 1000)
