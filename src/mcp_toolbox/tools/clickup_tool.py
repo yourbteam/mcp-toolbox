@@ -264,7 +264,7 @@ def register_tools(mcp: FastMCP) -> None:
             body["due_date"] = _to_ms(due_date)
         if start_date is not None:
             body["start_date"] = _to_ms(start_date)
-        if assignees_add is not None or assignees_remove is not None:
+        if assignees_add or assignees_remove:
             body["assignees"] = {}
             if assignees_add:
                 body["assignees"]["add"] = assignees_add
