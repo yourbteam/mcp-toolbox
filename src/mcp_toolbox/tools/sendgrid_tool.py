@@ -346,7 +346,10 @@ def register_tools(mcp: FastMCP) -> None:
             raise ToolError(f"SendGrid API error: {e}") from e
 
         data = _parse_response(response)
-        templates = data.get("templates", data.get("result", []))
+        templates = (
+            data if isinstance(data, list)
+            else data.get("templates", data.get("result", []))
+        )
         return _success(
             response.status_code,
             data=[
@@ -660,7 +663,7 @@ def register_tools(mcp: FastMCP) -> None:
                 raise ToolError(f"SendGrid API error: {e}") from e
 
             data = _parse_response(response)
-            lists = data.get("result", [])
+            lists = data if isinstance(data, list) else data.get("result", [])
             return _success(response.status_code, data=lists, count=len(lists))
 
         elif action == "delete":
