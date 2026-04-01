@@ -42,3 +42,9 @@ Each integration file in `tools/` must:
 
 ## Task Tracking
 See `Tasks/` folder — each task has `analysis.md` (requirements) and `plan.md` (implementation).
+
+## Memory
+- [Task Execution Workflow](feedback_task_workflow.md) — Create Tasks/subfolder with analysis.md and plan.md for each task
+- [MCP Toolbox Project Overview](project_mcp_toolbox.md) — Python MCP server providing external API integrations for LLM clients
+- [Testing Discipline](feedback_testing_discipline.md) — Every feature must include tests, pass them, then pass full regression before moving on
+- [Memory Sync to CLAUDE.md](feedback_memory_sync.md) — Whenever memory is added/updated, sync the Memory section in CLAUDE.md to match
