@@ -18,3 +18,7 @@ LOG_LEVEL: LogLevel = cast(LogLevel, os.getenv("LOG_LEVEL", "INFO"))
 SENDGRID_API_KEY: str | None = os.getenv("SENDGRID_API_KEY")
 SENDGRID_FROM_EMAIL: str | None = os.getenv("SENDGRID_FROM_EMAIL")
 SENDGRID_FROM_NAME: str | None = os.getenv("SENDGRID_FROM_NAME")
+
+# ClickUp
+CLICKUP_API_TOKEN: str | None = os.getenv("CLICKUP_API_TOKEN")
+CLICKUP_TEAM_ID: str | None = os.getenv("CLICKUP_TEAM_ID")

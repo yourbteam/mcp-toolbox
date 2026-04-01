@@ -27,11 +27,12 @@ mcp dev src/mcp_toolbox/server.py  # MCP Inspector
 ```
 src/mcp_toolbox/
 ├── server.py              # FastMCP instance, tool registration, main()
-├── config.py              # Environment loading (LOG_LEVEL, SendGrid keys)
+├── config.py              # Environment loading (LOG_LEVEL, SendGrid, ClickUp keys)
 └── tools/                 # One file per integration
     ├── __init__.py        # register_all_tools() hub
     ├── example_tool.py    # hello + add (scaffolding validation)
-    └── sendgrid_tool.py   # 14 SendGrid tools (email, management, contacts)
+    ├── sendgrid_tool.py   # 14 SendGrid tools (email, management, contacts)
+    └── clickup_tool.py    # 25 ClickUp tools (tasks, comments, time, org)
 ```
 
 ## Integrations
@@ -43,6 +44,15 @@ src/mcp_toolbox/
 - **Config:** `SENDGRID_API_KEY`, `SENDGRID_FROM_EMAIL`, `SENDGRID_FROM_NAME`
 - **SDK:** `sendgrid` v6.x (sync SDK, wrapped with `asyncio.to_thread()`)
 - **Note:** pyright excludes this file due to SendGrid's dynamic fluent API being untyped
+
+### ClickUp (clickup_tool.py) — 25 tools
+- **Tier 1 (Core Tasks):** clickup_get_workspaces, clickup_get_spaces, clickup_get_lists, clickup_create_task, clickup_get_task, clickup_update_task, clickup_get_tasks, clickup_search_tasks, clickup_delete_task
+- **Tier 2 (Details):** clickup_add_comment, clickup_get_comments, clickup_create_checklist, clickup_add_checklist_item, clickup_add_tag, clickup_remove_tag
+- **Tier 3 (Time):** clickup_log_time, clickup_get_time_entries, clickup_start_timer, clickup_stop_timer
+- **Tier 4 (Org):** clickup_create_space, clickup_create_list, clickup_create_folder, clickup_get_members, clickup_get_custom_fields, clickup_set_custom_field
+- **Config:** `CLICKUP_API_TOKEN`, `CLICKUP_TEAM_ID`
+- **HTTP:** Direct `httpx.AsyncClient` (no SDK, native async)
+- **Note:** pyright excludes this file; timestamps in milliseconds
 
 ## Tool Module Convention
 Each integration file in `tools/` must:
