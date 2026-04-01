@@ -577,7 +577,7 @@ def register_tools(mcp: FastMCP) -> None:
             raise ToolError(f"SendGrid API error: {e}") from e
 
         data = _parse_response(response)
-        job_id = data.get("job_id")
+        job_id = data.get("job_id") if isinstance(data, dict) else None
         return _success(response.status_code, job_id=job_id, contacts_count=len(contacts))
 
     @mcp.tool()
@@ -601,12 +601,13 @@ def register_tools(mcp: FastMCP) -> None:
             raise ToolError(f"SendGrid API error: {e}") from e
 
         data = _parse_response(response)
-        results = data.get("result", [])
-        return _success(
-            response.status_code,
-            data=results,
-            count=data.get("contact_count", len(results)),
-        )
+        if isinstance(data, list):
+            results = data
+            count = len(results)
+        else:
+            results = data.get("result", [])
+            count = data.get("contact_count", len(results))
+        return _success(response.status_code, data=results, count=count)
 
     @mcp.tool()
     async def get_contact(contact_id: str) -> str:
