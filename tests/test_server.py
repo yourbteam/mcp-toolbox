@@ -8,6 +8,6 @@ def test_server_name():
 
 
 def test_server_has_tools():
-    # After import, tools should be registered
+    # After import, tools should be registered (2 example + 14 sendgrid)
     tools = mcp._tool_manager._tools
-    assert len(tools) > 0
+    assert len(tools) >= 16

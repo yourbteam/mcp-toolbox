@@ -13,3 +13,8 @@ load_dotenv(_env_path)
 LogLevel = Literal["DEBUG", "INFO", "WARNING", "ERROR", "CRITICAL"]
 
 LOG_LEVEL: LogLevel = cast(LogLevel, os.getenv("LOG_LEVEL", "INFO"))
+
+# SendGrid
+SENDGRID_API_KEY: str | None = os.getenv("SENDGRID_API_KEY")
+SENDGRID_FROM_EMAIL: str | None = os.getenv("SENDGRID_FROM_EMAIL")
+SENDGRID_FROM_NAME: str | None = os.getenv("SENDGRID_FROM_NAME")
