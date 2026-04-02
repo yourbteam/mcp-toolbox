@@ -8,9 +8,9 @@ def test_server_name():
 
 
 def test_server_has_tools():
-    # 2 example + 14 sendgrid + 81 clickup + 19 o365 + 28 teams + 39 kv + 13 aws = 196
+    # 2 example + 14 sendgrid + 81 clickup + 19 o365 + 28 teams + 39 kv + 13 aws + 28 slack = 224
     tools = mcp._tool_manager._tools
-    assert len(tools) == 196
+    assert len(tools) == 224
     expected_tools = {
         # Example tools
         "hello", "add",
@@ -115,5 +115,18 @@ def test_server_has_tools():
         "aws_ssm_get_parameter_history",
         "aws_ssm_label_parameter_version", "aws_ssm_unlabel_parameter_version",
         "aws_ssm_add_tags", "aws_ssm_remove_tags", "aws_ssm_list_tags",
+        # Slack tools (28)
+        "slack_send_message", "slack_send_dm", "slack_update_message",
+        "slack_delete_message", "slack_schedule_message",
+        "slack_get_channel_history", "slack_get_thread_replies",
+        "slack_list_channels", "slack_get_channel_info", "slack_create_channel",
+        "slack_archive_channel", "slack_unarchive_channel",
+        "slack_invite_to_channel", "slack_list_channel_members",
+        "slack_set_channel_topic", "slack_set_channel_purpose",
+        "slack_list_users", "slack_get_user_info",
+        "slack_find_user_by_email", "slack_get_user_presence",
+        "slack_add_reaction", "slack_remove_reaction", "slack_get_reactions",
+        "slack_pin_message", "slack_unpin_message", "slack_list_pins",
+        "slack_upload_file", "slack_delete_file",
     }
     assert set(tools.keys()) == expected_tools

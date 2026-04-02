@@ -44,3 +44,6 @@ KEYVAULT_CLIENT_SECRET: str | None = os.getenv("KEYVAULT_CLIENT_SECRET") or O365
 AWS_ACCESS_KEY_ID: str | None = os.getenv("AWS_ACCESS_KEY_ID")
 AWS_SECRET_ACCESS_KEY: str | None = os.getenv("AWS_SECRET_ACCESS_KEY")
 AWS_DEFAULT_REGION: str | None = os.getenv("AWS_DEFAULT_REGION")
+
+# Slack
+SLACK_BOT_TOKEN: str | None = os.getenv("SLACK_BOT_TOKEN")

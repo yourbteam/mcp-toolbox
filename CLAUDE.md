@@ -36,7 +36,8 @@ src/mcp_toolbox/
     ├── o365_tool.py       # 19 O365 tools (send, read, drafts, folders)
     ├── teams_tool.py      # 28 Teams tools (teams, channels, messages, meetings)
     ├── keyvault_tool.py   # 39 Key Vault tools (secrets, keys, certificates)
-    └── aws_ssm_tool.py    # 13 AWS SSM tools (Parameter Store)
+    ├── aws_ssm_tool.py    # 13 AWS SSM tools (Parameter Store)
+    └── slack_tool.py      # 28 Slack tools (messages, channels, users, reactions)
 ```
 
 ## Integrations
@@ -103,6 +104,16 @@ src/mcp_toolbox/
 - **SDK:** `boto3` (sync, wrapped with `asyncio.to_thread`)
 - **Note:** Free tier: 10,000 params; supports SecureString (KMS encrypted); hierarchical paths
 
+### Slack (slack_tool.py) — 28 tools
+- **Messaging (7):** send_message, send_dm, update, delete, schedule, channel_history, thread_replies
+- **Channels (9):** list, get_info, create, archive, unarchive, invite, list_members, set_topic, set_purpose
+- **Users (4):** list, get_info, find_by_email, get_presence
+- **Reactions (3):** add, remove, get
+- **Pins (3):** pin, unpin, list
+- **Files (2):** upload, delete
+- **Config:** `SLACK_BOT_TOKEN` (xoxb-...)
+- **SDK:** `slack_sdk.WebClient` (sync, wrapped with `asyncio.to_thread`)
+
 ## Tool Module Convention
 Each integration file in `tools/` must:
 1. Define async tool functions with full type hints
@@ -119,3 +130,4 @@ See `Tasks/` folder — each task has `analysis.md` (requirements) and `plan.md`
 - [Testing Discipline](feedback_testing_discipline.md) — Every feature must include tests, pass them, then pass full regression before moving on
 - [Memory Sync to CLAUDE.md](feedback_memory_sync.md) — Whenever memory is added/updated, sync the Memory section in CLAUDE.md to match
 - [Memory Sync on Git Pull](feedback_memory_git_pull_sync.md) — After git pull, check CLAUDE.md for new memory entries from other machines and sync locally
+- [Never Stop Mid-Workflow](feedback_complete_workflow.md) — NEVER pause between workflow steps — execute the entire sequence without stopping or asking

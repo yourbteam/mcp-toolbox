@@ -9,6 +9,7 @@ from mcp_toolbox.tools import (
     keyvault_tool,
     o365_tool,
     sendgrid_tool,
+    slack_tool,
     teams_tool,
 )
 
@@ -22,3 +23,4 @@ def register_all_tools(mcp: FastMCP) -> None:
     teams_tool.register_tools(mcp)
     keyvault_tool.register_tools(mcp)
     aws_ssm_tool.register_tools(mcp)
+    slack_tool.register_tools(mcp)
