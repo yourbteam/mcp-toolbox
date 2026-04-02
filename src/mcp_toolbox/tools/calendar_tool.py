@@ -316,13 +316,20 @@ def register_tools(mcp: FastMCP) -> None:
             user_id: User email or ID
         """
         patch: dict = {}
-        tz = timezone or "UTC"
         if subject is not None:
             patch["subject"] = subject
         if start_datetime is not None:
-            patch["start"] = _dt(start_datetime, tz)
+            if not timezone:
+                raise ToolError(
+                    "timezone is required when updating start_datetime"
+                )
+            patch["start"] = _dt(start_datetime, timezone)
         if end_datetime is not None:
-            patch["end"] = _dt(end_datetime, tz)
+            if not timezone:
+                raise ToolError(
+                    "timezone is required when updating end_datetime"
+                )
+            patch["end"] = _dt(end_datetime, timezone)
         if body is not None:
             patch["body"] = {"contentType": body_content_type, "content": body}
         if location is not None:
@@ -644,8 +651,11 @@ def register_tools(mcp: FastMCP) -> None:
         """
         fp = Path(file_path)
         if not fp.is_file():
-            raise ToolError(f"File not found: {file_path}") from None
-        content_bytes = base64.b64encode(fp.read_bytes()).decode()
+            raise ToolError(f"File not found: {file_path}")
+        try:
+            content_bytes = base64.b64encode(fp.read_bytes()).decode()
+        except OSError as e:
+            raise ToolError(f"Error reading file {file_path}: {e}") from e
         att = {
             "@odata.type": "#microsoft.graph.fileAttachment",
             "name": file_name or fp.name,
