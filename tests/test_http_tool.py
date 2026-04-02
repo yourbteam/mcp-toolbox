@@ -218,6 +218,26 @@ async def test_download_file(server, tmp_path):
 
 
 @pytest.mark.asyncio
+@respx.mock
+async def test_download_exceeds_max_size(server, tmp_path):
+    respx.get("https://example.com/huge").mock(
+        return_value=httpx.Response(
+            200, content=b"x" * 2000,
+            headers={"content-type": "application/octet-stream"},
+        )
+    )
+    save_path = tmp_path / "huge.bin"
+    with pytest.raises(Exception, match="max_file_size"):
+        await server.call_tool("http_download", {
+            "url": "https://example.com/huge",
+            "save_path": str(save_path),
+            "max_file_size": 500,
+        })
+    # Partial file should be cleaned up
+    assert not save_path.exists()
+
+
+@pytest.mark.asyncio
 async def test_download_parent_missing(server):
     with pytest.raises(Exception, match="Parent directory"):
         await server.call_tool("http_download", {

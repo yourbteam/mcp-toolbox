@@ -199,15 +199,19 @@ def register_tools(mcp: FastMCP) -> None:
                         })
 
                     total = 0
-                    with open(save, "wb") as f:
-                        async for chunk in response.aiter_bytes(8192):
-                            total += len(chunk)
-                            if total > max_file_size:
-                                raise ToolError(
-                                    f"Download exceeds max_file_size "
-                                    f"({max_file_size} bytes). Aborted."
-                                )
-                            f.write(chunk)
+                    try:
+                        with open(save, "wb") as f:
+                            async for chunk in response.aiter_bytes(8192):
+                                total += len(chunk)
+                                if total > max_file_size:
+                                    raise ToolError(
+                                        f"Download exceeds max_file_size "
+                                        f"({max_file_size} bytes). Aborted."
+                                    )
+                                f.write(chunk)
+                    except ToolError:
+                        save.unlink(missing_ok=True)
+                        raise
 
                     content_type = response.headers.get("content-type", "unknown")
                     elapsed_ms = int(response.elapsed.total_seconds() * 1000)
