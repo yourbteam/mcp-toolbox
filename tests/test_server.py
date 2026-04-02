@@ -8,9 +8,9 @@ def test_server_name():
 
 
 def test_server_has_tools():
-    # 2 example + 14 sendgrid + 81 clickup + 19 o365 + 28 teams + 39 kv = 183
+    # 2 example + 14 sendgrid + 81 clickup + 19 o365 + 28 teams + 39 kv + 13 aws = 196
     tools = mcp._tool_manager._tools
-    assert len(tools) == 183
+    assert len(tools) == 196
     expected_tools = {
         # Example tools
         "hello", "add",
@@ -107,5 +107,13 @@ def test_server_has_tools():
         "kv_import_certificate", "kv_update_certificate",
         "kv_delete_certificate", "kv_recover_certificate",
         "kv_purge_certificate", "kv_list_deleted_certificates",
+        # AWS SSM tools (13)
+        "aws_ssm_put_parameter", "aws_ssm_get_parameter",
+        "aws_ssm_get_parameters", "aws_ssm_get_parameters_by_path",
+        "aws_ssm_describe_parameters",
+        "aws_ssm_delete_parameter", "aws_ssm_delete_parameters",
+        "aws_ssm_get_parameter_history",
+        "aws_ssm_label_parameter_version", "aws_ssm_unlabel_parameter_version",
+        "aws_ssm_add_tags", "aws_ssm_remove_tags", "aws_ssm_list_tags",
     }
     assert set(tools.keys()) == expected_tools

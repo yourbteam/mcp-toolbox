@@ -39,3 +39,8 @@ KEYVAULT_URL: str | None = os.getenv("KEYVAULT_URL")
 KEYVAULT_TENANT_ID: str | None = os.getenv("KEYVAULT_TENANT_ID") or O365_TENANT_ID
 KEYVAULT_CLIENT_ID: str | None = os.getenv("KEYVAULT_CLIENT_ID") or O365_CLIENT_ID
 KEYVAULT_CLIENT_SECRET: str | None = os.getenv("KEYVAULT_CLIENT_SECRET") or O365_CLIENT_SECRET
+
+# AWS (optional — boto3 reads credentials from env/config/IAM automatically)
+AWS_ACCESS_KEY_ID: str | None = os.getenv("AWS_ACCESS_KEY_ID")
+AWS_SECRET_ACCESS_KEY: str | None = os.getenv("AWS_SECRET_ACCESS_KEY")
+AWS_DEFAULT_REGION: str | None = os.getenv("AWS_DEFAULT_REGION")

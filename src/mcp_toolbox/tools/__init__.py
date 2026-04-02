@@ -3,6 +3,7 @@
 from mcp.server.fastmcp import FastMCP
 
 from mcp_toolbox.tools import (
+    aws_ssm_tool,
     clickup_tool,
     example_tool,
     keyvault_tool,
@@ -20,3 +21,4 @@ def register_all_tools(mcp: FastMCP) -> None:
     o365_tool.register_tools(mcp)
     teams_tool.register_tools(mcp)
     keyvault_tool.register_tools(mcp)
+    aws_ssm_tool.register_tools(mcp)

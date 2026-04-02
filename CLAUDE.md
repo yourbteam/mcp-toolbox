@@ -35,7 +35,8 @@ src/mcp_toolbox/
     ├── clickup_tool.py    # 81 ClickUp tools (full API v2 coverage)
     ├── o365_tool.py       # 19 O365 tools (send, read, drafts, folders)
     ├── teams_tool.py      # 28 Teams tools (teams, channels, messages, meetings)
-    └── keyvault_tool.py   # 39 Key Vault tools (secrets, keys, certificates)
+    ├── keyvault_tool.py   # 39 Key Vault tools (secrets, keys, certificates)
+    └── aws_ssm_tool.py    # 13 AWS SSM tools (Parameter Store)
 ```
 
 ## Integrations
@@ -94,6 +95,14 @@ src/mcp_toolbox/
 - **Auth:** Own msal instance with `vault.azure.net` scope (separate from Graph API tokens)
 - **Note:** Vault-specific base URL; api-version=7.4 auto-appended; pyright excluded (msal)
 
+### AWS Parameter Store (aws_ssm_tool.py) — 13 tools
+- **CRUD (7):** put, get, get_multiple, get_by_path, describe, delete, delete_multiple
+- **Versioning (3):** get_history, label_version, unlabel_version
+- **Tagging (3):** add_tags, remove_tags, list_tags
+- **Config:** `AWS_ACCESS_KEY_ID`, `AWS_SECRET_ACCESS_KEY`, `AWS_DEFAULT_REGION` (all optional — boto3 auto-resolves)
+- **SDK:** `boto3` (sync, wrapped with `asyncio.to_thread`)
+- **Note:** Free tier: 10,000 params; supports SecureString (KMS encrypted); hierarchical paths
+
 ## Tool Module Convention
 Each integration file in `tools/` must:
 1. Define async tool functions with full type hints
@@ -105,7 +114,7 @@ Each integration file in `tools/` must:
 See `Tasks/` folder — each task has `analysis.md` (requirements) and `plan.md` (implementation).
 
 ## Memory
-- [Task Execution Workflow](feedback_task_workflow.md) — Create Tasks/subfolder with analysis.md and plan.md for each task
+- [Task Execution Workflow](feedback_task_workflow.md) — Full end-to-end: create task, analysis, /verify-analysis, plan, /verify-plan, implement, commit, /review-fix-loop, push
 - [MCP Toolbox Project Overview](project_mcp_toolbox.md) — Python MCP server providing external API integrations for LLM clients
 - [Testing Discipline](feedback_testing_discipline.md) — Every feature must include tests, pass them, then pass full regression before moving on
 - [Memory Sync to CLAUDE.md](feedback_memory_sync.md) — Whenever memory is added/updated, sync the Memory section in CLAUDE.md to match
