@@ -8,9 +8,9 @@ def test_server_name():
 
 
 def test_server_has_tools():
-    # 2+14+81+19+28+39+13+28+4+23+43 = 294
+    # 2+14+81+19+28+39+13+28+4+23+43+44 = 338
     tools = mcp._tool_manager._tools
-    assert len(tools) == 294
+    assert len(tools) == 338
     expected_tools = {
         # Example tools
         "hello", "add",
@@ -160,5 +160,27 @@ def test_server_has_tools():
         "hubspot_list_owners", "hubspot_get_owner",
         "hubspot_list_properties", "hubspot_get_property", "hubspot_create_property",
         "hubspot_batch_create", "hubspot_batch_update",
+        # Jira tools (44)
+        "jira_create_issue", "jira_get_issue", "jira_update_issue",
+        "jira_delete_issue", "jira_search_issues", "jira_transition_issue",
+        "jira_list_transitions", "jira_assign_issue",
+        "jira_add_comment", "jira_list_comments",
+        "jira_update_comment", "jira_delete_comment",
+        "jira_add_attachment", "jira_list_attachments", "jira_delete_attachment",
+        "jira_list_projects", "jira_get_project",
+        "jira_list_boards", "jira_get_board", "jira_get_board_issues",
+        "jira_list_sprints", "jira_get_sprint",
+        "jira_get_sprint_issues", "jira_move_to_sprint",
+        "jira_search_users", "jira_get_user",
+        "jira_list_priorities", "jira_list_statuses",
+        "jira_add_worklog", "jira_list_worklogs",
+        "jira_update_worklog", "jira_delete_worklog",
+        "jira_get_watchers", "jira_add_watcher", "jira_remove_watcher",
+        "jira_create_issue_link", "jira_delete_issue_link",
+        "jira_list_issue_link_types",
+        "jira_list_components", "jira_create_component",
+        "jira_list_versions", "jira_create_version",
+        "jira_list_labels",
+        "jira_bulk_create_issues",
     }
     assert set(tools.keys()) == expected_tools

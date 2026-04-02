@@ -40,7 +40,8 @@ src/mcp_toolbox/
     ├── slack_tool.py      # 28 Slack tools (messages, channels, users, reactions)
     ├── http_tool.py       # 4 Generic HTTP tools (request, form, download, upload)
     ├── calendar_tool.py   # 23 Calendar tools (events, scheduling, attachments)
-    └── hubspot_tool.py    # 43 HubSpot CRM tools (contacts, companies, deals, tickets)
+    ├── hubspot_tool.py    # 43 HubSpot CRM tools (contacts, companies, deals, tickets)
+    └── jira_tool.py       # 44 Jira tools (issues, boards, sprints, worklogs)
 ```
 
 ## Integrations
@@ -150,6 +151,23 @@ src/mcp_toolbox/
 - **Batch (2):** batch create, batch update
 - **Config:** `HUBSPOT_API_TOKEN`
 - **HTTP:** Direct httpx with Bearer token auth
+
+### Jira (jira_tool.py) — 44 tools
+- **Issues (15):** create, get, update, delete, search (JQL), transition, assign, comments CRUD, attachments
+- **Projects (2):** list, get
+- **Boards (3):** list, get, get issues
+- **Sprints (4):** list, get, get issues, move to sprint
+- **Users (2):** search, get
+- **Metadata (2):** list priorities, list statuses
+- **Worklogs (4):** add, list, update, delete
+- **Watchers (3):** get, add, remove
+- **Issue Links (3):** create, delete, list types
+- **Components (2):** list, create
+- **Versions (2):** list, create
+- **Labels (1):** list
+- **Bulk (1):** bulk create issues
+- **Config:** `JIRA_BASE_URL`, `JIRA_EMAIL`, `JIRA_API_TOKEN`
+- **Auth:** Basic auth (email:token base64), dual API paths (platform v3 + agile v1.0)
 
 ## Tool Module Convention
 Each integration file in `tools/` must:

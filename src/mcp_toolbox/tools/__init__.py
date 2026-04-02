@@ -9,6 +9,7 @@ from mcp_toolbox.tools import (
     example_tool,
     http_tool,
     hubspot_tool,
+    jira_tool,
     keyvault_tool,
     o365_tool,
     sendgrid_tool,
@@ -30,3 +31,4 @@ def register_all_tools(mcp: FastMCP) -> None:
     http_tool.register_tools(mcp)
     calendar_tool.register_tools(mcp)
     hubspot_tool.register_tools(mcp)
+    jira_tool.register_tools(mcp)

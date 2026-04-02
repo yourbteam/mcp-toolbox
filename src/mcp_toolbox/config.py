@@ -50,3 +50,8 @@ SLACK_BOT_TOKEN: str | None = os.getenv("SLACK_BOT_TOKEN")
 
 # HubSpot
 HUBSPOT_API_TOKEN: str | None = os.getenv("HUBSPOT_API_TOKEN")
+
+# Jira
+JIRA_BASE_URL: str | None = os.getenv("JIRA_BASE_URL")
+JIRA_EMAIL: str | None = os.getenv("JIRA_EMAIL")
+JIRA_API_TOKEN: str | None = os.getenv("JIRA_API_TOKEN")
