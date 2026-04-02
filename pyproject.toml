@@ -39,7 +39,7 @@ select = ["E", "F", "I", "N", "W"]
 [tool.pyright]
 pythonVersion = "3.10"
 typeCheckingMode = "basic"
-exclude = ["src/mcp_toolbox/tools/sendgrid_tool.py", "src/mcp_toolbox/tools/o365_tool.py"]
+exclude = ["src/mcp_toolbox/tools/sendgrid_tool.py", "src/mcp_toolbox/tools/o365_tool.py", "src/mcp_toolbox/tools/teams_tool.py"]
 
 [tool.pytest.ini_options]
 asyncio_mode = "auto"

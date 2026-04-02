@@ -28,3 +28,8 @@ O365_TENANT_ID: str | None = os.getenv("O365_TENANT_ID")
 O365_CLIENT_ID: str | None = os.getenv("O365_CLIENT_ID")
 O365_CLIENT_SECRET: str | None = os.getenv("O365_CLIENT_SECRET")
 O365_USER_ID: str | None = os.getenv("O365_USER_ID")
+
+# Microsoft Teams (reuses O365 credentials if not set separately)
+TEAMS_TENANT_ID: str | None = os.getenv("TEAMS_TENANT_ID") or O365_TENANT_ID
+TEAMS_CLIENT_ID: str | None = os.getenv("TEAMS_CLIENT_ID") or O365_CLIENT_ID
+TEAMS_CLIENT_SECRET: str | None = os.getenv("TEAMS_CLIENT_SECRET") or O365_CLIENT_SECRET

@@ -8,9 +8,9 @@ def test_server_name():
 
 
 def test_server_has_tools():
-    # 2 example + 14 sendgrid + 81 clickup + 19 o365 = 116
+    # 2 example + 14 sendgrid + 81 clickup + 19 o365 + 28 teams = 144
     tools = mcp._tool_manager._tools
-    assert len(tools) == 116
+    assert len(tools) == 144
     expected_tools = {
         # Example tools
         "hello", "add",
@@ -79,5 +79,18 @@ def test_server_has_tools():
         "o365_send_draft", "o365_delete_draft",
         "o365_get_folder", "o365_list_folders", "o365_create_folder",
         "o365_delete_folder",
+        # Teams tools (28)
+        "teams_list_teams", "teams_get_team", "teams_create_team",
+        "teams_update_team", "teams_archive_team", "teams_unarchive_team",
+        "teams_list_members", "teams_add_member", "teams_remove_member",
+        "teams_list_channels", "teams_get_channel", "teams_create_channel",
+        "teams_update_channel", "teams_delete_channel",
+        "teams_list_channel_messages", "teams_get_message",
+        "teams_list_message_replies", "teams_send_webhook_message",
+        "teams_send_channel_message_delegated",
+        "teams_create_meeting", "teams_list_meetings",
+        "teams_get_meeting", "teams_delete_meeting",
+        "teams_get_presence", "teams_get_presence_bulk",
+        "teams_list_chats", "teams_get_chat", "teams_list_chat_messages",
     }
     assert set(tools.keys()) == expected_tools

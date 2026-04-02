@@ -27,13 +27,14 @@ mcp dev src/mcp_toolbox/server.py  # MCP Inspector
 ```
 src/mcp_toolbox/
 ├── server.py              # FastMCP instance, tool registration, main()
-├── config.py              # Environment loading (LOG_LEVEL, SendGrid, ClickUp, O365 keys)
+├── config.py              # Environment loading (all integration keys)
 └── tools/                 # One file per integration
     ├── __init__.py        # register_all_tools() hub
     ├── example_tool.py    # hello + add (scaffolding validation)
     ├── sendgrid_tool.py   # 14 SendGrid tools (email, management, contacts)
     ├── clickup_tool.py    # 81 ClickUp tools (full API v2 coverage)
-    └── o365_tool.py       # 19 O365 tools (send, read, drafts, folders)
+    ├── o365_tool.py       # 19 O365 tools (send, read, drafts, folders)
+    └── teams_tool.py      # 28 Teams tools (teams, channels, messages, meetings)
 ```
 
 ## Integrations
@@ -72,6 +73,17 @@ src/mcp_toolbox/
 - **Auth:** OAuth2 client credentials via `msal` (auto-caching, asyncio.to_thread for sync calls)
 - **HTTP:** Singleton `httpx.AsyncClient` with per-request Bearer token
 - **Note:** pyright excludes this file (msal lacks type stubs)
+
+### Microsoft Teams (teams_tool.py) — 28 tools
+- **Teams Mgmt (9):** list/get/create/update/archive/unarchive teams, list/add/remove members
+- **Channels (5):** list/get/create/update/delete channels
+- **Messaging (5):** list/get messages, list replies, send webhook, delegated send (placeholder)
+- **Meetings (4):** create/list/get/delete meetings (requires Application Access Policy)
+- **Presence (2):** get presence, bulk presence
+- **Chat Reading (3):** list chats, get chat, list chat messages (read-only)
+- **Config:** `TEAMS_TENANT_ID`, `TEAMS_CLIENT_ID`, `TEAMS_CLIENT_SECRET` (falls back to O365 credentials)
+- **Auth:** Same msal OAuth2 as O365; webhook tool uses separate httpx client (no auth)
+- **Note:** App-only cannot send channel/chat messages via Graph API; use webhook for sending
 
 ## Tool Module Convention
 Each integration file in `tools/` must:
