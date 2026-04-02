@@ -8,9 +8,9 @@ def test_server_name():
 
 
 def test_server_has_tools():
-    # 2 example + 14 sendgrid + 81 clickup + 19 o365 + 28 teams = 144
+    # 2 example + 14 sendgrid + 81 clickup + 19 o365 + 28 teams + 39 kv = 183
     tools = mcp._tool_manager._tools
-    assert len(tools) == 144
+    assert len(tools) == 183
     expected_tools = {
         # Example tools
         "hello", "add",
@@ -92,5 +92,20 @@ def test_server_has_tools():
         "teams_get_meeting", "teams_delete_meeting",
         "teams_get_presence", "teams_get_presence_bulk",
         "teams_list_chats", "teams_get_chat", "teams_list_chat_messages",
+        # Key Vault tools (39)
+        "kv_set_secret", "kv_get_secret", "kv_list_secrets",
+        "kv_list_secret_versions", "kv_update_secret",
+        "kv_delete_secret", "kv_recover_secret", "kv_purge_secret",
+        "kv_list_deleted_secrets", "kv_backup_secret", "kv_restore_secret",
+        "kv_create_key", "kv_get_key", "kv_list_keys", "kv_list_key_versions",
+        "kv_update_key", "kv_delete_key", "kv_recover_key", "kv_purge_key",
+        "kv_list_deleted_keys", "kv_rotate_key",
+        "kv_encrypt", "kv_decrypt", "kv_sign", "kv_verify",
+        "kv_wrap_key", "kv_unwrap_key", "kv_backup_key", "kv_restore_key",
+        "kv_get_certificate", "kv_list_certificates",
+        "kv_list_certificate_versions", "kv_create_certificate",
+        "kv_import_certificate", "kv_update_certificate",
+        "kv_delete_certificate", "kv_recover_certificate",
+        "kv_purge_certificate", "kv_list_deleted_certificates",
     }
     assert set(tools.keys()) == expected_tools

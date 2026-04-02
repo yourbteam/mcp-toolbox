@@ -34,7 +34,8 @@ src/mcp_toolbox/
     ├── sendgrid_tool.py   # 14 SendGrid tools (email, management, contacts)
     ├── clickup_tool.py    # 81 ClickUp tools (full API v2 coverage)
     ├── o365_tool.py       # 19 O365 tools (send, read, drafts, folders)
-    └── teams_tool.py      # 28 Teams tools (teams, channels, messages, meetings)
+    ├── teams_tool.py      # 28 Teams tools (teams, channels, messages, meetings)
+    └── keyvault_tool.py   # 39 Key Vault tools (secrets, keys, certificates)
 ```
 
 ## Integrations
@@ -84,6 +85,14 @@ src/mcp_toolbox/
 - **Config:** `TEAMS_TENANT_ID`, `TEAMS_CLIENT_ID`, `TEAMS_CLIENT_SECRET` (falls back to O365 credentials)
 - **Auth:** Same msal OAuth2 as O365; webhook tool uses separate httpx client (no auth)
 - **Note:** App-only cannot send channel/chat messages via Graph API; use webhook for sending
+
+### Azure Key Vault (keyvault_tool.py) — 39 tools
+- **Secrets (11):** set, get, list, list_versions, update, delete, recover, purge, list_deleted, backup, restore
+- **Keys (18):** create, get, list, list_versions, update, delete, recover, purge, list_deleted, rotate, encrypt, decrypt, sign, verify, wrap, unwrap, backup, restore
+- **Certificates (10):** get, list, list_versions, create, import, update, delete, recover, purge, list_deleted
+- **Config:** `KEYVAULT_URL` + `KEYVAULT_TENANT_ID/CLIENT_ID/CLIENT_SECRET` (falls back to O365)
+- **Auth:** Own msal instance with `vault.azure.net` scope (separate from Graph API tokens)
+- **Note:** Vault-specific base URL; api-version=7.4 auto-appended; pyright excluded (msal)
 
 ## Tool Module Convention
 Each integration file in `tools/` must:
