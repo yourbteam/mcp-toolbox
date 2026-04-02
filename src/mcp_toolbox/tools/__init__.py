@@ -2,7 +2,7 @@
 
 from mcp.server.fastmcp import FastMCP
 
-from mcp_toolbox.tools import clickup_tool, example_tool, sendgrid_tool
+from mcp_toolbox.tools import clickup_tool, example_tool, o365_tool, sendgrid_tool
 
 
 def register_all_tools(mcp: FastMCP) -> None:
@@ -10,3 +10,4 @@ def register_all_tools(mcp: FastMCP) -> None:
     example_tool.register_tools(mcp)
     sendgrid_tool.register_tools(mcp)
     clickup_tool.register_tools(mcp)
+    o365_tool.register_tools(mcp)

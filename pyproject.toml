@@ -10,6 +10,7 @@ dependencies = [
     "python-dotenv>=1.0.0",
     "pydantic>=2.0.0",
     "sendgrid>=6.0.0",
+    "msal>=1.28.0",
 ]
 
 [project.optional-dependencies]
@@ -38,7 +39,7 @@ select = ["E", "F", "I", "N", "W"]
 [tool.pyright]
 pythonVersion = "3.10"
 typeCheckingMode = "basic"
-exclude = ["src/mcp_toolbox/tools/sendgrid_tool.py"]
+exclude = ["src/mcp_toolbox/tools/sendgrid_tool.py", "src/mcp_toolbox/tools/o365_tool.py"]
 
 [tool.pytest.ini_options]
 asyncio_mode = "auto"

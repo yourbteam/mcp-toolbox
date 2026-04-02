@@ -22,3 +22,9 @@ SENDGRID_FROM_NAME: str | None = os.getenv("SENDGRID_FROM_NAME")
 # ClickUp
 CLICKUP_API_TOKEN: str | None = os.getenv("CLICKUP_API_TOKEN")
 CLICKUP_TEAM_ID: str | None = os.getenv("CLICKUP_TEAM_ID")
+
+# Office 365 (Microsoft Graph)
+O365_TENANT_ID: str | None = os.getenv("O365_TENANT_ID")
+O365_CLIENT_ID: str | None = os.getenv("O365_CLIENT_ID")
+O365_CLIENT_SECRET: str | None = os.getenv("O365_CLIENT_SECRET")
+O365_USER_ID: str | None = os.getenv("O365_USER_ID")

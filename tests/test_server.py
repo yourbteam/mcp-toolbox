@@ -8,9 +8,9 @@ def test_server_name():
 
 
 def test_server_has_tools():
-    # After import, tools should be registered (2 example + 14 sendgrid + 81 clickup = 97)
+    # 2 example + 14 sendgrid + 81 clickup + 19 o365 = 116
     tools = mcp._tool_manager._tools
-    assert len(tools) == 97
+    assert len(tools) == 116
     expected_tools = {
         # Example tools
         "hello", "add",
@@ -70,5 +70,14 @@ def test_server_has_tools():
         # ClickUp Group M: Webhooks (4)
         "clickup_get_webhooks", "clickup_create_webhook",
         "clickup_update_webhook", "clickup_delete_webhook",
+        # O365 tools (19)
+        "o365_send_email", "o365_send_email_with_attachment",
+        "o365_reply", "o365_reply_all", "o365_forward",
+        "o365_list_messages", "o365_get_message", "o365_search_messages",
+        "o365_list_attachments", "o365_move_message",
+        "o365_create_draft", "o365_update_draft", "o365_add_draft_attachment",
+        "o365_send_draft", "o365_delete_draft",
+        "o365_get_folder", "o365_list_folders", "o365_create_folder",
+        "o365_delete_folder",
     }
     assert set(tools.keys()) == expected_tools

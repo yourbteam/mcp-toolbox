@@ -27,12 +27,13 @@ mcp dev src/mcp_toolbox/server.py  # MCP Inspector
 ```
 src/mcp_toolbox/
 ├── server.py              # FastMCP instance, tool registration, main()
-├── config.py              # Environment loading (LOG_LEVEL, SendGrid, ClickUp keys)
+├── config.py              # Environment loading (LOG_LEVEL, SendGrid, ClickUp, O365 keys)
 └── tools/                 # One file per integration
     ├── __init__.py        # register_all_tools() hub
     ├── example_tool.py    # hello + add (scaffolding validation)
     ├── sendgrid_tool.py   # 14 SendGrid tools (email, management, contacts)
-    └── clickup_tool.py    # 25 ClickUp tools (tasks, comments, time, org)
+    ├── clickup_tool.py    # 81 ClickUp tools (full API v2 coverage)
+    └── o365_tool.py       # 19 O365 tools (send, read, drafts, folders)
 ```
 
 ## Integrations
@@ -61,6 +62,16 @@ src/mcp_toolbox/
 - **Config:** `CLICKUP_API_TOKEN`, `CLICKUP_TEAM_ID`
 - **HTTP:** Direct `httpx.AsyncClient` (no SDK, native async)
 - **Note:** Timestamps in milliseconds; fully typed (pyright enabled)
+
+### Office 365 (o365_tool.py) — 19 tools
+- **Sending (5):** send_email, send_email_with_attachment, reply, reply_all, forward
+- **Reading (5):** list_messages, get_message, search_messages, list_attachments, move_message
+- **Drafts (5):** create_draft, update_draft, add_draft_attachment, send_draft, delete_draft
+- **Folders (4):** get_folder, list_folders, create_folder, delete_folder
+- **Config:** `O365_TENANT_ID`, `O365_CLIENT_ID`, `O365_CLIENT_SECRET`, `O365_USER_ID`
+- **Auth:** OAuth2 client credentials via `msal` (auto-caching, asyncio.to_thread for sync calls)
+- **HTTP:** Singleton `httpx.AsyncClient` with per-request Bearer token
+- **Note:** pyright excludes this file (msal lacks type stubs)
 
 ## Tool Module Convention
 Each integration file in `tools/` must:
