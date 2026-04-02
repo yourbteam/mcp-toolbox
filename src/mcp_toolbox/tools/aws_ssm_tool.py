@@ -142,7 +142,10 @@ def register_tools(mcp: FastMCP) -> None:
             WithDecryption=True, MaxResults=max_results,
         )
         params = result.get("Parameters", [])
-        return _success(200, data=params, count=len(params))
+        return _success(
+            200, data=params, count=len(params),
+            next_token=result.get("NextToken"),
+        )
 
     @mcp.tool()
     async def aws_ssm_describe_parameters(
@@ -162,7 +165,10 @@ def register_tools(mcp: FastMCP) -> None:
             ]
         result = await _call("describe_parameters", **kwargs)
         params = result.get("Parameters", [])
-        return _success(200, data=params, count=len(params))
+        return _success(
+            200, data=params, count=len(params),
+            next_token=result.get("NextToken"),
+        )
 
     @mcp.tool()
     async def aws_ssm_delete_parameter(name: str) -> str:
@@ -206,7 +212,10 @@ def register_tools(mcp: FastMCP) -> None:
             Name=name, WithDecryption=True, MaxResults=max_results,
         )
         params = result.get("Parameters", [])
-        return _success(200, data=params, count=len(params))
+        return _success(
+            200, data=params, count=len(params),
+            next_token=result.get("NextToken"),
+        )
 
     @mcp.tool()
     async def aws_ssm_label_parameter_version(
