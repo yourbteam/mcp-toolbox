@@ -128,6 +128,7 @@ def register_tools(mcp: FastMCP) -> None:
         path: str,
         recursive: bool = True,
         max_results: int = 10,
+        next_token: str | None = None,
     ) -> str:
         """Get AWS SSM parameters under a hierarchy path.
 
@@ -135,12 +136,15 @@ def register_tools(mcp: FastMCP) -> None:
             path: Path prefix (e.g., /myapp/prod/)
             recursive: Include sub-paths (default true)
             max_results: Max results (default 10)
+            next_token: Pagination token from previous response
         """
-        result = await _call(
-            "get_parameters_by_path",
-            Path=path, Recursive=recursive,
-            WithDecryption=True, MaxResults=max_results,
-        )
+        kwargs: dict = {
+            "Path": path, "Recursive": recursive,
+            "WithDecryption": True, "MaxResults": max_results,
+        }
+        if next_token:
+            kwargs["NextToken"] = next_token
+        result = await _call("get_parameters_by_path", **kwargs)
         params = result.get("Parameters", [])
         return _success(
             200, data=params, count=len(params),
@@ -151,14 +155,18 @@ def register_tools(mcp: FastMCP) -> None:
     async def aws_ssm_describe_parameters(
         max_results: int = 50,
         name_prefix: str | None = None,
+        next_token: str | None = None,
     ) -> str:
         """List AWS SSM parameters (metadata only, no values).
 
         Args:
             max_results: Max results (default 50)
             name_prefix: Filter by name prefix
+            next_token: Pagination token from previous response
         """
         kwargs: dict = {"MaxResults": max_results}
+        if next_token:
+            kwargs["NextToken"] = next_token
         if name_prefix:
             kwargs["ParameterFilters"] = [
                 {"Key": "Name", "Option": "BeginsWith", "Values": [name_prefix]}
@@ -200,17 +208,21 @@ def register_tools(mcp: FastMCP) -> None:
     async def aws_ssm_get_parameter_history(
         name: str,
         max_results: int = 50,
+        next_token: str | None = None,
     ) -> str:
         """Get version history of an AWS SSM parameter.
 
         Args:
             name: Parameter name
             max_results: Max results (default 50)
+            next_token: Pagination token from previous response
         """
-        result = await _call(
-            "get_parameter_history",
-            Name=name, WithDecryption=True, MaxResults=max_results,
-        )
+        kwargs: dict = {
+            "Name": name, "WithDecryption": True, "MaxResults": max_results,
+        }
+        if next_token:
+            kwargs["NextToken"] = next_token
+        result = await _call("get_parameter_history", **kwargs)
         params = result.get("Parameters", [])
         return _success(
             200, data=params, count=len(params),
