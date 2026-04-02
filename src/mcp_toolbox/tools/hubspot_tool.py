@@ -539,7 +539,12 @@ def register_tools(mcp: FastMCP) -> None:
             ticket_id: Associate with ticket
             extra_properties: Additional properties
         """
-        props: dict = {"hs_note_body": body, "hs_timestamp": ""}
+        import time
+
+        props: dict = {
+            "hs_note_body": body,
+            "hs_timestamp": str(int(time.time() * 1000)),
+        }
         if extra_properties:
             props.update(extra_properties)
         req: dict = {"properties": props}
