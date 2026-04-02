@@ -38,7 +38,8 @@ src/mcp_toolbox/
     ├── keyvault_tool.py   # 39 Key Vault tools (secrets, keys, certificates)
     ├── aws_ssm_tool.py    # 13 AWS SSM tools (Parameter Store)
     ├── slack_tool.py      # 28 Slack tools (messages, channels, users, reactions)
-    └── http_tool.py       # 4 Generic HTTP tools (request, form, download, upload)
+    ├── http_tool.py       # 4 Generic HTTP tools (request, form, download, upload)
+    └── calendar_tool.py   # 23 Calendar tools (events, scheduling, attachments)
 ```
 
 ## Integrations
@@ -122,6 +123,18 @@ src/mcp_toolbox/
 - `http_upload` — Multipart file upload
 - **Config:** None — everything per-request
 - **Note:** Fresh httpx client per request (no singleton); response truncation at 50K chars
+
+### MS Graph Calendar (calendar_tool.py) — 23 tools
+- **Calendars (4):** list, get, create, delete
+- **Events (5):** create, get, update, delete, list (calendarView)
+- **Responses (3):** accept, decline, tentatively accept
+- **Scheduling (2):** get free/busy schedule, find meeting times
+- **Recurring (1):** list event instances
+- **Actions (2):** forward, cancel
+- **Attachments (4):** add, list, get, delete
+- **Reminders (2):** snooze, dismiss
+- **Config:** Reuses O365 credentials (no new config)
+- **Auth:** Same msal + Graph API token as O365 email
 
 ## Tool Module Convention
 Each integration file in `tools/` must:

@@ -4,6 +4,7 @@ from mcp.server.fastmcp import FastMCP
 
 from mcp_toolbox.tools import (
     aws_ssm_tool,
+    calendar_tool,
     clickup_tool,
     example_tool,
     http_tool,
@@ -26,3 +27,4 @@ def register_all_tools(mcp: FastMCP) -> None:
     aws_ssm_tool.register_tools(mcp)
     slack_tool.register_tools(mcp)
     http_tool.register_tools(mcp)
+    calendar_tool.register_tools(mcp)

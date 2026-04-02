@@ -8,9 +8,9 @@ def test_server_name():
 
 
 def test_server_has_tools():
-    # 2+14+81+19+28+39+13+28+4 = 228
+    # 2+14+81+19+28+39+13+28+4+23 = 251
     tools = mcp._tool_manager._tools
-    assert len(tools) == 228
+    assert len(tools) == 251
     expected_tools = {
         # Example tools
         "hello", "add",
@@ -130,5 +130,18 @@ def test_server_has_tools():
         "slack_upload_file", "slack_delete_file",
         # Generic HTTP tools (4)
         "http_request", "http_request_form", "http_download", "http_upload",
+        # Calendar tools (23)
+        "calendar_list_calendars", "calendar_get_calendar",
+        "calendar_create_calendar", "calendar_delete_calendar",
+        "calendar_create_event", "calendar_get_event",
+        "calendar_update_event", "calendar_delete_event", "calendar_list_events",
+        "calendar_accept_event", "calendar_decline_event",
+        "calendar_tentatively_accept_event",
+        "calendar_get_schedule", "calendar_find_meeting_times",
+        "calendar_list_event_instances",
+        "calendar_forward_event", "calendar_cancel_event",
+        "calendar_add_event_attachment", "calendar_list_event_attachments",
+        "calendar_get_event_attachment", "calendar_delete_event_attachment",
+        "calendar_snooze_reminder", "calendar_dismiss_reminder",
     }
     assert set(tools.keys()) == expected_tools
