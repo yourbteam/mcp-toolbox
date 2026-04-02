@@ -272,7 +272,7 @@ async def test_upload_file(server, tmp_path):
     mcp, mc = server
     test_file = tmp_path / "test.txt"
     test_file.write_text("Hello")
-    mc.files_upload_v2.return_value = {"file": {"id": "F1"}}
+    mc.files_upload_v2.return_value = {"files": [{"id": "F1"}]}
     result = await mcp.call_tool("slack_upload_file", {
         "channel": "C1", "file_path": str(test_file),
     })

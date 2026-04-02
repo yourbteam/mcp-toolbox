@@ -453,7 +453,8 @@ def register_tools(mcp: FastMCP) -> None:
         if initial_comment:
             kwargs["initial_comment"] = initial_comment
         result = await _call("files_upload_v2", **kwargs)
-        return _success(200, data=result.get("file", {}))
+        files = result.get("files", [])
+        return _success(200, data=files[0] if files else result.get("file", {}))
 
     @mcp.tool()
     async def slack_delete_file(file_id: str) -> str:
