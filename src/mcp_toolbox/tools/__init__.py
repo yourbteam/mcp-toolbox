@@ -8,6 +8,7 @@ from mcp_toolbox.tools import (
     clickup_tool,
     example_tool,
     http_tool,
+    hubspot_tool,
     keyvault_tool,
     o365_tool,
     sendgrid_tool,
@@ -28,3 +29,4 @@ def register_all_tools(mcp: FastMCP) -> None:
     slack_tool.register_tools(mcp)
     http_tool.register_tools(mcp)
     calendar_tool.register_tools(mcp)
+    hubspot_tool.register_tools(mcp)

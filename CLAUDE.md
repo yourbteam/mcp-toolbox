@@ -39,7 +39,8 @@ src/mcp_toolbox/
     ├── aws_ssm_tool.py    # 13 AWS SSM tools (Parameter Store)
     ├── slack_tool.py      # 28 Slack tools (messages, channels, users, reactions)
     ├── http_tool.py       # 4 Generic HTTP tools (request, form, download, upload)
-    └── calendar_tool.py   # 23 Calendar tools (events, scheduling, attachments)
+    ├── calendar_tool.py   # 23 Calendar tools (events, scheduling, attachments)
+    └── hubspot_tool.py    # 43 HubSpot CRM tools (contacts, companies, deals, tickets)
 ```
 
 ## Integrations
@@ -135,6 +136,20 @@ src/mcp_toolbox/
 - **Reminders (2):** snooze, dismiss
 - **Config:** Reuses O365 credentials (no new config)
 - **Auth:** Same msal + Graph API token as O365 email
+
+### HubSpot CRM (hubspot_tool.py) — 43 tools
+- **Contacts (6):** create, get, update, delete, list, search
+- **Companies (6):** create, get, update, delete, list, search
+- **Deals (6):** create, get, update, delete, list, search
+- **Tickets (6):** create, get, update, delete, list, search
+- **Notes (6):** create, get, list, update, delete, search
+- **Associations (4):** create, remove, get, list types
+- **Pipelines (2):** list pipelines, list stages
+- **Owners (2):** list, get
+- **Properties (3):** list, get, create
+- **Batch (2):** batch create, batch update
+- **Config:** `HUBSPOT_API_TOKEN`
+- **HTTP:** Direct httpx with Bearer token auth
 
 ## Tool Module Convention
 Each integration file in `tools/` must:

@@ -47,3 +47,6 @@ AWS_DEFAULT_REGION: str | None = os.getenv("AWS_DEFAULT_REGION")
 
 # Slack
 SLACK_BOT_TOKEN: str | None = os.getenv("SLACK_BOT_TOKEN")
+
+# HubSpot
+HUBSPOT_API_TOKEN: str | None = os.getenv("HUBSPOT_API_TOKEN")

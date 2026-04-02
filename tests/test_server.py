@@ -8,9 +8,9 @@ def test_server_name():
 
 
 def test_server_has_tools():
-    # 2+14+81+19+28+39+13+28+4+23 = 251
+    # 2+14+81+19+28+39+13+28+4+23+43 = 294
     tools = mcp._tool_manager._tools
-    assert len(tools) == 251
+    assert len(tools) == 294
     expected_tools = {
         # Example tools
         "hello", "add",
@@ -143,5 +143,22 @@ def test_server_has_tools():
         "calendar_add_event_attachment", "calendar_list_event_attachments",
         "calendar_get_event_attachment", "calendar_delete_event_attachment",
         "calendar_snooze_reminder", "calendar_dismiss_reminder",
+        # HubSpot tools (43)
+        "hubspot_create_contact", "hubspot_get_contact", "hubspot_update_contact",
+        "hubspot_delete_contact", "hubspot_list_contacts", "hubspot_search_contacts",
+        "hubspot_create_company", "hubspot_get_company", "hubspot_update_company",
+        "hubspot_delete_company", "hubspot_list_companies", "hubspot_search_companies",
+        "hubspot_create_deal", "hubspot_get_deal", "hubspot_update_deal",
+        "hubspot_delete_deal", "hubspot_list_deals", "hubspot_search_deals",
+        "hubspot_create_ticket", "hubspot_get_ticket", "hubspot_update_ticket",
+        "hubspot_delete_ticket", "hubspot_list_tickets", "hubspot_search_tickets",
+        "hubspot_create_note", "hubspot_get_note", "hubspot_list_notes",
+        "hubspot_update_note", "hubspot_delete_note", "hubspot_search_notes",
+        "hubspot_create_association", "hubspot_remove_association",
+        "hubspot_get_associations", "hubspot_list_association_types",
+        "hubspot_list_pipelines", "hubspot_list_pipeline_stages",
+        "hubspot_list_owners", "hubspot_get_owner",
+        "hubspot_list_properties", "hubspot_get_property", "hubspot_create_property",
+        "hubspot_batch_create", "hubspot_batch_update",
     }
     assert set(tools.keys()) == expected_tools
