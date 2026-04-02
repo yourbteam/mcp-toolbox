@@ -8,9 +8,9 @@ def test_server_name():
 
 
 def test_server_has_tools():
-    # 2 example + 14 sendgrid + 81 clickup + 19 o365 + 28 teams + 39 kv + 13 aws + 28 slack = 224
+    # 2+14+81+19+28+39+13+28+4 = 228
     tools = mcp._tool_manager._tools
-    assert len(tools) == 224
+    assert len(tools) == 228
     expected_tools = {
         # Example tools
         "hello", "add",
@@ -128,5 +128,7 @@ def test_server_has_tools():
         "slack_add_reaction", "slack_remove_reaction", "slack_get_reactions",
         "slack_pin_message", "slack_unpin_message", "slack_list_pins",
         "slack_upload_file", "slack_delete_file",
+        # Generic HTTP tools (4)
+        "http_request", "http_request_form", "http_download", "http_upload",
     }
     assert set(tools.keys()) == expected_tools

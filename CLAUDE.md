@@ -37,7 +37,8 @@ src/mcp_toolbox/
     ├── teams_tool.py      # 28 Teams tools (teams, channels, messages, meetings)
     ├── keyvault_tool.py   # 39 Key Vault tools (secrets, keys, certificates)
     ├── aws_ssm_tool.py    # 13 AWS SSM tools (Parameter Store)
-    └── slack_tool.py      # 28 Slack tools (messages, channels, users, reactions)
+    ├── slack_tool.py      # 28 Slack tools (messages, channels, users, reactions)
+    └── http_tool.py       # 4 Generic HTTP tools (request, form, download, upload)
 ```
 
 ## Integrations
@@ -113,6 +114,14 @@ src/mcp_toolbox/
 - **Files (2):** upload, delete
 - **Config:** `SLACK_BOT_TOKEN` (xoxb-...)
 - **SDK:** `slack_sdk.WebClient` (sync, wrapped with `asyncio.to_thread`)
+
+### Generic HTTP (http_tool.py) — 4 tools
+- `http_request` — Any method/URL/headers/body (the escape hatch for any REST API)
+- `http_request_form` — Form-encoded POST
+- `http_download` — Stream download to file
+- `http_upload` — Multipart file upload
+- **Config:** None — everything per-request
+- **Note:** Fresh httpx client per request (no singleton); response truncation at 50K chars
 
 ## Tool Module Convention
 Each integration file in `tools/` must:
