@@ -8,9 +8,9 @@ def test_server_name():
 
 
 def test_server_has_tools():
-    # 2+14+81+19+28+39+13+28+4+23+43+44+77+27+46+75+14+34+35+62+21 = 729
+    # 2+14+81+19+28+39+13+28+4+23+43+44+77+27+46+75+14+34+35+62+21+37 = 766
     tools = mcp._tool_manager._tools
-    assert len(tools) == 729
+    assert len(tools) == 766
     expected_tools = {
         # Example tools
         "hello", "add",
@@ -391,5 +391,26 @@ def test_server_has_tools():
         "notion_list_users", "notion_get_user", "notion_get_bot_user",
         "notion_search",
         "notion_list_comments", "notion_create_comment",
+        # Google Drive tools (37)
+        "gdrive_list_files", "gdrive_get_file", "gdrive_create_file",
+        "gdrive_copy_file", "gdrive_update_file", "gdrive_delete_file",
+        "gdrive_export_file", "gdrive_empty_trash",
+        "gdrive_download_file", "gdrive_stop_channel",
+        "gdrive_list_permissions", "gdrive_get_permission",
+        "gdrive_create_permission", "gdrive_update_permission",
+        "gdrive_delete_permission",
+        "gdrive_list_comments", "gdrive_get_comment",
+        "gdrive_create_comment", "gdrive_update_comment",
+        "gdrive_delete_comment",
+        "gdrive_list_replies", "gdrive_get_reply",
+        "gdrive_create_reply", "gdrive_update_reply",
+        "gdrive_delete_reply",
+        "gdrive_list_revisions", "gdrive_get_revision",
+        "gdrive_update_revision", "gdrive_delete_revision",
+        "gdrive_get_start_page_token", "gdrive_list_changes",
+        "gdrive_watch_changes",
+        "gdrive_list_drives", "gdrive_get_drive",
+        "gdrive_create_drive", "gdrive_update_drive",
+        "gdrive_delete_drive",
     }
     assert set(tools.keys()) == expected_tools

@@ -56,6 +56,9 @@ JIRA_BASE_URL: str | None = os.getenv("JIRA_BASE_URL")
 JIRA_EMAIL: str | None = os.getenv("JIRA_EMAIL")
 JIRA_API_TOKEN: str | None = os.getenv("JIRA_API_TOKEN")
 
+# Google Drive
+GDRIVE_DEFAULT_FOLDER_ID: str | None = os.getenv("GDRIVE_DEFAULT_FOLDER_ID")
+
 # Notion
 NOTION_API_TOKEN: str | None = os.getenv("NOTION_API_TOKEN")
 

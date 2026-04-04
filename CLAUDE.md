@@ -50,7 +50,8 @@ src/mcp_toolbox/
     ├── gcal_tool.py       # 34 Google Calendar tools (calendars, events, ACLs, settings)
     ├── gdocs_tool.py      # 35 Google Docs tools (documents, text, tables, formatting)
     ├── gmail_tool.py      # 62 Gmail tools (messages, threads, labels, drafts, settings)
-    └── notion_tool.py     # 21 Notion tools (pages, databases, blocks, search)
+    ├── notion_tool.py     # 21 Notion tools (pages, databases, blocks, search)
+    └── gdrive_tool.py     # 37 Google Drive tools (files, permissions, comments, drives)
 ```
 
 ## Integrations
@@ -198,6 +199,18 @@ src/mcp_toolbox/
 - **Config:** `STRIPE_API_KEY`
 - **HTTP:** Direct httpx with Bearer token, form-encoded requests (`data=` not `json=`)
 - **Note:** Uses `_flatten()` helper for Stripe bracket-notation nested params; pyright excluded
+
+### Google Drive (gdrive_tool.py) — 37 tools
+- **Files (10):** list, get, create, copy, update, delete, export, empty trash, download, stop channel
+- **Permissions (5):** list, get, create, update, delete
+- **Comments (5):** list, get, create, update, delete
+- **Replies (5):** list, get, create, update, delete
+- **Revisions (4):** list, get, update, delete
+- **Changes (3):** get start token, list changes, watch changes
+- **Shared Drives (5):** list, get, create, update, delete
+- **Config:** `GOOGLE_SERVICE_ACCOUNT_JSON` (reuse), `GDRIVE_DEFAULT_FOLDER_ID` (optional)
+- **Auth:** Service account with drive scope, auto-refresh
+- **HTTP:** httpx; metadata-only creates, multipart upload for content, alt=media for downloads
 
 ### Notion (notion_tool.py) — 21 tools
 - **Pages (5):** create, get, update, archive, get property
