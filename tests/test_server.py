@@ -8,9 +8,9 @@ def test_server_name():
 
 
 def test_server_has_tools():
-    # 2+14+81+19+28+39+13+28+4+23+43+44+77+27+46+75+14 = 577
+    # 2+14+81+19+28+39+13+28+4+23+43+44+77+27+46+75+14+34 = 611
     tools = mcp._tool_manager._tools
-    assert len(tools) == 577
+    assert len(tools) == 611
     expected_tools = {
         # Example tools
         "hello", "add",
@@ -299,5 +299,26 @@ def test_server_has_tools():
         "gtasks_list_tasks", "gtasks_get_task", "gtasks_insert_task",
         "gtasks_update_task", "gtasks_patch_task", "gtasks_delete_task",
         "gtasks_move_task", "gtasks_clear_tasks",
+        # Google Calendar tools (34)
+        "gcal_list_calendar_list", "gcal_get_calendar_list_entry",
+        "gcal_insert_calendar_list_entry", "gcal_update_calendar_list_entry",
+        "gcal_delete_calendar_list_entry",
+        "gcal_get_calendar", "gcal_create_calendar",
+        "gcal_update_calendar", "gcal_delete_calendar",
+        "gcal_clear_calendar",
+        "gcal_list_events", "gcal_get_event", "gcal_create_event",
+        "gcal_update_event", "gcal_delete_event",
+        "gcal_quick_add_event", "gcal_move_event",
+        "gcal_import_event", "gcal_list_event_instances",
+        "gcal_add_attendees", "gcal_remove_attendees",
+        "gcal_set_attendee_response",
+        "gcal_freebusy_query",
+        "gcal_list_acl", "gcal_get_acl_rule",
+        "gcal_insert_acl_rule", "gcal_update_acl_rule",
+        "gcal_delete_acl_rule",
+        "gcal_list_settings", "gcal_get_setting",
+        "gcal_get_colors",
+        "gcal_watch_events", "gcal_watch_calendar_list",
+        "gcal_stop_channel",
     }
     assert set(tools.keys()) == expected_tools

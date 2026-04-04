@@ -46,7 +46,8 @@ src/mcp_toolbox/
     ├── sheets_tool.py     # 27 Google Sheets tools (spreadsheets, values, formatting, charts)
     ├── quickbooks_tool.py # 46 QuickBooks tools (customers, invoices, payments, reports)
     ├── github_tool.py     # 75 GitHub tools (repos, issues, PRs, actions, search)
-    └── gtasks_tool.py     # 14 Google Tasks tools (task lists, tasks, ordering)
+    ├── gtasks_tool.py     # 14 Google Tasks tools (task lists, tasks, ordering)
+    └── gcal_tool.py       # 34 Google Calendar tools (calendars, events, ACLs, settings)
 ```
 
 ## Integrations
@@ -194,6 +195,20 @@ src/mcp_toolbox/
 - **Config:** `STRIPE_API_KEY`
 - **HTTP:** Direct httpx with Bearer token, form-encoded requests (`data=` not `json=`)
 - **Note:** Uses `_flatten()` helper for Stripe bracket-notation nested params; pyright excluded
+
+### Google Calendar (gcal_tool.py) — 34 tools
+- **CalendarList (5):** list, get, insert, update, delete calendar list entries
+- **Calendars (5):** get, create, update, delete, clear
+- **Events (9):** list, get, create, update, delete, quick add, move, import, list instances
+- **Attendees (3):** add, remove, set response
+- **FreeBusy (1):** query free/busy across calendars
+- **ACLs (5):** list, get, insert, update, delete access control rules
+- **Settings (2):** list, get (read-only)
+- **Colors (1):** get color definitions
+- **Channels (3):** watch events, watch calendar list, stop channel
+- **Config:** `GOOGLE_SERVICE_ACCOUNT_JSON` (reuse), `GCAL_DEFAULT_CALENDAR_ID` (optional, defaults to "primary")
+- **Auth:** Service account with calendar scope, auto-refresh via asyncio.to_thread
+- **HTTP:** httpx with base URL `googleapis.com/calendar/v3`; `_cid()` helper for default calendar
 
 ### Google Tasks (gtasks_tool.py) — 14 tools
 - **Task Lists (6):** list, get, insert, update, patch, delete
