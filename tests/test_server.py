@@ -8,9 +8,9 @@ def test_server_name():
 
 
 def test_server_has_tools():
-    # 2+14+81+19+28+39+13+28+4+23+43+44+77+27+46+75+14+34+35+62+21+37+66 = 832
+    # 2+14+81+19+28+39+13+28+4+23+43+44+77+27+46+75+14+34+35+62+21+37+66+66 = 898
     tools = mcp._tool_manager._tools
-    assert len(tools) == 832
+    assert len(tools) == 898
     expected_tools = {
         # Example tools
         "hello", "add",
@@ -451,5 +451,33 @@ def test_server_has_tools():
         "zendesk_list_macros", "zendesk_get_macro",
         "zendesk_create_macro", "zendesk_update_macro",
         "zendesk_delete_macro",
+        # Salesforce tools (66)
+        "sf_create_account", "sf_get_account", "sf_update_account",
+        "sf_delete_account", "sf_list_accounts", "sf_upsert_account",
+        "sf_create_contact", "sf_get_contact", "sf_update_contact",
+        "sf_delete_contact", "sf_list_contacts", "sf_upsert_contact",
+        "sf_create_opportunity", "sf_get_opportunity",
+        "sf_update_opportunity", "sf_delete_opportunity",
+        "sf_list_opportunities", "sf_upsert_opportunity",
+        "sf_create_lead", "sf_get_lead", "sf_update_lead",
+        "sf_delete_lead", "sf_list_leads", "sf_convert_lead",
+        "sf_create_case", "sf_get_case", "sf_update_case",
+        "sf_delete_case", "sf_list_cases", "sf_add_case_comment",
+        "sf_create_task", "sf_get_task", "sf_update_task",
+        "sf_delete_task", "sf_list_tasks",
+        "sf_create_event", "sf_get_event", "sf_update_event",
+        "sf_delete_event", "sf_list_events",
+        "sf_query", "sf_query_more", "sf_query_all",
+        "sf_search",
+        "sf_describe_sobject", "sf_describe_global",
+        "sf_get_record_types", "sf_get_picklist_values",
+        "sf_create_record", "sf_get_record", "sf_update_record",
+        "sf_delete_record", "sf_upsert_record",
+        "sf_bulk_create_job", "sf_bulk_upload_data",
+        "sf_bulk_close_job", "sf_bulk_get_job_status",
+        "sf_composite", "sf_composite_batch",
+        "sf_list_reports", "sf_run_report", "sf_describe_report",
+        "sf_get_limits", "sf_get_user", "sf_get_current_user",
+        "sf_get_api_versions",
     }
     assert set(tools.keys()) == expected_tools

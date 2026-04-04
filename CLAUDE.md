@@ -52,7 +52,8 @@ src/mcp_toolbox/
     ├── gmail_tool.py      # 62 Gmail tools (messages, threads, labels, drafts, settings)
     ├── notion_tool.py     # 21 Notion tools (pages, databases, blocks, search)
     ├── gdrive_tool.py     # 37 Google Drive tools (files, permissions, comments, drives)
-    └── zendesk_tool.py    # 66 Zendesk tools (tickets, users, orgs, groups, search)
+    ├── zendesk_tool.py    # 66 Zendesk tools (tickets, users, orgs, groups, search)
+    └── salesforce_tool.py # 66 Salesforce tools (accounts, contacts, opps, leads, SOQL)
 ```
 
 ## Integrations
@@ -200,6 +201,26 @@ src/mcp_toolbox/
 - **Config:** `STRIPE_API_KEY`
 - **HTTP:** Direct httpx with Bearer token, form-encoded requests (`data=` not `json=`)
 - **Note:** Uses `_flatten()` helper for Stripe bracket-notation nested params; pyright excluded
+
+### Salesforce (salesforce_tool.py) — 66 tools
+- **Accounts (6):** create, get, update, delete, list, upsert
+- **Contacts (6):** create, get, update, delete, list, upsert
+- **Opportunities (6):** create, get, update, delete, list, upsert
+- **Leads (6):** create, get, update, delete, list, convert
+- **Cases (6):** create, get, update, delete, list, add comment
+- **Tasks (5):** create, get, update, delete, list
+- **Events (5):** create, get, update, delete, list
+- **SOQL (3):** query, query_more, query_all
+- **Search (1):** SOSL full-text search
+- **Describe (4):** describe SObject, global describe, record types, picklist values
+- **Generic SObject (5):** create, get, update, delete, upsert any object
+- **Bulk API (4):** create job, upload data, close job, get status
+- **Composite (2):** composite (cross-ref), composite batch
+- **Reports (3):** list, run, describe
+- **Misc (4):** limits, get user, current user, API versions
+- **Config:** `SF_CLIENT_ID`, `SF_CLIENT_SECRET`, `SF_REFRESH_TOKEN`, `SF_INSTANCE_URL`, `SF_API_VERSION`
+- **Auth:** OAuth2 refresh token with asyncio.Lock; instance URL auto-detected from token response
+- **HTTP:** httpx with dynamic base URL; SOQL query builder with injection escaping
 
 ### Zendesk (zendesk_tool.py) — 66 tools
 - **Tickets (16):** create, get, update, delete, list, comments, tags, merge, bulk update, macro, audits, collaborators, incidents
