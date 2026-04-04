@@ -8,9 +8,9 @@ def test_server_name():
 
 
 def test_server_has_tools():
-    # 2+14+81+19+28+39+13+28+4+23+43+44 = 338
+    # 2+14+81+19+28+39+13+28+4+23+43+44+77 = 415
     tools = mcp._tool_manager._tools
-    assert len(tools) == 338
+    assert len(tools) == 415
     expected_tools = {
         # Example tools
         "hello", "add",
@@ -182,5 +182,42 @@ def test_server_has_tools():
         "jira_list_versions", "jira_create_version",
         "jira_list_labels",
         "jira_bulk_create_issues",
+        # Stripe tools (77)
+        "stripe_create_customer", "stripe_get_customer", "stripe_update_customer",
+        "stripe_delete_customer", "stripe_list_customers", "stripe_search_customers",
+        "stripe_create_payment_intent", "stripe_get_payment_intent",
+        "stripe_update_payment_intent", "stripe_confirm_payment_intent",
+        "stripe_cancel_payment_intent", "stripe_list_payment_intents",
+        "stripe_create_charge", "stripe_get_charge", "stripe_update_charge",
+        "stripe_list_charges", "stripe_capture_charge",
+        "stripe_create_invoice", "stripe_get_invoice", "stripe_update_invoice",
+        "stripe_finalize_invoice", "stripe_pay_invoice", "stripe_void_invoice",
+        "stripe_send_invoice", "stripe_list_invoices",
+        "stripe_list_invoice_line_items", "stripe_add_invoice_line_item",
+        "stripe_create_invoice_item", "stripe_get_invoice_item",
+        "stripe_update_invoice_item", "stripe_delete_invoice_item",
+        "stripe_list_invoice_items",
+        "stripe_create_subscription", "stripe_get_subscription",
+        "stripe_update_subscription", "stripe_cancel_subscription",
+        "stripe_list_subscriptions", "stripe_resume_subscription",
+        "stripe_create_product", "stripe_get_product", "stripe_update_product",
+        "stripe_delete_product", "stripe_list_products",
+        "stripe_create_price", "stripe_get_price", "stripe_update_price",
+        "stripe_list_prices",
+        "stripe_create_payment_method", "stripe_get_payment_method",
+        "stripe_list_payment_methods", "stripe_attach_payment_method",
+        "stripe_detach_payment_method",
+        "stripe_create_refund", "stripe_get_refund", "stripe_update_refund",
+        "stripe_list_refunds",
+        "stripe_get_balance", "stripe_list_balance_transactions",
+        "stripe_create_payout", "stripe_get_payout", "stripe_list_payouts",
+        "stripe_create_coupon", "stripe_get_coupon", "stripe_update_coupon",
+        "stripe_delete_coupon", "stripe_list_coupons",
+        "stripe_create_promotion_code", "stripe_get_promotion_code",
+        "stripe_update_promotion_code", "stripe_list_promotion_codes",
+        "stripe_get_event", "stripe_list_events",
+        "stripe_create_webhook_endpoint", "stripe_get_webhook_endpoint",
+        "stripe_update_webhook_endpoint", "stripe_delete_webhook_endpoint",
+        "stripe_list_webhook_endpoints",
     }
     assert set(tools.keys()) == expected_tools

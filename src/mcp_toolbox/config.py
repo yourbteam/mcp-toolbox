@@ -55,3 +55,6 @@ HUBSPOT_API_TOKEN: str | None = os.getenv("HUBSPOT_API_TOKEN")
 JIRA_BASE_URL: str | None = os.getenv("JIRA_BASE_URL")
 JIRA_EMAIL: str | None = os.getenv("JIRA_EMAIL")
 JIRA_API_TOKEN: str | None = os.getenv("JIRA_API_TOKEN")
+
+# Stripe
+STRIPE_API_KEY: str | None = os.getenv("STRIPE_API_KEY")

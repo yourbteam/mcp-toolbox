@@ -14,6 +14,7 @@ from mcp_toolbox.tools import (
     o365_tool,
     sendgrid_tool,
     slack_tool,
+    stripe_tool,
     teams_tool,
 )
 
@@ -32,3 +33,4 @@ def register_all_tools(mcp: FastMCP) -> None:
     calendar_tool.register_tools(mcp)
     hubspot_tool.register_tools(mcp)
     jira_tool.register_tools(mcp)
+    stripe_tool.register_tools(mcp)

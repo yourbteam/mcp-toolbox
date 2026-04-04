@@ -41,7 +41,8 @@ src/mcp_toolbox/
     ├── http_tool.py       # 4 Generic HTTP tools (request, form, download, upload)
     ├── calendar_tool.py   # 23 Calendar tools (events, scheduling, attachments)
     ├── hubspot_tool.py    # 43 HubSpot CRM tools (contacts, companies, deals, tickets)
-    └── jira_tool.py       # 44 Jira tools (issues, boards, sprints, worklogs)
+    ├── jira_tool.py       # 44 Jira tools (issues, boards, sprints, worklogs)
+    └── stripe_tool.py     # 77 Stripe tools (customers, payments, invoices, subscriptions)
 ```
 
 ## Integrations
@@ -168,6 +169,27 @@ src/mcp_toolbox/
 - **Bulk (1):** bulk create issues
 - **Config:** `JIRA_BASE_URL`, `JIRA_EMAIL`, `JIRA_API_TOKEN`
 - **Auth:** Basic auth (email:token base64), dual API paths (platform v3 + agile v1.0)
+
+### Stripe (stripe_tool.py) — 77 tools
+- **Customers (6):** create, get, update, delete, list, search
+- **Payment Intents (6):** create, get, update, confirm, cancel, list
+- **Charges (5):** create, get, update, list, capture
+- **Invoices (10):** create, get, update, finalize, pay, void, send, list, list line items, add line item
+- **Invoice Items (5):** create, get, update, delete, list
+- **Subscriptions (6):** create, get, update, cancel, list, resume
+- **Products (5):** create, get, update, delete, list
+- **Prices (4):** create, get, update, list
+- **Payment Methods (5):** create, get, list, attach, detach
+- **Refunds (4):** create, get, update, list
+- **Balance (2):** get balance, list transactions
+- **Payouts (3):** create, get, list
+- **Coupons (5):** create, get, update, delete, list
+- **Promotion Codes (4):** create, get, update, list
+- **Events (2):** get, list
+- **Webhook Endpoints (5):** create, get, update, delete, list
+- **Config:** `STRIPE_API_KEY`
+- **HTTP:** Direct httpx with Bearer token, form-encoded requests (`data=` not `json=`)
+- **Note:** Uses `_flatten()` helper for Stripe bracket-notation nested params; pyright excluded
 
 ## Tool Module Convention
 Each integration file in `tools/` must:
