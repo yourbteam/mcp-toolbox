@@ -8,9 +8,9 @@ def test_server_name():
 
 
 def test_server_has_tools():
-    # 2+14+81+19+28+39+13+28+4+23+43+44+77+27+46+75+14+34+35+62 = 708
+    # 2+14+81+19+28+39+13+28+4+23+43+44+77+27+46+75+14+34+35+62+21 = 729
     tools = mcp._tool_manager._tools
-    assert len(tools) == 708
+    assert len(tools) == 729
     expected_tools = {
         # Example tools
         "hello", "add",
@@ -379,5 +379,17 @@ def test_server_has_tools():
         "gmail_list_delegates", "gmail_get_delegate",
         "gmail_create_delegate", "gmail_delete_delegate",
         "gmail_get_attachment",
+        # Notion tools (21)
+        "notion_create_page", "notion_get_page", "notion_update_page",
+        "notion_archive_page", "notion_get_page_property",
+        "notion_create_database", "notion_get_database",
+        "notion_update_database", "notion_query_database",
+        "notion_archive_database",
+        "notion_get_block", "notion_get_block_children",
+        "notion_append_block_children", "notion_update_block",
+        "notion_delete_block",
+        "notion_list_users", "notion_get_user", "notion_get_bot_user",
+        "notion_search",
+        "notion_list_comments", "notion_create_comment",
     }
     assert set(tools.keys()) == expected_tools

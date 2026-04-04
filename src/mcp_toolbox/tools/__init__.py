@@ -16,6 +16,7 @@ from mcp_toolbox.tools import (
     hubspot_tool,
     jira_tool,
     keyvault_tool,
+    notion_tool,
     o365_tool,
     quickbooks_tool,
     sendgrid_tool,
@@ -47,4 +48,5 @@ def register_all_tools(mcp: FastMCP) -> None:
     gdocs_tool.register_tools(mcp)
     gmail_tool.register_tools(mcp)
     github_tool.register_tools(mcp)
+    notion_tool.register_tools(mcp)
     gtasks_tool.register_tools(mcp)

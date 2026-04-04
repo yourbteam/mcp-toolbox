@@ -49,7 +49,8 @@ src/mcp_toolbox/
     ├── gtasks_tool.py     # 14 Google Tasks tools (task lists, tasks, ordering)
     ├── gcal_tool.py       # 34 Google Calendar tools (calendars, events, ACLs, settings)
     ├── gdocs_tool.py      # 35 Google Docs tools (documents, text, tables, formatting)
-    └── gmail_tool.py      # 62 Gmail tools (messages, threads, labels, drafts, settings)
+    ├── gmail_tool.py      # 62 Gmail tools (messages, threads, labels, drafts, settings)
+    └── notion_tool.py     # 21 Notion tools (pages, databases, blocks, search)
 ```
 
 ## Integrations
@@ -197,6 +198,17 @@ src/mcp_toolbox/
 - **Config:** `STRIPE_API_KEY`
 - **HTTP:** Direct httpx with Bearer token, form-encoded requests (`data=` not `json=`)
 - **Note:** Uses `_flatten()` helper for Stripe bracket-notation nested params; pyright excluded
+
+### Notion (notion_tool.py) — 21 tools
+- **Pages (5):** create, get, update, archive, get property
+- **Databases (5):** create, get, update, query, archive
+- **Blocks (5):** get, get children, append children, update, delete
+- **Users (3):** list, get, get bot user
+- **Search (1):** full-text search across pages/databases
+- **Comments (2):** list, create
+- **Config:** `NOTION_API_TOKEN`
+- **Auth:** Bearer token + `Notion-Version: 2022-06-28` header
+- **HTTP:** httpx with cursor-based pagination; rich text/property object helpers
 
 ### Gmail (gmail_tool.py) — 62 tools
 - **Messages (12):** send, send with attachment, list, get, modify, delete, trash, untrash, batch modify/delete, import, insert

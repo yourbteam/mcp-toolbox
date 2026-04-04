@@ -56,6 +56,9 @@ JIRA_BASE_URL: str | None = os.getenv("JIRA_BASE_URL")
 JIRA_EMAIL: str | None = os.getenv("JIRA_EMAIL")
 JIRA_API_TOKEN: str | None = os.getenv("JIRA_API_TOKEN")
 
+# Notion
+NOTION_API_TOKEN: str | None = os.getenv("NOTION_API_TOKEN")
+
 # Gmail
 GMAIL_DELEGATED_USER: str | None = os.getenv("GMAIL_DELEGATED_USER")
 
