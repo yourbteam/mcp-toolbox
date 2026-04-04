@@ -48,7 +48,8 @@ src/mcp_toolbox/
     ├── github_tool.py     # 75 GitHub tools (repos, issues, PRs, actions, search)
     ├── gtasks_tool.py     # 14 Google Tasks tools (task lists, tasks, ordering)
     ├── gcal_tool.py       # 34 Google Calendar tools (calendars, events, ACLs, settings)
-    └── gdocs_tool.py      # 35 Google Docs tools (documents, text, tables, formatting)
+    ├── gdocs_tool.py      # 35 Google Docs tools (documents, text, tables, formatting)
+    └── gmail_tool.py      # 62 Gmail tools (messages, threads, labels, drafts, settings)
 ```
 
 ## Integrations
@@ -196,6 +197,22 @@ src/mcp_toolbox/
 - **Config:** `STRIPE_API_KEY`
 - **HTTP:** Direct httpx with Bearer token, form-encoded requests (`data=` not `json=`)
 - **Note:** Uses `_flatten()` helper for Stripe bracket-notation nested params; pyright excluded
+
+### Gmail (gmail_tool.py) — 62 tools
+- **Messages (12):** send, send with attachment, list, get, modify, delete, trash, untrash, batch modify/delete, import, insert
+- **Threads (6):** list, get, modify, delete, trash, untrash
+- **Labels (6):** list, get, create, update, patch, delete
+- **Drafts (6):** list, get, create, update, delete, send
+- **History (1):** list history changes
+- **Settings (11):** get/update vacation, auto-forwarding, IMAP, POP, language; get profile
+- **Send-As (7):** list, get, create, update, patch, delete, verify
+- **Filters (4):** list, get, create, delete
+- **Forwarding (4):** list, get, create, delete
+- **Delegates (4):** list, get, create, delete
+- **Attachments (1):** get attachment data
+- **Config:** `GOOGLE_SERVICE_ACCOUNT_JSON` (reuse), `GMAIL_DELEGATED_USER`
+- **Auth:** Service account with domain-wide delegation via `with_subject()`; scope `https://mail.google.com/`
+- **HTTP:** httpx; base64url-encoded RFC 2822 MIME messages for send operations
 
 ### Google Docs (gdocs_tool.py) — 35 tools
 - **Documents (3):** create, get, batch update (raw requests)

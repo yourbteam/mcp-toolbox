@@ -8,9 +8,9 @@ def test_server_name():
 
 
 def test_server_has_tools():
-    # 2+14+81+19+28+39+13+28+4+23+43+44+77+27+46+75+14+34+35 = 646
+    # 2+14+81+19+28+39+13+28+4+23+43+44+77+27+46+75+14+34+35+62 = 708
     tools = mcp._tool_manager._tools
-    assert len(tools) == 646
+    assert len(tools) == 708
     expected_tools = {
         # Example tools
         "hello", "add",
@@ -343,5 +343,41 @@ def test_server_has_tools():
         "gdocs_delete_header", "gdocs_delete_footer",
         "gdocs_create_footnote",
         "gdocs_replace_named_range_content", "gdocs_replace_image",
+        # Gmail tools (62)
+        "gmail_send_message", "gmail_send_message_with_attachment",
+        "gmail_list_messages", "gmail_get_message",
+        "gmail_modify_message", "gmail_delete_message",
+        "gmail_trash_message", "gmail_untrash_message",
+        "gmail_batch_modify_messages", "gmail_batch_delete_messages",
+        "gmail_import_message", "gmail_insert_message",
+        "gmail_list_threads", "gmail_get_thread",
+        "gmail_modify_thread", "gmail_delete_thread",
+        "gmail_trash_thread", "gmail_untrash_thread",
+        "gmail_list_labels", "gmail_get_label",
+        "gmail_create_label", "gmail_update_label",
+        "gmail_patch_label", "gmail_delete_label",
+        "gmail_list_drafts", "gmail_get_draft",
+        "gmail_create_draft", "gmail_update_draft",
+        "gmail_delete_draft", "gmail_send_draft",
+        "gmail_list_history",
+        "gmail_get_vacation_settings", "gmail_update_vacation_settings",
+        "gmail_get_auto_forwarding", "gmail_update_auto_forwarding",
+        "gmail_get_imap_settings", "gmail_update_imap_settings",
+        "gmail_get_pop_settings", "gmail_update_pop_settings",
+        "gmail_get_language_settings", "gmail_update_language_settings",
+        "gmail_get_profile",
+        "gmail_list_send_as", "gmail_get_send_as",
+        "gmail_create_send_as", "gmail_update_send_as",
+        "gmail_patch_send_as", "gmail_delete_send_as",
+        "gmail_verify_send_as",
+        "gmail_list_filters", "gmail_get_filter",
+        "gmail_create_filter", "gmail_delete_filter",
+        "gmail_list_forwarding_addresses",
+        "gmail_get_forwarding_address",
+        "gmail_create_forwarding_address",
+        "gmail_delete_forwarding_address",
+        "gmail_list_delegates", "gmail_get_delegate",
+        "gmail_create_delegate", "gmail_delete_delegate",
+        "gmail_get_attachment",
     }
     assert set(tools.keys()) == expected_tools
