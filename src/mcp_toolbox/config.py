@@ -56,5 +56,11 @@ JIRA_BASE_URL: str | None = os.getenv("JIRA_BASE_URL")
 JIRA_EMAIL: str | None = os.getenv("JIRA_EMAIL")
 JIRA_API_TOKEN: str | None = os.getenv("JIRA_API_TOKEN")
 
+# Google Sheets
+GOOGLE_SERVICE_ACCOUNT_JSON: str | None = os.getenv("GOOGLE_SERVICE_ACCOUNT_JSON")
+GOOGLE_SHEETS_DEFAULT_SPREADSHEET_ID: str | None = os.getenv(
+    "GOOGLE_SHEETS_DEFAULT_SPREADSHEET_ID"
+)
+
 # Stripe
 STRIPE_API_KEY: str | None = os.getenv("STRIPE_API_KEY")

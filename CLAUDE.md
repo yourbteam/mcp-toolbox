@@ -42,7 +42,8 @@ src/mcp_toolbox/
     ├── calendar_tool.py   # 23 Calendar tools (events, scheduling, attachments)
     ├── hubspot_tool.py    # 43 HubSpot CRM tools (contacts, companies, deals, tickets)
     ├── jira_tool.py       # 44 Jira tools (issues, boards, sprints, worklogs)
-    └── stripe_tool.py     # 77 Stripe tools (customers, payments, invoices, subscriptions)
+    ├── stripe_tool.py     # 77 Stripe tools (customers, payments, invoices, subscriptions)
+    └── sheets_tool.py     # 27 Google Sheets tools (spreadsheets, values, formatting, charts)
 ```
 
 ## Integrations
@@ -190,6 +191,19 @@ src/mcp_toolbox/
 - **Config:** `STRIPE_API_KEY`
 - **HTTP:** Direct httpx with Bearer token, form-encoded requests (`data=` not `json=`)
 - **Note:** Uses `_flatten()` helper for Stripe bracket-notation nested params; pyright excluded
+
+### Google Sheets (sheets_tool.py) — 27 tools
+- **Spreadsheets (3):** create, get metadata, batch update (raw requests)
+- **Sheets (4):** add, delete, copy, rename tabs
+- **Values (7):** read, write, append, clear, batch get, batch update, batch clear
+- **Formatting (5):** format cells, update borders, merge, unmerge, auto resize
+- **Named Ranges (3):** add, update, delete
+- **Filters (2):** set basic filter, clear basic filter
+- **Charts (1):** add embedded chart
+- **Protection (2):** protect range, unprotect range
+- **Config:** `GOOGLE_SERVICE_ACCOUNT_JSON`, `GOOGLE_SHEETS_DEFAULT_SPREADSHEET_ID` (optional)
+- **Auth:** Google service account via `google-auth[requests]`, auto-refresh Bearer token
+- **HTTP:** httpx with per-request token refresh; all batchUpdate ops via shared `_batch_update()` helper
 
 ## Tool Module Convention
 Each integration file in `tools/` must:

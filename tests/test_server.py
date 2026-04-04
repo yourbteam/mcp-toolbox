@@ -8,9 +8,9 @@ def test_server_name():
 
 
 def test_server_has_tools():
-    # 2+14+81+19+28+39+13+28+4+23+43+44+77 = 415
+    # 2+14+81+19+28+39+13+28+4+23+43+44+77+27 = 442
     tools = mcp._tool_manager._tools
-    assert len(tools) == 415
+    assert len(tools) == 442
     expected_tools = {
         # Example tools
         "hello", "add",
@@ -219,5 +219,20 @@ def test_server_has_tools():
         "stripe_create_webhook_endpoint", "stripe_get_webhook_endpoint",
         "stripe_update_webhook_endpoint", "stripe_delete_webhook_endpoint",
         "stripe_list_webhook_endpoints",
+        # Google Sheets tools (27)
+        "sheets_create_spreadsheet", "sheets_get_spreadsheet",
+        "sheets_batch_update_spreadsheet",
+        "sheets_add_sheet", "sheets_delete_sheet",
+        "sheets_copy_sheet", "sheets_rename_sheet",
+        "sheets_read_values", "sheets_write_values", "sheets_append_values",
+        "sheets_clear_values", "sheets_batch_get_values",
+        "sheets_batch_update_values", "sheets_batch_clear_values",
+        "sheets_format_cells", "sheets_update_borders",
+        "sheets_merge_cells", "sheets_unmerge_cells", "sheets_auto_resize",
+        "sheets_add_named_range", "sheets_update_named_range",
+        "sheets_delete_named_range",
+        "sheets_set_basic_filter", "sheets_clear_basic_filter",
+        "sheets_add_chart",
+        "sheets_protect_range", "sheets_unprotect_range",
     }
     assert set(tools.keys()) == expected_tools

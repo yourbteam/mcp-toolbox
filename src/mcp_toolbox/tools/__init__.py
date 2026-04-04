@@ -13,6 +13,7 @@ from mcp_toolbox.tools import (
     keyvault_tool,
     o365_tool,
     sendgrid_tool,
+    sheets_tool,
     slack_tool,
     stripe_tool,
     teams_tool,
@@ -34,3 +35,4 @@ def register_all_tools(mcp: FastMCP) -> None:
     hubspot_tool.register_tools(mcp)
     jira_tool.register_tools(mcp)
     stripe_tool.register_tools(mcp)
+    sheets_tool.register_tools(mcp)
