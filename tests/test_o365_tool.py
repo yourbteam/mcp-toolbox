@@ -73,19 +73,27 @@ async def test_token_acquisition_failure():
 @pytest.mark.asyncio
 @respx.mock
 async def test_send_email(server):
-    respx.post(f"{GRAPH_BASE}/users/user@example.com/sendMail").mock(
+    route = respx.post(f"{GRAPH_BASE}/users/user@example.com/sendMail").mock(
         return_value=httpx.Response(202)
     )
     result = await server.call_tool("o365_send_email", {
         "to": "recipient@example.com", "subject": "Hello", "body": "<p>Hi</p>",
     })
     assert _get_result_data(result)["status"] == "success"
+    req = route.calls[0].request
+    body = json.loads(req.content)
+    assert body["message"]["subject"] == "Hello"
+    assert body["message"]["body"] == {"contentType": "HTML", "content": "<p>Hi</p>"}
+    assert body["message"]["toRecipients"] == [
+        {"emailAddress": {"address": "recipient@example.com"}}
+    ]
+    assert body["saveToSentItems"] is True
 
 
 @pytest.mark.asyncio
 @respx.mock
 async def test_send_email_with_attachment(server, tmp_path):
-    respx.post(f"{GRAPH_BASE}/users/user@example.com/sendMail").mock(
+    route = respx.post(f"{GRAPH_BASE}/users/user@example.com/sendMail").mock(
         return_value=httpx.Response(202)
     )
     test_file = tmp_path / "test.txt"
@@ -95,42 +103,64 @@ async def test_send_email_with_attachment(server, tmp_path):
         "attachments": [{"file_path": str(test_file)}],
     })
     assert _get_result_data(result)["status"] == "success"
+    req = route.calls[0].request
+    body = json.loads(req.content)
+    assert body["message"]["subject"] == "With file"
+    assert body["message"]["toRecipients"] == [
+        {"emailAddress": {"address": "r@example.com"}}
+    ]
+    assert len(body["message"]["attachments"]) == 1
+    att = body["message"]["attachments"][0]
+    assert att["@odata.type"] == "#microsoft.graph.fileAttachment"
+    assert att["name"] == "test.txt"
+    assert body["saveToSentItems"] is True
 
 
 @pytest.mark.asyncio
 @respx.mock
 async def test_reply(server):
-    respx.post(f"{GRAPH_BASE}/users/user@example.com/messages/msg_1/reply").mock(
+    route = respx.post(f"{GRAPH_BASE}/users/user@example.com/messages/msg_1/reply").mock(
         return_value=httpx.Response(202)
     )
     result = await server.call_tool("o365_reply", {
         "message_id": "msg_1", "comment": "Thanks!",
     })
     assert _get_result_data(result)["status"] == "success"
+    req = route.calls[0].request
+    body = json.loads(req.content)
+    assert body["comment"] == "Thanks!"
 
 
 @pytest.mark.asyncio
 @respx.mock
 async def test_reply_all(server):
-    respx.post(f"{GRAPH_BASE}/users/user@example.com/messages/msg_1/replyAll").mock(
+    route = respx.post(f"{GRAPH_BASE}/users/user@example.com/messages/msg_1/replyAll").mock(
         return_value=httpx.Response(202)
     )
     result = await server.call_tool("o365_reply_all", {
         "message_id": "msg_1", "comment": "Agreed!",
     })
     assert _get_result_data(result)["status"] == "success"
+    req = route.calls[0].request
+    body = json.loads(req.content)
+    assert body["comment"] == "Agreed!"
 
 
 @pytest.mark.asyncio
 @respx.mock
 async def test_forward(server):
-    respx.post(f"{GRAPH_BASE}/users/user@example.com/messages/msg_1/forward").mock(
+    route = respx.post(f"{GRAPH_BASE}/users/user@example.com/messages/msg_1/forward").mock(
         return_value=httpx.Response(202)
     )
     result = await server.call_tool("o365_forward", {
         "message_id": "msg_1", "to": "other@example.com",
     })
     assert _get_result_data(result)["status"] == "success"
+    req = route.calls[0].request
+    body = json.loads(req.content)
+    assert body["toRecipients"] == [
+        {"emailAddress": {"address": "other@example.com"}}
+    ]
 
 
 # --- Mailbox Reading ---
@@ -183,13 +213,16 @@ async def test_list_attachments(server):
 @pytest.mark.asyncio
 @respx.mock
 async def test_move_message(server):
-    respx.post(f"{GRAPH_BASE}/users/user@example.com/messages/msg_1/move").mock(
+    route = respx.post(f"{GRAPH_BASE}/users/user@example.com/messages/msg_1/move").mock(
         return_value=httpx.Response(200, json={"id": "msg_1"})
     )
     result = await server.call_tool("o365_move_message", {
         "message_id": "msg_1", "destination_folder": "Archive",
     })
     assert _get_result_data(result)["status"] == "success"
+    req = route.calls[0].request
+    body = json.loads(req.content)
+    assert body["destinationId"] == "Archive"
 
 
 # --- Draft Management ---
@@ -198,25 +231,32 @@ async def test_move_message(server):
 @pytest.mark.asyncio
 @respx.mock
 async def test_create_draft(server):
-    respx.post(f"{GRAPH_BASE}/users/user@example.com/messages").mock(
+    route = respx.post(f"{GRAPH_BASE}/users/user@example.com/messages").mock(
         return_value=httpx.Response(201, json={"id": "draft_1"})
     )
     result = await server.call_tool("o365_create_draft", {
         "subject": "Draft", "body": "<p>WIP</p>",
     })
     assert _get_result_data(result)["status"] == "success"
+    req = route.calls[0].request
+    body = json.loads(req.content)
+    assert body["subject"] == "Draft"
+    assert body["body"] == {"contentType": "HTML", "content": "<p>WIP</p>"}
 
 
 @pytest.mark.asyncio
 @respx.mock
 async def test_update_draft(server):
-    respx.patch(f"{GRAPH_BASE}/users/user@example.com/messages/draft_1").mock(
+    route = respx.patch(f"{GRAPH_BASE}/users/user@example.com/messages/draft_1").mock(
         return_value=httpx.Response(200, json={"id": "draft_1"})
     )
     result = await server.call_tool("o365_update_draft", {
         "message_id": "draft_1", "subject": "Updated Draft",
     })
     assert _get_result_data(result)["status"] == "success"
+    req = route.calls[0].request
+    body = json.loads(req.content)
+    assert body["subject"] == "Updated Draft"
 
 
 @pytest.mark.asyncio
@@ -228,7 +268,7 @@ async def test_update_draft_no_fields(server):
 @pytest.mark.asyncio
 @respx.mock
 async def test_add_draft_attachment(server, tmp_path):
-    respx.post(f"{GRAPH_BASE}/users/user@example.com/messages/draft_1/attachments").mock(
+    route = respx.post(f"{GRAPH_BASE}/users/user@example.com/messages/draft_1/attachments").mock(
         return_value=httpx.Response(201, json={"id": "att_1"})
     )
     test_file = tmp_path / "doc.pdf"
@@ -237,6 +277,12 @@ async def test_add_draft_attachment(server, tmp_path):
         "message_id": "draft_1", "file_path": str(test_file),
     })
     assert _get_result_data(result)["status"] == "success"
+    req = route.calls[0].request
+    body = json.loads(req.content)
+    assert body["@odata.type"] == "#microsoft.graph.fileAttachment"
+    assert body["name"] == "doc.pdf"
+    assert body["contentType"] == "application/octet-stream"
+    assert "contentBytes" in body
 
 
 @pytest.mark.asyncio
@@ -289,11 +335,14 @@ async def test_list_folders(server):
 @pytest.mark.asyncio
 @respx.mock
 async def test_create_folder(server):
-    respx.post(f"{GRAPH_BASE}/users/user@example.com/mailFolders").mock(
+    route = respx.post(f"{GRAPH_BASE}/users/user@example.com/mailFolders").mock(
         return_value=httpx.Response(201, json={"id": "f_new", "displayName": "Custom"})
     )
     result = await server.call_tool("o365_create_folder", {"name": "Custom"})
     assert _get_result_data(result)["status"] == "success"
+    req = route.calls[0].request
+    body = json.loads(req.content)
+    assert body["displayName"] == "Custom"
 
 
 @pytest.mark.asyncio

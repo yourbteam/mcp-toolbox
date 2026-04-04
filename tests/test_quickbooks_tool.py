@@ -80,12 +80,14 @@ async def test_api_error(server):
 @pytest.mark.asyncio
 @respx.mock
 async def test_create_customer(server):
-    respx.post(f"{BASE}/customer").mock(
+    route = respx.post(f"{BASE}/customer").mock(
         return_value=httpx.Response(200, json={"Customer": {"Id": "1"}}),
     )
     _ok(await server.call_tool(
         "qb_create_customer", {"display_name": "Test"},
     ))
+    body = json.loads(route.calls[0].request.content)
+    assert body["DisplayName"] == "Test"
 
 
 @pytest.mark.asyncio
@@ -100,12 +102,17 @@ async def test_get_customer(server):
 @pytest.mark.asyncio
 @respx.mock
 async def test_update_customer(server):
-    respx.post(f"{BASE}/customer").mock(
+    route = respx.post(f"{BASE}/customer").mock(
         return_value=httpx.Response(200, json={"Customer": {"Id": "1"}}),
     )
     _ok(await server.call_tool("qb_update_customer", {
         "customer_id": "1", "sync_token": "0", "display_name": "New",
     }))
+    body = json.loads(route.calls[0].request.content)
+    assert body["Id"] == "1"
+    assert body["SyncToken"] == "0"
+    assert body["sparse"] is True
+    assert body["DisplayName"] == "New"
 
 
 @pytest.mark.asyncio
@@ -131,7 +138,7 @@ async def test_query_customers(server):
 @pytest.mark.asyncio
 @respx.mock
 async def test_delete_customer(server):
-    respx.post(f"{BASE}/customer").mock(
+    route = respx.post(f"{BASE}/customer").mock(
         return_value=httpx.Response(200, json={
             "Customer": {"Id": "1", "Active": False},
         }),
@@ -139,6 +146,9 @@ async def test_delete_customer(server):
     _ok(await server.call_tool("qb_delete_customer", {
         "customer_id": "1", "sync_token": "0",
     }))
+    body = json.loads(route.calls[0].request.content)
+    assert body["Id"] == "1"
+    assert body["Active"] is False
 
 
 # --- Invoices ---
@@ -146,13 +156,18 @@ async def test_delete_customer(server):
 @pytest.mark.asyncio
 @respx.mock
 async def test_create_invoice(server):
-    respx.post(f"{BASE}/invoice").mock(
+    route = respx.post(f"{BASE}/invoice").mock(
         return_value=httpx.Response(200, json={"Invoice": {"Id": "1"}}),
     )
     _ok(await server.call_tool("qb_create_invoice", {
         "customer_id": "1",
         "line_items": [{"DetailType": "SalesItemLineDetail", "Amount": 100}],
     }))
+    body = json.loads(route.calls[0].request.content)
+    assert body["CustomerRef"] == {"value": "1"}
+    assert len(body["Line"]) == 1
+    assert body["Line"][0]["DetailType"] == "SalesItemLineDetail"
+    assert body["Line"][0]["Amount"] == 100
 
 
 @pytest.mark.asyncio
@@ -167,12 +182,17 @@ async def test_get_invoice(server):
 @pytest.mark.asyncio
 @respx.mock
 async def test_update_invoice(server):
-    respx.post(f"{BASE}/invoice").mock(
+    route = respx.post(f"{BASE}/invoice").mock(
         return_value=httpx.Response(200, json={"Invoice": {"Id": "1"}}),
     )
     _ok(await server.call_tool("qb_update_invoice", {
         "invoice_id": "1", "sync_token": "0", "due_date": "2026-05-01",
     }))
+    body = json.loads(route.calls[0].request.content)
+    assert body["Id"] == "1"
+    assert body["SyncToken"] == "0"
+    assert body["sparse"] is True
+    assert body["DueDate"] == "2026-05-01"
 
 
 @pytest.mark.asyncio
@@ -198,12 +218,15 @@ async def test_send_invoice(server):
 @pytest.mark.asyncio
 @respx.mock
 async def test_void_invoice(server):
-    respx.post(f"{BASE}/invoice").mock(
+    route = respx.post(f"{BASE}/invoice").mock(
         return_value=httpx.Response(200, json={"Invoice": {"Id": "1"}}),
     )
     _ok(await server.call_tool("qb_void_invoice", {
         "invoice_id": "1", "sync_token": "0",
     }))
+    body = json.loads(route.calls[0].request.content)
+    assert body["Id"] == "1"
+    assert body["SyncToken"] == "0"
 
 
 @pytest.mark.asyncio
@@ -222,12 +245,15 @@ async def test_delete_invoice(server):
 @pytest.mark.asyncio
 @respx.mock
 async def test_create_payment(server):
-    respx.post(f"{BASE}/payment").mock(
+    route = respx.post(f"{BASE}/payment").mock(
         return_value=httpx.Response(200, json={"Payment": {"Id": "1"}}),
     )
     _ok(await server.call_tool("qb_create_payment", {
         "customer_id": "1", "total_amt": 150.0,
     }))
+    body = json.loads(route.calls[0].request.content)
+    assert body["CustomerRef"] == {"value": "1"}
+    assert body["TotalAmt"] == 150.0
 
 
 @pytest.mark.asyncio
@@ -277,12 +303,16 @@ async def test_delete_payment(server):
 @pytest.mark.asyncio
 @respx.mock
 async def test_create_item(server):
-    respx.post(f"{BASE}/item").mock(
+    route = respx.post(f"{BASE}/item").mock(
         return_value=httpx.Response(200, json={"Item": {"Id": "1"}}),
     )
     _ok(await server.call_tool("qb_create_item", {
         "name": "Service", "income_account_ref": "1",
     }))
+    body = json.loads(route.calls[0].request.content)
+    assert body["Name"] == "Service"
+    assert body["Type"] == "Service"
+    assert body["IncomeAccountRef"] == {"value": "1"}
 
 
 @pytest.mark.asyncio
@@ -297,12 +327,16 @@ async def test_get_item(server):
 @pytest.mark.asyncio
 @respx.mock
 async def test_update_item(server):
-    respx.post(f"{BASE}/item").mock(
+    route = respx.post(f"{BASE}/item").mock(
         return_value=httpx.Response(200, json={"Item": {"Id": "1"}}),
     )
     _ok(await server.call_tool("qb_update_item", {
         "item_id": "1", "sync_token": "0", "name": "Updated",
     }))
+    body = json.loads(route.calls[0].request.content)
+    assert body["Id"] == "1"
+    assert body["sparse"] is True
+    assert body["Name"] == "Updated"
 
 
 @pytest.mark.asyncio
@@ -343,13 +377,17 @@ async def test_query_accounts(server):
 @pytest.mark.asyncio
 @respx.mock
 async def test_create_bill(server):
-    respx.post(f"{BASE}/bill").mock(
+    route = respx.post(f"{BASE}/bill").mock(
         return_value=httpx.Response(200, json={"Bill": {"Id": "1"}}),
     )
     _ok(await server.call_tool("qb_create_bill", {
         "vendor_id": "1",
         "line_items": [{"DetailType": "AccountBasedExpenseLineDetail", "Amount": 200}],
     }))
+    body = json.loads(route.calls[0].request.content)
+    assert body["VendorRef"] == {"value": "1"}
+    assert len(body["Line"]) == 1
+    assert body["Line"][0]["Amount"] == 200
 
 
 @pytest.mark.asyncio
@@ -364,12 +402,15 @@ async def test_get_bill(server):
 @pytest.mark.asyncio
 @respx.mock
 async def test_update_bill(server):
-    respx.post(f"{BASE}/bill").mock(
+    route = respx.post(f"{BASE}/bill").mock(
         return_value=httpx.Response(200, json={"Bill": {"Id": "1"}}),
     )
     _ok(await server.call_tool("qb_update_bill", {
         "bill_id": "1", "sync_token": "0", "due_date": "2026-06-01",
     }))
+    body = json.loads(route.calls[0].request.content)
+    assert body["Id"] == "1"
+    assert body["DueDate"] == "2026-06-01"
 
 
 @pytest.mark.asyncio
@@ -388,12 +429,14 @@ async def test_query_bills(server):
 @pytest.mark.asyncio
 @respx.mock
 async def test_create_vendor(server):
-    respx.post(f"{BASE}/vendor").mock(
+    route = respx.post(f"{BASE}/vendor").mock(
         return_value=httpx.Response(200, json={"Vendor": {"Id": "1"}}),
     )
     _ok(await server.call_tool("qb_create_vendor", {
         "display_name": "Acme",
     }))
+    body = json.loads(route.calls[0].request.content)
+    assert body["DisplayName"] == "Acme"
 
 
 @pytest.mark.asyncio
@@ -408,12 +451,16 @@ async def test_get_vendor(server):
 @pytest.mark.asyncio
 @respx.mock
 async def test_update_vendor(server):
-    respx.post(f"{BASE}/vendor").mock(
+    route = respx.post(f"{BASE}/vendor").mock(
         return_value=httpx.Response(200, json={"Vendor": {"Id": "1"}}),
     )
     _ok(await server.call_tool("qb_update_vendor", {
         "vendor_id": "1", "sync_token": "0", "display_name": "New",
     }))
+    body = json.loads(route.calls[0].request.content)
+    assert body["Id"] == "1"
+    assert body["sparse"] is True
+    assert body["DisplayName"] == "New"
 
 
 @pytest.mark.asyncio
@@ -432,13 +479,16 @@ async def test_query_vendors(server):
 @pytest.mark.asyncio
 @respx.mock
 async def test_create_estimate(server):
-    respx.post(f"{BASE}/estimate").mock(
+    route = respx.post(f"{BASE}/estimate").mock(
         return_value=httpx.Response(200, json={"Estimate": {"Id": "1"}}),
     )
     _ok(await server.call_tool("qb_create_estimate", {
         "customer_id": "1",
         "line_items": [{"DetailType": "SalesItemLineDetail", "Amount": 50}],
     }))
+    body = json.loads(route.calls[0].request.content)
+    assert body["CustomerRef"] == {"value": "1"}
+    assert body["Line"][0]["Amount"] == 50
 
 
 @pytest.mark.asyncio
@@ -486,13 +536,16 @@ async def test_send_estimate(server):
 @pytest.mark.asyncio
 @respx.mock
 async def test_create_credit_memo(server):
-    respx.post(f"{BASE}/creditmemo").mock(
+    route = respx.post(f"{BASE}/creditmemo").mock(
         return_value=httpx.Response(200, json={"CreditMemo": {"Id": "1"}}),
     )
     _ok(await server.call_tool("qb_create_credit_memo", {
         "customer_id": "1",
         "line_items": [{"DetailType": "SalesItemLineDetail", "Amount": 25}],
     }))
+    body = json.loads(route.calls[0].request.content)
+    assert body["CustomerRef"] == {"value": "1"}
+    assert body["Line"][0]["Amount"] == 25
 
 
 @pytest.mark.asyncio
@@ -522,13 +575,17 @@ async def test_query_credit_memos(server):
 @pytest.mark.asyncio
 @respx.mock
 async def test_create_purchase(server):
-    respx.post(f"{BASE}/purchase").mock(
+    route = respx.post(f"{BASE}/purchase").mock(
         return_value=httpx.Response(200, json={"Purchase": {"Id": "1"}}),
     )
     _ok(await server.call_tool("qb_create_purchase", {
         "account_ref": "35", "payment_type": "Cash",
         "line_items": [{"DetailType": "AccountBasedExpenseLineDetail", "Amount": 25}],
     }))
+    body = json.loads(route.calls[0].request.content)
+    assert body["AccountRef"] == {"value": "35"}
+    assert body["PaymentType"] == "Cash"
+    assert body["Line"][0]["Amount"] == 25
 
 
 @pytest.mark.asyncio

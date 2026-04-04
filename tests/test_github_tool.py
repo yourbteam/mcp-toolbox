@@ -249,7 +249,7 @@ async def test_list_repo_languages(server):
 @pytest.mark.asyncio
 @respx.mock
 async def test_create_issue(server):
-    respx.post(
+    route = respx.post(
         f"{BASE}/repos/owner/repo/issues"
     ).mock(
         return_value=httpx.Response(
@@ -257,8 +257,18 @@ async def test_create_issue(server):
         ),
     )
     _ok(await server.call_tool(
-        "github_create_issue", {"title": "Bug"},
+        "github_create_issue",
+        {
+            "title": "Bug",
+            "body": "It broke",
+            "labels": ["bug", "urgent"],
+        },
     ))
+    req = route.calls[0].request
+    body = json.loads(req.content)
+    assert body["title"] == "Bug"
+    assert body["body"] == "It broke"
+    assert body["labels"] == ["bug", "urgent"]
 
 
 @pytest.mark.asyncio
@@ -379,7 +389,7 @@ async def test_list_issue_comments(server):
 @pytest.mark.asyncio
 @respx.mock
 async def test_create_issue_comment(server):
-    respx.post(
+    route = respx.post(
         f"{BASE}/repos/owner/repo"
         "/issues/1/comments"
     ).mock(
@@ -391,6 +401,9 @@ async def test_create_issue_comment(server):
         "github_create_issue_comment",
         {"issue_number": 1, "body": "Hello"},
     ))
+    req = route.calls[0].request
+    body = json.loads(req.content)
+    assert body["body"] == "Hello"
 
 
 @pytest.mark.asyncio
@@ -488,7 +501,7 @@ async def test_get_pull(server):
 @pytest.mark.asyncio
 @respx.mock
 async def test_create_pull(server):
-    respx.post(
+    route = respx.post(
         f"{BASE}/repos/owner/repo/pulls"
     ).mock(
         return_value=httpx.Response(
@@ -503,6 +516,11 @@ async def test_create_pull(server):
             "base": "main",
         },
     ))
+    req = route.calls[0].request
+    body = json.loads(req.content)
+    assert body["title"] == "Fix"
+    assert body["head"] == "feature"
+    assert body["base"] == "main"
 
 
 @pytest.mark.asyncio
@@ -641,7 +659,7 @@ async def test_get_branch(server):
 @pytest.mark.asyncio
 @respx.mock
 async def test_create_branch(server):
-    respx.post(
+    route = respx.post(
         f"{BASE}/repos/owner/repo/git/refs"
     ).mock(
         return_value=httpx.Response(
@@ -652,6 +670,10 @@ async def test_create_branch(server):
         "github_create_branch",
         {"branch": "feat", "sha": "abc123"},
     ))
+    req = route.calls[0].request
+    body = json.loads(req.content)
+    assert body["ref"] == "refs/heads/feat"
+    assert body["sha"] == "abc123"
 
 
 @pytest.mark.asyncio
@@ -774,7 +796,7 @@ async def test_get_release(server):
 @pytest.mark.asyncio
 @respx.mock
 async def test_create_release(server):
-    respx.post(
+    route = respx.post(
         f"{BASE}/repos/owner/repo/releases"
     ).mock(
         return_value=httpx.Response(
@@ -785,6 +807,9 @@ async def test_create_release(server):
         "github_create_release",
         {"tag_name": "v1.0.0"},
     ))
+    req = route.calls[0].request
+    body = json.loads(req.content)
+    assert body["tag_name"] == "v1.0.0"
 
 
 @pytest.mark.asyncio

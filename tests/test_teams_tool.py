@@ -97,37 +97,56 @@ async def test_get_team(server):
 @pytest.mark.asyncio
 @respx.mock
 async def test_create_team(server):
-    respx.post(f"{GRAPH_BASE}/teams").mock(return_value=httpx.Response(202))
+    route = respx.post(f"{GRAPH_BASE}/teams").mock(return_value=httpx.Response(202))
     result = await server.call_tool("teams_create_team", {
         "display_name": "New Team", "owner_id": "user_1",
     })
     assert _get_result_data(result)["status"] == "success"
+    req = route.calls[0].request
+    body = json.loads(req.content)
+    assert body["displayName"] == "New Team"
+    assert body["visibility"] == "private"
+    assert body["template@odata.bind"] == (
+        "https://graph.microsoft.com/v1.0/teamsTemplates('standard')"
+    )
+    assert len(body["members"]) == 1
+    assert body["members"][0]["roles"] == ["owner"]
+    assert "users('user_1')" in body["members"][0]["user@odata.bind"]
 
 
 @pytest.mark.asyncio
 @respx.mock
 async def test_update_team(server):
-    respx.patch(f"{GRAPH_BASE}/teams/t1").mock(return_value=httpx.Response(204))
+    route = respx.patch(f"{GRAPH_BASE}/teams/t1").mock(return_value=httpx.Response(204))
     result = await server.call_tool("teams_update_team", {
         "team_id": "t1", "display_name": "Renamed",
     })
     assert _get_result_data(result)["status"] == "success"
+    req = route.calls[0].request
+    body = json.loads(req.content)
+    assert body["displayName"] == "Renamed"
 
 
 @pytest.mark.asyncio
 @respx.mock
 async def test_archive_team(server):
-    respx.post(f"{GRAPH_BASE}/teams/t1/archive").mock(return_value=httpx.Response(202))
+    route = respx.post(f"{GRAPH_BASE}/teams/t1/archive").mock(return_value=httpx.Response(202))
     result = await server.call_tool("teams_archive_team", {"team_id": "t1"})
     assert _get_result_data(result)["status"] == "success"
+    req = route.calls[0].request
+    body = json.loads(req.content)
+    assert body == {}
 
 
 @pytest.mark.asyncio
 @respx.mock
 async def test_unarchive_team(server):
-    respx.post(f"{GRAPH_BASE}/teams/t1/unarchive").mock(return_value=httpx.Response(202))
+    route = respx.post(f"{GRAPH_BASE}/teams/t1/unarchive").mock(return_value=httpx.Response(202))
     result = await server.call_tool("teams_unarchive_team", {"team_id": "t1"})
     assert _get_result_data(result)["status"] == "success"
+    req = route.calls[0].request
+    body = json.loads(req.content)
+    assert body == {}
 
 
 @pytest.mark.asyncio
@@ -143,11 +162,16 @@ async def test_list_members(server):
 @pytest.mark.asyncio
 @respx.mock
 async def test_add_member(server):
-    respx.post(f"{GRAPH_BASE}/teams/t1/members").mock(
+    route = respx.post(f"{GRAPH_BASE}/teams/t1/members").mock(
         return_value=httpx.Response(201, json={"id": "m_new"})
     )
     result = await server.call_tool("teams_add_member", {"team_id": "t1", "user_id": "u1"})
     assert _get_result_data(result)["status"] == "success"
+    req = route.calls[0].request
+    body = json.loads(req.content)
+    assert body["@odata.type"] == "#microsoft.graph.aadUserConversationMember"
+    assert body["roles"] == []
+    assert "users('u1')" in body["user@odata.bind"]
 
 
 @pytest.mark.asyncio
@@ -186,23 +210,30 @@ async def test_get_channel(server):
 @pytest.mark.asyncio
 @respx.mock
 async def test_create_channel(server):
-    respx.post(f"{GRAPH_BASE}/teams/t1/channels").mock(
+    route = respx.post(f"{GRAPH_BASE}/teams/t1/channels").mock(
         return_value=httpx.Response(201, json={"id": "c_new"})
     )
     result = await server.call_tool("teams_create_channel", {
         "team_id": "t1", "display_name": "General",
     })
     assert _get_result_data(result)["status"] == "success"
+    req = route.calls[0].request
+    body = json.loads(req.content)
+    assert body["displayName"] == "General"
+    assert body["membershipType"] == "standard"
 
 
 @pytest.mark.asyncio
 @respx.mock
 async def test_update_channel(server):
-    respx.patch(f"{GRAPH_BASE}/teams/t1/channels/c1").mock(return_value=httpx.Response(204))
+    route = respx.patch(f"{GRAPH_BASE}/teams/t1/channels/c1").mock(return_value=httpx.Response(204))
     result = await server.call_tool("teams_update_channel", {
         "team_id": "t1", "channel_id": "c1", "display_name": "Renamed",
     })
     assert _get_result_data(result)["status"] == "success"
+    req = route.calls[0].request
+    body = json.loads(req.content)
+    assert body["displayName"] == "Renamed"
 
 
 @pytest.mark.asyncio
@@ -256,11 +287,14 @@ async def test_list_message_replies(server):
 @respx.mock
 async def test_send_webhook_message(server):
     webhook_url = "https://prod-123.westus.logic.azure.com/workflows/abc/triggers/manual"
-    respx.post(webhook_url).mock(return_value=httpx.Response(200))
+    route = respx.post(webhook_url).mock(return_value=httpx.Response(200))
     result = await server.call_tool("teams_send_webhook_message", {
         "webhook_url": webhook_url, "text": "Hello Teams!",
     })
     assert _get_result_data(result)["status"] == "success"
+    req = route.calls[0].request
+    body = json.loads(req.content)
+    assert body["text"] == "Hello Teams!"
 
 
 @pytest.mark.asyncio
@@ -277,7 +311,7 @@ async def test_send_channel_message_delegated_fails(server):
 @pytest.mark.asyncio
 @respx.mock
 async def test_create_meeting(server):
-    respx.post(f"{GRAPH_BASE}/users/user@example.com/onlineMeetings").mock(
+    route = respx.post(f"{GRAPH_BASE}/users/user@example.com/onlineMeetings").mock(
         return_value=httpx.Response(201, json={"id": "m1", "joinWebUrl": "https://..."})
     )
     result = await server.call_tool("teams_create_meeting", {
@@ -285,6 +319,11 @@ async def test_create_meeting(server):
         "end_time": "2025-06-15T10:30:00Z",
     })
     assert _get_result_data(result)["status"] == "success"
+    req = route.calls[0].request
+    body = json.loads(req.content)
+    assert body["subject"] == "Standup"
+    assert body["startDateTime"] == "2025-06-15T10:00:00Z"
+    assert body["endDateTime"] == "2025-06-15T10:30:00Z"
 
 
 @pytest.mark.asyncio
@@ -335,11 +374,14 @@ async def test_get_presence(server):
 @pytest.mark.asyncio
 @respx.mock
 async def test_get_presence_bulk(server):
-    respx.post(f"{GRAPH_BASE}/communications/getPresencesByUserId").mock(
+    route = respx.post(f"{GRAPH_BASE}/communications/getPresencesByUserId").mock(
         return_value=httpx.Response(200, json={"value": [{"id": "u1"}]})
     )
     result = await server.call_tool("teams_get_presence_bulk", {"user_ids": ["u1", "u2"]})
     assert _get_result_data(result)["status"] == "success"
+    req = route.calls[0].request
+    body = json.loads(req.content)
+    assert body["ids"] == ["u1", "u2"]
 
 
 @pytest.mark.asyncio

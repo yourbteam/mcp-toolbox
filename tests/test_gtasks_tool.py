@@ -99,34 +99,40 @@ async def test_get_tasklist(server):
 @pytest.mark.asyncio
 @respx.mock
 async def test_insert_tasklist(server):
-    respx.post(f"{BASE}/users/@me/lists").mock(
+    route = respx.post(f"{BASE}/users/@me/lists").mock(
         return_value=httpx.Response(200, json={"id": "tl2", "title": "New"}),
     )
     _ok(await server.call_tool(
         "gtasks_insert_tasklist", {"title": "New"},
     ))
+    body = json.loads(route.calls[0].request.content)
+    assert body["title"] == "New"
 
 
 @pytest.mark.asyncio
 @respx.mock
 async def test_update_tasklist(server):
-    respx.put(f"{BASE}/users/@me/lists/tl1").mock(
+    route = respx.put(f"{BASE}/users/@me/lists/tl1").mock(
         return_value=httpx.Response(200, json={"id": "tl1"}),
     )
     _ok(await server.call_tool(
         "gtasks_update_tasklist", {"tasklist_id": "tl1", "title": "Updated"},
     ))
+    body = json.loads(route.calls[0].request.content)
+    assert body["title"] == "Updated"
 
 
 @pytest.mark.asyncio
 @respx.mock
 async def test_patch_tasklist(server):
-    respx.patch(f"{BASE}/users/@me/lists/tl1").mock(
+    route = respx.patch(f"{BASE}/users/@me/lists/tl1").mock(
         return_value=httpx.Response(200, json={"id": "tl1"}),
     )
     _ok(await server.call_tool(
         "gtasks_patch_tasklist", {"tasklist_id": "tl1", "title": "Patched"},
     ))
+    body = json.loads(route.calls[0].request.content)
+    assert body["title"] == "Patched"
 
 
 @pytest.mark.asyncio
@@ -174,34 +180,60 @@ async def test_get_task(server):
 @pytest.mark.asyncio
 @respx.mock
 async def test_insert_task(server):
-    respx.post(f"{BASE}/lists/@default/tasks").mock(
+    route = respx.post(f"{BASE}/lists/@default/tasks").mock(
         return_value=httpx.Response(200, json={"id": "t2"}),
     )
     _ok(await server.call_tool(
         "gtasks_insert_task", {"title": "New task"},
     ))
+    body = json.loads(route.calls[0].request.content)
+    assert body["title"] == "New task"
+
+
+@pytest.mark.asyncio
+@respx.mock
+async def test_insert_task_with_parent_and_notes(server):
+    route = respx.post(f"{BASE}/lists/@default/tasks").mock(
+        return_value=httpx.Response(200, json={"id": "t3"}),
+    )
+    _ok(await server.call_tool("gtasks_insert_task", {
+        "title": "Sub task", "notes": "Details here",
+        "parent": "t1", "previous": "t2",
+    }))
+    req = route.calls[0].request
+    body = json.loads(req.content)
+    assert body["title"] == "Sub task"
+    assert body["notes"] == "Details here"
+    assert req.url.params["parent"] == "t1"
+    assert req.url.params["previous"] == "t2"
 
 
 @pytest.mark.asyncio
 @respx.mock
 async def test_update_task(server):
-    respx.put(f"{BASE}/lists/@default/tasks/t1").mock(
+    route = respx.put(f"{BASE}/lists/@default/tasks/t1").mock(
         return_value=httpx.Response(200, json={"id": "t1"}),
     )
     _ok(await server.call_tool("gtasks_update_task", {
         "task_id": "t1", "title": "Updated",
     }))
+    body = json.loads(route.calls[0].request.content)
+    assert body["id"] == "t1"
+    assert body["title"] == "Updated"
 
 
 @pytest.mark.asyncio
 @respx.mock
 async def test_patch_task(server):
-    respx.patch(f"{BASE}/lists/@default/tasks/t1").mock(
+    route = respx.patch(f"{BASE}/lists/@default/tasks/t1").mock(
         return_value=httpx.Response(200, json={"id": "t1"}),
     )
     _ok(await server.call_tool("gtasks_patch_task", {
         "task_id": "t1", "status": "completed",
     }))
+    body = json.loads(route.calls[0].request.content)
+    assert body["status"] == "completed"
+    assert "title" not in body  # only provided fields
 
 
 @pytest.mark.asyncio
@@ -224,12 +256,14 @@ async def test_delete_task(server):
 @pytest.mark.asyncio
 @respx.mock
 async def test_move_task(server):
-    respx.post(f"{BASE}/lists/@default/tasks/t1/move").mock(
+    route = respx.post(f"{BASE}/lists/@default/tasks/t1/move").mock(
         return_value=httpx.Response(200, json={"id": "t1"}),
     )
     _ok(await server.call_tool("gtasks_move_task", {
         "task_id": "t1", "previous": "t0",
     }))
+    req = route.calls[0].request
+    assert req.url.params["previous"] == "t0"
 
 
 @pytest.mark.asyncio

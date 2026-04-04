@@ -28,7 +28,7 @@ def server():
 @pytest.mark.asyncio
 @respx.mock
 async def test_request_get_json(server):
-    respx.get("https://api.example.com/users").mock(
+    route = respx.get("https://api.example.com/users").mock(
         return_value=httpx.Response(200, json={"users": []})
     )
     result = await server.call_tool("http_request", {
@@ -38,12 +38,17 @@ async def test_request_get_json(server):
     assert data["status_code"] == 200
     assert data["body"] == {"users": []}
     assert data["truncated"] is False
+    # Contract: GET with no body
+    req = route.calls[0].request
+    assert req.method == "GET"
+    assert str(req.url) == "https://api.example.com/users"
+    assert req.content == b""
 
 
 @pytest.mark.asyncio
 @respx.mock
 async def test_request_post_json_body(server):
-    respx.post("https://api.example.com/items").mock(
+    route = respx.post("https://api.example.com/items").mock(
         return_value=httpx.Response(201, json={"id": "123"})
     )
     result = await server.call_tool("http_request", {
@@ -52,12 +57,17 @@ async def test_request_post_json_body(server):
     })
     data = _get_result_data(result)
     assert data["status_code"] == 201
+    # Contract: JSON body sent correctly
+    req = route.calls[0].request
+    body = json.loads(req.content)
+    assert body == {"name": "test"}
+    assert req.headers["content-type"] == "application/json"
 
 
 @pytest.mark.asyncio
 @respx.mock
 async def test_request_with_auth_header(server):
-    respx.get("https://api.example.com/me").mock(
+    route = respx.get("https://api.example.com/me").mock(
         return_value=httpx.Response(200, json={"name": "John"})
     )
     result = await server.call_tool("http_request", {
@@ -65,12 +75,15 @@ async def test_request_with_auth_header(server):
         "auth_header": "Bearer test-token",
     })
     assert _get_result_data(result)["status_code"] == 200
+    # Contract: Authorization header sent
+    req = route.calls[0].request
+    assert req.headers["authorization"] == "Bearer test-token"
 
 
 @pytest.mark.asyncio
 @respx.mock
 async def test_request_with_params(server):
-    respx.get("https://api.example.com/search").mock(
+    route = respx.get("https://api.example.com/search").mock(
         return_value=httpx.Response(200, json={"results": []})
     )
     result = await server.call_tool("http_request", {
@@ -78,6 +91,10 @@ async def test_request_with_params(server):
         "params": {"q": "test", "limit": "10"},
     })
     assert _get_result_data(result)["status_code"] == 200
+    # Contract: query params appended to URL
+    req = route.calls[0].request
+    assert "q=test" in str(req.url)
+    assert "limit=10" in str(req.url)
 
 
 @pytest.mark.asyncio
@@ -108,7 +125,7 @@ async def test_request_both_bodies(server):
 @pytest.mark.asyncio
 @respx.mock
 async def test_request_text_response(server):
-    respx.get("https://example.com").mock(
+    route = respx.get("https://example.com").mock(
         return_value=httpx.Response(
             200, text="Hello World",
             headers={"content-type": "text/plain"},
@@ -119,12 +136,16 @@ async def test_request_text_response(server):
     })
     data = _get_result_data(result)
     assert data["body"] == "Hello World"
+    # Contract: GET with no body
+    req = route.calls[0].request
+    assert req.method == "GET"
+    assert req.content == b""
 
 
 @pytest.mark.asyncio
 @respx.mock
 async def test_request_binary_response(server):
-    respx.get("https://example.com/img.png").mock(
+    route = respx.get("https://example.com/img.png").mock(
         return_value=httpx.Response(
             200, content=b"\x89PNG\r\n",
             headers={"content-type": "image/png"},
@@ -135,12 +156,16 @@ async def test_request_binary_response(server):
     })
     data = _get_result_data(result)
     assert "Binary content" in data["body"]
+    # Contract: GET request with no body
+    req = route.calls[0].request
+    assert req.method == "GET"
+    assert str(req.url) == "https://example.com/img.png"
 
 
 @pytest.mark.asyncio
 @respx.mock
 async def test_request_truncation(server):
-    respx.get("https://example.com/big").mock(
+    route = respx.get("https://example.com/big").mock(
         return_value=httpx.Response(
             200, text="x" * 1000,
             headers={"content-type": "text/plain"},
@@ -153,12 +178,16 @@ async def test_request_truncation(server):
     data = _get_result_data(result)
     assert data["truncated"] is True
     assert len(data["body"]) == 100
+    # Contract: request was a simple GET
+    req = route.calls[0].request
+    assert req.method == "GET"
+    assert str(req.url) == "https://example.com/big"
 
 
 @pytest.mark.asyncio
 @respx.mock
 async def test_request_4xx_returned_not_error(server):
-    respx.get("https://api.example.com/missing").mock(
+    route = respx.get("https://api.example.com/missing").mock(
         return_value=httpx.Response(404, json={"error": "not found"})
     )
     result = await server.call_tool("http_request", {
@@ -166,6 +195,10 @@ async def test_request_4xx_returned_not_error(server):
     })
     data = _get_result_data(result)
     assert data["status_code"] == 404
+    # Contract: request was a simple GET
+    req = route.calls[0].request
+    assert req.method == "GET"
+    assert str(req.url) == "https://api.example.com/missing"
 
 
 # --- http_request_form ---
@@ -174,7 +207,7 @@ async def test_request_4xx_returned_not_error(server):
 @pytest.mark.asyncio
 @respx.mock
 async def test_form_post(server):
-    respx.post("https://oauth.example.com/token").mock(
+    route = respx.post("https://oauth.example.com/token").mock(
         return_value=httpx.Response(200, json={"access_token": "abc"})
     )
     result = await server.call_tool("http_request_form", {
@@ -183,6 +216,12 @@ async def test_form_post(server):
     })
     data = _get_result_data(result)
     assert data["status_code"] == 200
+    # Contract: form-encoded body sent correctly
+    req = route.calls[0].request
+    form_data = dict(httpx.QueryParams(req.content.decode()))
+    assert form_data["grant_type"] == "client_credentials"
+    assert form_data["client_id"] == "xxx"
+    assert "application/x-www-form-urlencoded" in req.headers["content-type"]
 
 
 @pytest.mark.asyncio
@@ -200,7 +239,7 @@ async def test_form_empty_data(server):
 @respx.mock
 async def test_download_file(server, tmp_path):
     content = b"PDF file content here"
-    respx.get("https://example.com/report.pdf").mock(
+    route = respx.get("https://example.com/report.pdf").mock(
         return_value=httpx.Response(
             200, content=content,
             headers={"content-type": "application/pdf"},
@@ -215,6 +254,10 @@ async def test_download_file(server, tmp_path):
     assert data["status_code"] == 200
     assert data["file_size_bytes"] == len(content)
     assert Path(save_path).read_bytes() == content
+    # Contract: GET request to correct URL
+    req = route.calls[0].request
+    assert req.method == "GET"
+    assert str(req.url) == "https://example.com/report.pdf"
 
 
 @pytest.mark.asyncio
@@ -249,7 +292,7 @@ async def test_download_parent_missing(server):
 @pytest.mark.asyncio
 @respx.mock
 async def test_download_http_error(server, tmp_path):
-    respx.get("https://example.com/missing").mock(
+    route = respx.get("https://example.com/missing").mock(
         return_value=httpx.Response(404, text="Not Found")
     )
     save_path = str(tmp_path / "file.txt")
@@ -259,6 +302,10 @@ async def test_download_http_error(server, tmp_path):
     })
     data = _get_result_data(result)
     assert data["status_code"] == 404
+    # Contract: GET request to correct URL
+    req = route.calls[0].request
+    assert req.method == "GET"
+    assert str(req.url) == "https://example.com/missing"
 
 
 # --- http_upload ---
@@ -269,7 +316,7 @@ async def test_download_http_error(server, tmp_path):
 async def test_upload_file(server, tmp_path):
     test_file = tmp_path / "test.txt"
     test_file.write_text("Hello upload")
-    respx.post("https://api.example.com/upload").mock(
+    route = respx.post("https://api.example.com/upload").mock(
         return_value=httpx.Response(200, json={"id": "f123"})
     )
     result = await server.call_tool("http_upload", {
@@ -278,6 +325,14 @@ async def test_upload_file(server, tmp_path):
     })
     data = _get_result_data(result)
     assert data["status_code"] == 200
+    # Contract: multipart upload with correct field name and file content
+    req = route.calls[0].request
+    assert req.method == "POST"
+    assert "multipart/form-data" in req.headers["content-type"]
+    body_str = req.content.decode("utf-8", errors="replace")
+    assert "Hello upload" in body_str
+    assert 'name="file"' in body_str
+    assert 'filename="test.txt"' in body_str
 
 
 @pytest.mark.asyncio
@@ -294,7 +349,7 @@ async def test_upload_file_not_found(server):
 async def test_upload_with_extra_fields(server, tmp_path):
     test_file = tmp_path / "img.jpg"
     test_file.write_bytes(b"\xff\xd8\xff")
-    respx.post("https://api.example.com/process").mock(
+    route = respx.post("https://api.example.com/process").mock(
         return_value=httpx.Response(200, json={"result": "ok"})
     )
     result = await server.call_tool("http_upload", {
@@ -305,3 +360,11 @@ async def test_upload_with_extra_fields(server, tmp_path):
     })
     data = _get_result_data(result)
     assert data["status_code"] == 200
+    # Contract: multipart upload with custom field name and extra fields
+    req = route.calls[0].request
+    assert "multipart/form-data" in req.headers["content-type"]
+    body_str = req.content.decode("utf-8", errors="replace")
+    assert 'name="image"' in body_str
+    assert 'filename="img.jpg"' in body_str
+    assert 'name="size"' in body_str
+    assert "auto" in body_str

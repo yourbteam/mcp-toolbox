@@ -94,7 +94,7 @@ async def test_api_error_400(server):
 @pytest.mark.asyncio
 @respx.mock
 async def test_create_page_under_page(server):
-    respx.post(f"{BASE}/pages").mock(
+    route = respx.post(f"{BASE}/pages").mock(
         return_value=httpx.Response(
             200, json={"id": "page-1", "object": "page"}
         )
@@ -109,12 +109,16 @@ async def test_create_page_under_page(server):
     ))
     assert r["status"] == "success"
     assert r["data"]["id"] == "page-1"
+    req = route.calls[0].request
+    body = json.loads(req.content)
+    assert body["parent"] == {"page_id": "parent-1"}
+    assert "title" in body["properties"]
 
 
 @pytest.mark.asyncio
 @respx.mock
 async def test_create_page_under_database(server):
-    respx.post(f"{BASE}/pages").mock(
+    route = respx.post(f"{BASE}/pages").mock(
         return_value=httpx.Response(
             200, json={"id": "page-2", "object": "page"}
         )
@@ -128,6 +132,10 @@ async def test_create_page_under_database(server):
         },
     ))
     assert r["status"] == "success"
+    req = route.calls[0].request
+    body = json.loads(req.content)
+    assert body["parent"] == {"database_id": "db-1"}
+    assert "Name" in body["properties"]
 
 
 @pytest.mark.asyncio
@@ -335,7 +343,7 @@ async def test_query_database(server):
 @pytest.mark.asyncio
 @respx.mock
 async def test_query_database_with_filter(server):
-    respx.post(f"{BASE}/databases/db-1/query").mock(
+    route = respx.post(f"{BASE}/databases/db-1/query").mock(
         return_value=httpx.Response(
             200,
             json={
@@ -359,6 +367,11 @@ async def test_query_database_with_filter(server):
     assert r["count"] == 1
     assert r["has_more"] is True
     assert r["next_cursor"] == "cursor-abc"
+    req = route.calls[0].request
+    body = json.loads(req.content)
+    assert body["filter"]["property"] == "Status"
+    assert body["filter"]["select"] == {"equals": "Done"}
+    assert body["page_size"] == 1
 
 
 @pytest.mark.asyncio
@@ -453,7 +466,7 @@ async def test_get_block_children_paginated(server):
 @pytest.mark.asyncio
 @respx.mock
 async def test_append_block_children(server):
-    respx.patch(f"{BASE}/blocks/blk-1/children").mock(
+    route = respx.patch(f"{BASE}/blocks/blk-1/children").mock(
         return_value=httpx.Response(
             200,
             json={
@@ -485,12 +498,18 @@ async def test_append_block_children(server):
         },
     ))
     assert r["status"] == "success"
+    req = route.calls[0].request
+    body = json.loads(req.content)
+    assert len(body["children"]) == 1
+    assert body["children"][0]["type"] == "paragraph"
+    rich = body["children"][0]["paragraph"]["rich_text"]
+    assert rich[0]["text"]["content"] == "Hi"
 
 
 @pytest.mark.asyncio
 @respx.mock
 async def test_update_block(server):
-    respx.patch(f"{BASE}/blocks/blk-1").mock(
+    route = respx.patch(f"{BASE}/blocks/blk-1").mock(
         return_value=httpx.Response(
             200,
             json={
@@ -515,6 +534,10 @@ async def test_update_block(server):
         },
     ))
     assert r["status"] == "success"
+    req = route.calls[0].request
+    body = json.loads(req.content)
+    assert "paragraph" in body
+    assert body["paragraph"]["rich_text"][0]["text"]["content"] == "Updated"
 
 
 @pytest.mark.asyncio

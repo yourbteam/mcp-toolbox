@@ -79,11 +79,15 @@ async def test_api_error_429(server):
 @pytest.mark.asyncio
 @respx.mock
 async def test_set_secret(server):
-    respx.put(f"{VAULT_BASE}/secrets/my-secret").mock(
+    route = respx.put(f"{VAULT_BASE}/secrets/my-secret").mock(
         return_value=httpx.Response(200, json={"id": "...", "value": "val"})
     )
     result = await server.call_tool("kv_set_secret", {"name": "my-secret", "value": "val"})
     assert _get_result_data(result)["status"] == "success"
+    req = route.calls[0].request
+    body = json.loads(req.content)
+    assert body["value"] == "val"
+    assert body["attributes"]["enabled"] is True
 
 
 @pytest.mark.asyncio
@@ -119,13 +123,16 @@ async def test_list_secret_versions(server):
 @pytest.mark.asyncio
 @respx.mock
 async def test_update_secret(server):
-    respx.patch(f"{VAULT_BASE}/secrets/my-secret/v1").mock(
+    route = respx.patch(f"{VAULT_BASE}/secrets/my-secret/v1").mock(
         return_value=httpx.Response(200, json={"id": "..."})
     )
     result = await server.call_tool("kv_update_secret", {
         "name": "my-secret", "version": "v1", "enabled": False,
     })
     assert _get_result_data(result)["status"] == "success"
+    req = route.calls[0].request
+    body = json.loads(req.content)
+    assert body["attributes"]["enabled"] is False
 
 
 @pytest.mark.asyncio
@@ -181,11 +188,14 @@ async def test_backup_secret(server):
 @pytest.mark.asyncio
 @respx.mock
 async def test_restore_secret(server):
-    respx.post(f"{VAULT_BASE}/secrets/restore").mock(
+    route = respx.post(f"{VAULT_BASE}/secrets/restore").mock(
         return_value=httpx.Response(200, json={"id": "..."})
     )
     result = await server.call_tool("kv_restore_secret", {"value": "backup-blob"})
     assert _get_result_data(result)["status"] == "success"
+    req = route.calls[0].request
+    body = json.loads(req.content)
+    assert body["value"] == "backup-blob"
 
 
 # --- Keys ---
@@ -194,11 +204,14 @@ async def test_restore_secret(server):
 @pytest.mark.asyncio
 @respx.mock
 async def test_create_key(server):
-    respx.post(f"{VAULT_BASE}/keys/my-key/create").mock(
+    route = respx.post(f"{VAULT_BASE}/keys/my-key/create").mock(
         return_value=httpx.Response(200, json={"key": {"kid": "..."}})
     )
     result = await server.call_tool("kv_create_key", {"name": "my-key", "kty": "RSA"})
     assert _get_result_data(result)["status"] == "success"
+    req = route.calls[0].request
+    body = json.loads(req.content)
+    assert body["kty"] == "RSA"
 
 
 @pytest.mark.asyncio
@@ -234,13 +247,16 @@ async def test_list_key_versions(server):
 @pytest.mark.asyncio
 @respx.mock
 async def test_update_key(server):
-    respx.patch(f"{VAULT_BASE}/keys/my-key/v1").mock(
+    route = respx.patch(f"{VAULT_BASE}/keys/my-key/v1").mock(
         return_value=httpx.Response(200, json={"key": {"kid": "..."}})
     )
     result = await server.call_tool("kv_update_key", {
         "name": "my-key", "version": "v1", "enabled": False,
     })
     assert _get_result_data(result)["status"] == "success"
+    req = route.calls[0].request
+    body = json.loads(req.content)
+    assert body["attributes"]["enabled"] is False
 
 
 @pytest.mark.asyncio
@@ -296,43 +312,55 @@ async def test_rotate_key(server):
 @pytest.mark.asyncio
 @respx.mock
 async def test_encrypt(server):
-    respx.post(f"{VAULT_BASE}/keys/my-key/v1/encrypt").mock(
+    route = respx.post(f"{VAULT_BASE}/keys/my-key/v1/encrypt").mock(
         return_value=httpx.Response(200, json={"value": "encrypted"})
     )
     result = await server.call_tool("kv_encrypt", {
         "name": "my-key", "version": "v1", "algorithm": "RSA-OAEP", "value": "cGxhaW4=",
     })
     assert _get_result_data(result)["status"] == "success"
+    req = route.calls[0].request
+    body = json.loads(req.content)
+    assert body["alg"] == "RSA-OAEP"
+    assert body["value"] == "cGxhaW4="
 
 
 @pytest.mark.asyncio
 @respx.mock
 async def test_decrypt(server):
-    respx.post(f"{VAULT_BASE}/keys/my-key/v1/decrypt").mock(
+    route = respx.post(f"{VAULT_BASE}/keys/my-key/v1/decrypt").mock(
         return_value=httpx.Response(200, json={"value": "decrypted"})
     )
     result = await server.call_tool("kv_decrypt", {
         "name": "my-key", "version": "v1", "algorithm": "RSA-OAEP", "value": "enc=",
     })
     assert _get_result_data(result)["status"] == "success"
+    req = route.calls[0].request
+    body = json.loads(req.content)
+    assert body["alg"] == "RSA-OAEP"
+    assert body["value"] == "enc="
 
 
 @pytest.mark.asyncio
 @respx.mock
 async def test_sign(server):
-    respx.post(f"{VAULT_BASE}/keys/my-key/v1/sign").mock(
+    route = respx.post(f"{VAULT_BASE}/keys/my-key/v1/sign").mock(
         return_value=httpx.Response(200, json={"value": "sig"})
     )
     result = await server.call_tool("kv_sign", {
         "name": "my-key", "version": "v1", "algorithm": "RS256", "value": "digest",
     })
     assert _get_result_data(result)["status"] == "success"
+    req = route.calls[0].request
+    body = json.loads(req.content)
+    assert body["alg"] == "RS256"
+    assert body["value"] == "digest"
 
 
 @pytest.mark.asyncio
 @respx.mock
 async def test_verify(server):
-    respx.post(f"{VAULT_BASE}/keys/my-key/v1/verify").mock(
+    route = respx.post(f"{VAULT_BASE}/keys/my-key/v1/verify").mock(
         return_value=httpx.Response(200, json={"value": True})
     )
     result = await server.call_tool("kv_verify", {
@@ -340,30 +368,43 @@ async def test_verify(server):
         "digest": "dig", "signature": "sig",
     })
     assert _get_result_data(result)["status"] == "success"
+    req = route.calls[0].request
+    body = json.loads(req.content)
+    assert body["alg"] == "RS256"
+    assert body["digest"] == "dig"
+    assert body["value"] == "sig"
 
 
 @pytest.mark.asyncio
 @respx.mock
 async def test_wrap_key(server):
-    respx.post(f"{VAULT_BASE}/keys/my-key/v1/wrapkey").mock(
+    route = respx.post(f"{VAULT_BASE}/keys/my-key/v1/wrapkey").mock(
         return_value=httpx.Response(200, json={"value": "wrapped"})
     )
     result = await server.call_tool("kv_wrap_key", {
         "name": "my-key", "version": "v1", "algorithm": "RSA-OAEP", "value": "key=",
     })
     assert _get_result_data(result)["status"] == "success"
+    req = route.calls[0].request
+    body = json.loads(req.content)
+    assert body["alg"] == "RSA-OAEP"
+    assert body["value"] == "key="
 
 
 @pytest.mark.asyncio
 @respx.mock
 async def test_unwrap_key(server):
-    respx.post(f"{VAULT_BASE}/keys/my-key/v1/unwrapkey").mock(
+    route = respx.post(f"{VAULT_BASE}/keys/my-key/v1/unwrapkey").mock(
         return_value=httpx.Response(200, json={"value": "unwrapped"})
     )
     result = await server.call_tool("kv_unwrap_key", {
         "name": "my-key", "version": "v1", "algorithm": "RSA-OAEP", "value": "wrapped=",
     })
     assert _get_result_data(result)["status"] == "success"
+    req = route.calls[0].request
+    body = json.loads(req.content)
+    assert body["alg"] == "RSA-OAEP"
+    assert body["value"] == "wrapped="
 
 
 @pytest.mark.asyncio
@@ -379,11 +420,14 @@ async def test_backup_key(server):
 @pytest.mark.asyncio
 @respx.mock
 async def test_restore_key(server):
-    respx.post(f"{VAULT_BASE}/keys/restore").mock(
+    route = respx.post(f"{VAULT_BASE}/keys/restore").mock(
         return_value=httpx.Response(200, json={"key": {"kid": "..."}})
     )
     result = await server.call_tool("kv_restore_key", {"value": "backup-blob"})
     assert _get_result_data(result)["status"] == "success"
+    req = route.calls[0].request
+    body = json.loads(req.content)
+    assert body["value"] == "backup-blob"
 
 
 # --- Certificates ---
@@ -422,37 +466,49 @@ async def test_list_certificate_versions(server):
 @pytest.mark.asyncio
 @respx.mock
 async def test_create_certificate(server):
-    respx.post(f"{VAULT_BASE}/certificates/my-cert/create").mock(
+    route = respx.post(f"{VAULT_BASE}/certificates/my-cert/create").mock(
         return_value=httpx.Response(202, json={"id": "..."})
     )
     result = await server.call_tool("kv_create_certificate", {
         "name": "my-cert", "subject": "CN=example.com",
     })
     assert _get_result_data(result)["status"] == "success"
+    req = route.calls[0].request
+    body = json.loads(req.content)
+    assert body["policy"]["x509_props"]["subject"] == "CN=example.com"
+    assert body["policy"]["x509_props"]["validity_months"] == 12
+    assert body["policy"]["key_props"]["kty"] == "RSA"
+    assert body["policy"]["issuer"]["name"] == "Self"
 
 
 @pytest.mark.asyncio
 @respx.mock
 async def test_import_certificate(server):
-    respx.post(f"{VAULT_BASE}/certificates/my-cert/import").mock(
+    route = respx.post(f"{VAULT_BASE}/certificates/my-cert/import").mock(
         return_value=httpx.Response(200, json={"id": "..."})
     )
     result = await server.call_tool("kv_import_certificate", {
         "name": "my-cert", "value": "base64-cert-content",
     })
     assert _get_result_data(result)["status"] == "success"
+    req = route.calls[0].request
+    body = json.loads(req.content)
+    assert body["value"] == "base64-cert-content"
 
 
 @pytest.mark.asyncio
 @respx.mock
 async def test_update_certificate(server):
-    respx.patch(f"{VAULT_BASE}/certificates/my-cert/v1").mock(
+    route = respx.patch(f"{VAULT_BASE}/certificates/my-cert/v1").mock(
         return_value=httpx.Response(200, json={"id": "..."})
     )
     result = await server.call_tool("kv_update_certificate", {
         "name": "my-cert", "version": "v1", "enabled": False,
     })
     assert _get_result_data(result)["status"] == "success"
+    req = route.calls[0].request
+    body = json.loads(req.content)
+    assert body["attributes"]["enabled"] is False
 
 
 @pytest.mark.asyncio

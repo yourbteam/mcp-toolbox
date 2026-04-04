@@ -175,7 +175,7 @@ async def test_get_calendar(server):
 @pytest.mark.asyncio
 @respx.mock
 async def test_create_calendar(server):
-    respx.post(f"{BASE}/calendars").mock(
+    route = respx.post(f"{BASE}/calendars").mock(
         return_value=httpx.Response(
             200, json={"id": "new1", "summary": "Work"},
         ),
@@ -183,6 +183,8 @@ async def test_create_calendar(server):
     _ok(await server.call_tool(
         "gcal_create_calendar", {"summary": "Work"},
     ))
+    body = json.loads(route.calls[0].request.content)
+    assert body["summary"] == "Work"
 
 
 @pytest.mark.asyncio
@@ -256,7 +258,7 @@ async def test_get_event(server):
 @pytest.mark.asyncio
 @respx.mock
 async def test_create_event(server):
-    respx.post(f"{BASE}/calendars/cal1/events").mock(
+    route = respx.post(f"{BASE}/calendars/cal1/events").mock(
         return_value=httpx.Response(
             200, json={"id": "e2"},
         ),
@@ -266,8 +268,16 @@ async def test_create_event(server):
             "summary": "Lunch",
             "start_datetime": "2026-04-05T12:00:00Z",
             "end_datetime": "2026-04-05T13:00:00Z",
+            "attendees": ["alice@test.com", "bob@test.com"],
         },
     ))
+    body = json.loads(route.calls[0].request.content)
+    assert body["summary"] == "Lunch"
+    assert body["start"]["dateTime"] == "2026-04-05T12:00:00Z"
+    assert body["end"]["dateTime"] == "2026-04-05T13:00:00Z"
+    assert body["attendees"] == [
+        {"email": "alice@test.com"}, {"email": "bob@test.com"},
+    ]
 
 
 @pytest.mark.asyncio
@@ -338,7 +348,7 @@ async def test_move_event(server):
 @pytest.mark.asyncio
 @respx.mock
 async def test_import_event(server):
-    respx.post(
+    route = respx.post(
         f"{BASE}/calendars/cal1/events/import",
     ).mock(
         return_value=httpx.Response(
@@ -353,6 +363,9 @@ async def test_import_event(server):
             "end_datetime": "2026-04-05T11:00:00Z",
         },
     ))
+    body = json.loads(route.calls[0].request.content)
+    assert body["iCalUID"] == "uid-123@example.com"
+    assert body["summary"] == "Imported Event"
 
 
 @pytest.mark.asyncio
@@ -493,7 +506,7 @@ async def test_set_attendee_response_not_found(server):
 @pytest.mark.asyncio
 @respx.mock
 async def test_freebusy_query(server):
-    respx.post(f"{BASE}/freeBusy").mock(
+    route = respx.post(f"{BASE}/freeBusy").mock(
         return_value=httpx.Response(200, json={
             "calendars": {
                 "cal1": {
@@ -514,6 +527,10 @@ async def test_freebusy_query(server):
             "items": ["cal1"],
         },
     ))
+    body = json.loads(route.calls[0].request.content)
+    assert body["timeMin"] == "2026-04-05T00:00:00Z"
+    assert body["timeMax"] == "2026-04-06T00:00:00Z"
+    assert body["items"] == [{"id": "cal1"}]
 
 
 # --- ACLs (5 tools) ---
@@ -554,7 +571,7 @@ async def test_get_acl_rule(server):
 @pytest.mark.asyncio
 @respx.mock
 async def test_insert_acl_rule(server):
-    respx.post(f"{BASE}/calendars/cal1/acl").mock(
+    route = respx.post(f"{BASE}/calendars/cal1/acl").mock(
         return_value=httpx.Response(200, json={
             "id": "user:b@test.com", "role": "reader",
         }),
@@ -566,6 +583,10 @@ async def test_insert_acl_rule(server):
             "scope_value": "b@test.com",
         },
     ))
+    body = json.loads(route.calls[0].request.content)
+    assert body["role"] == "reader"
+    assert body["scope"]["type"] == "user"
+    assert body["scope"]["value"] == "b@test.com"
 
 
 @pytest.mark.asyncio
@@ -665,7 +686,7 @@ async def test_get_colors(server):
 @pytest.mark.asyncio
 @respx.mock
 async def test_watch_events(server):
-    respx.post(
+    route = respx.post(
         f"{BASE}/calendars/cal1/events/watch",
     ).mock(
         return_value=httpx.Response(200, json={
@@ -680,6 +701,10 @@ async def test_watch_events(server):
             "address": "https://example.com/hook",
         },
     ))
+    body = json.loads(route.calls[0].request.content)
+    assert body["id"] == "ch1"
+    assert body["type"] == "web_hook"
+    assert body["address"] == "https://example.com/hook"
 
 
 @pytest.mark.asyncio
@@ -705,7 +730,7 @@ async def test_watch_calendar_list(server):
 @pytest.mark.asyncio
 @respx.mock
 async def test_stop_channel(server):
-    respx.post(f"{BASE}/channels/stop").mock(
+    route = respx.post(f"{BASE}/channels/stop").mock(
         return_value=httpx.Response(204),
     )
     _ok(await server.call_tool(
@@ -714,3 +739,6 @@ async def test_stop_channel(server):
             "resource_id": "res1",
         },
     ))
+    body = json.loads(route.calls[0].request.content)
+    assert body["id"] == "ch1"
+    assert body["resourceId"] == "res1"

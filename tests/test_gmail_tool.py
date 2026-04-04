@@ -87,7 +87,7 @@ async def test_rate_limit(server):
 @pytest.mark.asyncio
 @respx.mock
 async def test_send_message(server):
-    respx.post(f"{BASE}/messages/send").mock(
+    route = respx.post(f"{BASE}/messages/send").mock(
         return_value=httpx.Response(200, json={
             "id": "m1", "threadId": "t1",
         }),
@@ -97,12 +97,15 @@ async def test_send_message(server):
         "subject": "Hi",
         "body": "Hello",
     }))
+    req = route.calls[0].request
+    body = json.loads(req.content)
+    assert "raw" in body
 
 
 @pytest.mark.asyncio
 @respx.mock
 async def test_send_message_with_attachment(server):
-    respx.post(f"{BASE}/messages/send").mock(
+    route = respx.post(f"{BASE}/messages/send").mock(
         return_value=httpx.Response(200, json={
             "id": "m2", "threadId": "t1",
         }),
@@ -117,6 +120,9 @@ async def test_send_message_with_attachment(server):
             "attachment_content_type": "text/plain",
         },
     ))
+    req = route.calls[0].request
+    body = json.loads(req.content)
+    assert "raw" in body
 
 
 @pytest.mark.asyncio
@@ -168,7 +174,7 @@ async def test_get_message(server):
 @pytest.mark.asyncio
 @respx.mock
 async def test_modify_message(server):
-    respx.post(f"{BASE}/messages/m1/modify").mock(
+    route = respx.post(f"{BASE}/messages/m1/modify").mock(
         return_value=httpx.Response(200, json={
             "id": "m1", "labelIds": ["INBOX", "STARRED"],
         }),
@@ -177,6 +183,9 @@ async def test_modify_message(server):
         "message_id": "m1",
         "add_label_ids": ["STARRED"],
     }))
+    req = route.calls[0].request
+    body = json.loads(req.content)
+    assert body["addLabelIds"] == ["STARRED"]
 
 
 @pytest.mark.asyncio
@@ -219,7 +228,7 @@ async def test_untrash_message(server):
 @pytest.mark.asyncio
 @respx.mock
 async def test_batch_modify_messages(server):
-    respx.post(f"{BASE}/messages/batchModify").mock(
+    route = respx.post(f"{BASE}/messages/batchModify").mock(
         return_value=httpx.Response(204),
     )
     _ok(await server.call_tool(
@@ -228,12 +237,16 @@ async def test_batch_modify_messages(server):
             "add_label_ids": ["STARRED"],
         },
     ))
+    req = route.calls[0].request
+    body = json.loads(req.content)
+    assert body["ids"] == ["m1", "m2"]
+    assert body["addLabelIds"] == ["STARRED"]
 
 
 @pytest.mark.asyncio
 @respx.mock
 async def test_batch_delete_messages(server):
-    respx.post(f"{BASE}/messages/batchDelete").mock(
+    route = respx.post(f"{BASE}/messages/batchDelete").mock(
         return_value=httpx.Response(204),
     )
     _ok(await server.call_tool(
@@ -241,6 +254,9 @@ async def test_batch_delete_messages(server):
             "message_ids": ["m1", "m2"],
         },
     ))
+    req = route.calls[0].request
+    body = json.loads(req.content)
+    assert body["ids"] == ["m1", "m2"]
 
 
 @pytest.mark.asyncio
@@ -319,7 +335,7 @@ async def test_get_thread(server):
 @pytest.mark.asyncio
 @respx.mock
 async def test_modify_thread(server):
-    respx.post(f"{BASE}/threads/t1/modify").mock(
+    route = respx.post(f"{BASE}/threads/t1/modify").mock(
         return_value=httpx.Response(200, json={
             "id": "t1",
         }),
@@ -328,6 +344,9 @@ async def test_modify_thread(server):
         "thread_id": "t1",
         "add_label_ids": ["IMPORTANT"],
     }))
+    req = route.calls[0].request
+    body = json.loads(req.content)
+    assert body["addLabelIds"] == ["IMPORTANT"]
 
 
 @pytest.mark.asyncio
@@ -402,7 +421,7 @@ async def test_get_label(server):
 @pytest.mark.asyncio
 @respx.mock
 async def test_create_label(server):
-    respx.post(f"{BASE}/labels").mock(
+    route = respx.post(f"{BASE}/labels").mock(
         return_value=httpx.Response(200, json={
             "id": "Label_1", "name": "Projects",
         }),
@@ -410,12 +429,15 @@ async def test_create_label(server):
     _ok(await server.call_tool("gmail_create_label", {
         "name": "Projects",
     }))
+    req = route.calls[0].request
+    body = json.loads(req.content)
+    assert body["name"] == "Projects"
 
 
 @pytest.mark.asyncio
 @respx.mock
 async def test_create_label_with_color(server):
-    respx.post(f"{BASE}/labels").mock(
+    route = respx.post(f"{BASE}/labels").mock(
         return_value=httpx.Response(200, json={
             "id": "Label_2", "name": "Urgent",
         }),
@@ -425,6 +447,10 @@ async def test_create_label_with_color(server):
         "background_color": "#ff0000",
         "text_color": "#ffffff",
     }))
+    req = route.calls[0].request
+    body = json.loads(req.content)
+    assert body["name"] == "Urgent"
+    assert "color" in body
 
 
 @pytest.mark.asyncio
@@ -784,7 +810,7 @@ async def test_get_send_as(server):
 @pytest.mark.asyncio
 @respx.mock
 async def test_create_send_as(server):
-    respx.post(f"{BASE}/settings/sendAs").mock(
+    route = respx.post(f"{BASE}/settings/sendAs").mock(
         return_value=httpx.Response(200, json={
             "sendAsEmail": "alias@test.com",
         }),
@@ -793,6 +819,10 @@ async def test_create_send_as(server):
         "send_as_email": "alias@test.com",
         "display_name": "My Alias",
     }))
+    req = route.calls[0].request
+    body = json.loads(req.content)
+    assert body["sendAsEmail"] == "alias@test.com"
+    assert body["displayName"] == "My Alias"
 
 
 @pytest.mark.asyncio
@@ -914,7 +944,7 @@ async def test_get_filter(server):
 @pytest.mark.asyncio
 @respx.mock
 async def test_create_filter(server):
-    respx.post(f"{BASE}/settings/filters").mock(
+    route = respx.post(f"{BASE}/settings/filters").mock(
         return_value=httpx.Response(200, json={
             "id": "f2",
         }),
@@ -923,6 +953,12 @@ async def test_create_filter(server):
         "criteria_from": "news@test.com",
         "action_add_label_ids": ["Label_1"],
     }))
+    req = route.calls[0].request
+    body = json.loads(req.content)
+    assert "criteria" in body
+    assert body["criteria"]["from"] == "news@test.com"
+    assert "action" in body
+    assert body["action"]["addLabelIds"] == ["Label_1"]
 
 
 @pytest.mark.asyncio
@@ -980,7 +1016,7 @@ async def test_get_forwarding_address(server):
 @pytest.mark.asyncio
 @respx.mock
 async def test_create_forwarding_address(server):
-    respx.post(
+    route = respx.post(
         f"{BASE}/settings/forwardingAddresses",
     ).mock(
         return_value=httpx.Response(200, json={
@@ -993,6 +1029,9 @@ async def test_create_forwarding_address(server):
             "forwarding_email": "new-fwd@test.com",
         },
     ))
+    req = route.calls[0].request
+    body = json.loads(req.content)
+    assert body["forwardingEmail"] == "new-fwd@test.com"
 
 
 @pytest.mark.asyncio
@@ -1050,7 +1089,7 @@ async def test_get_delegate(server):
 @pytest.mark.asyncio
 @respx.mock
 async def test_create_delegate(server):
-    respx.post(f"{BASE}/settings/delegates").mock(
+    route = respx.post(f"{BASE}/settings/delegates").mock(
         return_value=httpx.Response(200, json={
             "delegateEmail": "new-del@test.com",
             "verificationStatus": "pending",
@@ -1059,6 +1098,9 @@ async def test_create_delegate(server):
     _ok(await server.call_tool("gmail_create_delegate", {
         "delegate_email": "new-del@test.com",
     }))
+    req = route.calls[0].request
+    body = json.loads(req.content)
+    assert body["delegateEmail"] == "new-del@test.com"
 
 
 @pytest.mark.asyncio

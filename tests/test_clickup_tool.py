@@ -96,7 +96,7 @@ async def test_get_lists_missing_ids(server):
 @pytest.mark.asyncio
 @respx.mock
 async def test_create_task(server):
-    respx.post(f"{CLICKUP_BASE}/list/l1/task").mock(
+    route = respx.post(f"{CLICKUP_BASE}/list/l1/task").mock(
         return_value=httpx.Response(200, json={
             "id": "task_abc", "name": "My Task", "status": {"status": "open"}
         })
@@ -109,6 +109,9 @@ async def test_create_task(server):
     data = _get_result_data(result)
     assert data["status"] == "success"
     assert data["data"]["id"] == "task_abc"
+    req_body = json.loads(route.calls[0].request.content)
+    assert req_body["name"] == "My Task"
+    assert req_body["priority"] == 3
 
 
 @pytest.mark.asyncio
@@ -125,7 +128,7 @@ async def test_get_task(server):
 @pytest.mark.asyncio
 @respx.mock
 async def test_update_task(server):
-    respx.put(f"{CLICKUP_BASE}/task/task_abc").mock(
+    route = respx.put(f"{CLICKUP_BASE}/task/task_abc").mock(
         return_value=httpx.Response(200, json={"id": "task_abc", "status": {"status": "done"}})
     )
     result = await server.call_tool("clickup_update_task", {
@@ -134,6 +137,8 @@ async def test_update_task(server):
     })
     data = _get_result_data(result)
     assert data["status"] == "success"
+    req_body = json.loads(route.calls[0].request.content)
+    assert req_body["status"] == "done"
 
 
 @pytest.mark.asyncio
@@ -188,7 +193,7 @@ async def test_delete_task(server):
 @pytest.mark.asyncio
 @respx.mock
 async def test_add_comment(server):
-    respx.post(f"{CLICKUP_BASE}/task/task_abc/comment").mock(
+    route = respx.post(f"{CLICKUP_BASE}/task/task_abc/comment").mock(
         return_value=httpx.Response(200, json={"id": "comment_1"})
     )
     result = await server.call_tool("clickup_add_comment", {
@@ -197,6 +202,8 @@ async def test_add_comment(server):
     })
     data = _get_result_data(result)
     assert data["status"] == "success"
+    req_body = json.loads(route.calls[0].request.content)
+    assert req_body["comment_text"] == "Looks good!"
 
 
 @pytest.mark.asyncio
@@ -216,7 +223,7 @@ async def test_get_comments(server):
 @pytest.mark.asyncio
 @respx.mock
 async def test_create_checklist(server):
-    respx.post(f"{CLICKUP_BASE}/task/task_abc/checklist").mock(
+    route = respx.post(f"{CLICKUP_BASE}/task/task_abc/checklist").mock(
         return_value=httpx.Response(200, json={"checklist": {"id": "cl_1", "name": "TODO"}})
     )
     result = await server.call_tool("clickup_create_checklist", {
@@ -224,12 +231,14 @@ async def test_create_checklist(server):
     })
     data = _get_result_data(result)
     assert data["status"] == "success"
+    req_body = json.loads(route.calls[0].request.content)
+    assert req_body["name"] == "TODO"
 
 
 @pytest.mark.asyncio
 @respx.mock
 async def test_add_checklist_item(server):
-    respx.post(f"{CLICKUP_BASE}/checklist/cl_1/checklist_item").mock(
+    route = respx.post(f"{CLICKUP_BASE}/checklist/cl_1/checklist_item").mock(
         return_value=httpx.Response(200, json={"checklist": {"id": "cl_1"}})
     )
     result = await server.call_tool("clickup_add_checklist_item", {
@@ -237,6 +246,8 @@ async def test_add_checklist_item(server):
     })
     data = _get_result_data(result)
     assert data["status"] == "success"
+    req_body = json.loads(route.calls[0].request.content)
+    assert req_body["name"] == "Buy milk"
 
 
 @pytest.mark.asyncio
@@ -272,7 +283,7 @@ async def test_remove_tag(server):
 @pytest.mark.asyncio
 @respx.mock
 async def test_log_time(server):
-    respx.post(f"{CLICKUP_BASE}/task/task_abc/time").mock(
+    route = respx.post(f"{CLICKUP_BASE}/task/task_abc/time").mock(
         return_value=httpx.Response(200, json={"data": {"id": "te_1"}})
     )
     result = await server.call_tool("clickup_log_time", {
@@ -280,6 +291,8 @@ async def test_log_time(server):
     })
     data = _get_result_data(result)
     assert data["status"] == "success"
+    req_body = json.loads(route.calls[0].request.content)
+    assert req_body["duration"] == 3600000
 
 
 @pytest.mark.asyncio
@@ -299,23 +312,27 @@ async def test_get_time_entries(server):
 @pytest.mark.asyncio
 @respx.mock
 async def test_start_timer(server):
-    respx.post(f"{CLICKUP_BASE}/team/team_123/time_entries/start").mock(
+    route = respx.post(f"{CLICKUP_BASE}/team/team_123/time_entries/start").mock(
         return_value=httpx.Response(200, json={"data": {"id": "te_2"}})
     )
     result = await server.call_tool("clickup_start_timer", {"task_id": "task_abc"})
     data = _get_result_data(result)
     assert data["status"] == "success"
+    req_body = json.loads(route.calls[0].request.content)
+    assert req_body["tid"] == "task_abc"
 
 
 @pytest.mark.asyncio
 @respx.mock
 async def test_stop_timer(server):
-    respx.post(f"{CLICKUP_BASE}/team/team_123/time_entries/stop").mock(
+    route = respx.post(f"{CLICKUP_BASE}/team/team_123/time_entries/stop").mock(
         return_value=httpx.Response(200, json={"data": {"id": "te_2", "duration": "1800000"}})
     )
     result = await server.call_tool("clickup_stop_timer", {})
     data = _get_result_data(result)
     assert data["status"] == "success"
+    req_body = json.loads(route.calls[0].request.content)
+    assert req_body == {}
 
 
 # --- Tier 4: Organizational ---
@@ -324,18 +341,20 @@ async def test_stop_timer(server):
 @pytest.mark.asyncio
 @respx.mock
 async def test_create_space(server):
-    respx.post(f"{CLICKUP_BASE}/team/team_123/space").mock(
+    route = respx.post(f"{CLICKUP_BASE}/team/team_123/space").mock(
         return_value=httpx.Response(200, json={"id": "s_new", "name": "New Space"})
     )
     result = await server.call_tool("clickup_create_space", {"name": "New Space"})
     data = _get_result_data(result)
     assert data["status"] == "success"
+    req_body = json.loads(route.calls[0].request.content)
+    assert req_body["name"] == "New Space"
 
 
 @pytest.mark.asyncio
 @respx.mock
 async def test_create_list(server):
-    respx.post(f"{CLICKUP_BASE}/space/s1/list").mock(
+    route = respx.post(f"{CLICKUP_BASE}/space/s1/list").mock(
         return_value=httpx.Response(200, json={"id": "l_new", "name": "Backlog"})
     )
     result = await server.call_tool("clickup_create_list", {
@@ -343,6 +362,8 @@ async def test_create_list(server):
     })
     data = _get_result_data(result)
     assert data["status"] == "success"
+    req_body = json.loads(route.calls[0].request.content)
+    assert req_body["name"] == "Backlog"
 
 
 @pytest.mark.asyncio
@@ -354,7 +375,7 @@ async def test_create_list_missing_ids(server):
 @pytest.mark.asyncio
 @respx.mock
 async def test_create_folder(server):
-    respx.post(f"{CLICKUP_BASE}/space/s1/folder").mock(
+    route = respx.post(f"{CLICKUP_BASE}/space/s1/folder").mock(
         return_value=httpx.Response(200, json={"id": "f_new", "name": "Sprint 2"})
     )
     result = await server.call_tool("clickup_create_folder", {
@@ -362,6 +383,8 @@ async def test_create_folder(server):
     })
     data = _get_result_data(result)
     assert data["status"] == "success"
+    req_body = json.loads(route.calls[0].request.content)
+    assert req_body["name"] == "Sprint 2"
 
 
 @pytest.mark.asyncio
@@ -396,7 +419,7 @@ async def test_get_custom_fields(server):
 @pytest.mark.asyncio
 @respx.mock
 async def test_set_custom_field(server):
-    respx.post(f"{CLICKUP_BASE}/task/task_abc/field/cf_1").mock(
+    route = respx.post(f"{CLICKUP_BASE}/task/task_abc/field/cf_1").mock(
         return_value=httpx.Response(200, json={})
     )
     result = await server.call_tool("clickup_set_custom_field", {
@@ -404,6 +427,8 @@ async def test_set_custom_field(server):
     })
     data = _get_result_data(result)
     assert data["status"] == "success"
+    req_body = json.loads(route.calls[0].request.content)
+    assert req_body["value"] == 42
 
 
 # --- API Error Handling ---
@@ -445,11 +470,13 @@ async def test_get_space(server):
 @pytest.mark.asyncio
 @respx.mock
 async def test_update_space(server):
-    respx.put(f"{CLICKUP_BASE}/space/s1").mock(
+    route = respx.put(f"{CLICKUP_BASE}/space/s1").mock(
         return_value=httpx.Response(200, json={"id": "s1", "name": "New Name"})
     )
     result = await server.call_tool("clickup_update_space", {"space_id": "s1", "name": "New Name"})
     assert _get_result_data(result)["status"] == "success"
+    req_body = json.loads(route.calls[0].request.content)
+    assert req_body["name"] == "New Name"
 
 
 @pytest.mark.asyncio
@@ -486,11 +513,13 @@ async def test_get_folder(server):
 @pytest.mark.asyncio
 @respx.mock
 async def test_update_folder(server):
-    respx.put(f"{CLICKUP_BASE}/folder/f1").mock(
+    route = respx.put(f"{CLICKUP_BASE}/folder/f1").mock(
         return_value=httpx.Response(200, json={"id": "f1", "name": "Renamed"})
     )
     result = await server.call_tool("clickup_update_folder", {"folder_id": "f1", "name": "Renamed"})
     assert _get_result_data(result)["status"] == "success"
+    req_body = json.loads(route.calls[0].request.content)
+    assert req_body["name"] == "Renamed"
 
 
 @pytest.mark.asyncio
@@ -517,11 +546,13 @@ async def test_get_list(server):
 @pytest.mark.asyncio
 @respx.mock
 async def test_update_list(server):
-    respx.put(f"{CLICKUP_BASE}/list/l1").mock(
+    route = respx.put(f"{CLICKUP_BASE}/list/l1").mock(
         return_value=httpx.Response(200, json={"id": "l1", "name": "Updated"})
     )
     result = await server.call_tool("clickup_update_list", {"list_id": "l1", "name": "Updated"})
     assert _get_result_data(result)["status"] == "success"
+    req_body = json.loads(route.calls[0].request.content)
+    assert req_body["name"] == "Updated"
 
 
 @pytest.mark.asyncio
@@ -538,13 +569,15 @@ async def test_delete_list(server):
 @pytest.mark.asyncio
 @respx.mock
 async def test_update_comment(server):
-    respx.put(f"{CLICKUP_BASE}/comment/c1").mock(
+    route = respx.put(f"{CLICKUP_BASE}/comment/c1").mock(
         return_value=httpx.Response(200, json={})
     )
     result = await server.call_tool("clickup_update_comment", {
         "comment_id": "c1", "comment_text": "Updated text",
     })
     assert _get_result_data(result)["status"] == "success"
+    req_body = json.loads(route.calls[0].request.content)
+    assert req_body["comment_text"] == "Updated text"
 
 
 @pytest.mark.asyncio
@@ -561,13 +594,15 @@ async def test_delete_comment(server):
 @pytest.mark.asyncio
 @respx.mock
 async def test_update_checklist(server):
-    respx.put(f"{CLICKUP_BASE}/checklist/cl_1").mock(
+    route = respx.put(f"{CLICKUP_BASE}/checklist/cl_1").mock(
         return_value=httpx.Response(200, json={"checklist": {"id": "cl_1"}})
     )
     result = await server.call_tool("clickup_update_checklist", {
         "checklist_id": "cl_1", "name": "Renamed",
     })
     assert _get_result_data(result)["status"] == "success"
+    req_body = json.loads(route.calls[0].request.content)
+    assert req_body["name"] == "Renamed"
 
 
 @pytest.mark.asyncio
@@ -581,13 +616,15 @@ async def test_delete_checklist(server):
 @pytest.mark.asyncio
 @respx.mock
 async def test_update_checklist_item(server):
-    respx.put(f"{CLICKUP_BASE}/checklist/cl_1/checklist_item/ci_1").mock(
+    route = respx.put(f"{CLICKUP_BASE}/checklist/cl_1/checklist_item/ci_1").mock(
         return_value=httpx.Response(200, json={})
     )
     result = await server.call_tool("clickup_update_checklist_item", {
         "checklist_id": "cl_1", "checklist_item_id": "ci_1", "resolved": True,
     })
     assert _get_result_data(result)["status"] == "success"
+    req_body = json.loads(route.calls[0].request.content)
+    assert req_body["resolved"] is True
 
 
 @pytest.mark.asyncio
@@ -630,13 +667,15 @@ async def test_delete_task_time(server):
 @pytest.mark.asyncio
 @respx.mock
 async def test_update_time_entry(server):
-    respx.put(f"{CLICKUP_BASE}/team/team_123/time_entries/te_1").mock(
+    route = respx.put(f"{CLICKUP_BASE}/team/team_123/time_entries/te_1").mock(
         return_value=httpx.Response(200, json={"data": {"id": "te_1"}})
     )
     result = await server.call_tool("clickup_update_time_entry", {
         "timer_id": "te_1", "description": "Updated",
     })
     assert _get_result_data(result)["status"] == "success"
+    req_body = json.loads(route.calls[0].request.content)
+    assert req_body["description"] == "Updated"
 
 
 @pytest.mark.asyncio
@@ -675,25 +714,29 @@ async def test_get_space_tags(server):
 @pytest.mark.asyncio
 @respx.mock
 async def test_create_space_tag(server):
-    respx.post(f"{CLICKUP_BASE}/space/s1/tag").mock(
+    route = respx.post(f"{CLICKUP_BASE}/space/s1/tag").mock(
         return_value=httpx.Response(200, json={})
     )
     result = await server.call_tool("clickup_create_space_tag", {
         "space_id": "s1", "name": "bug",
     })
     assert _get_result_data(result)["status"] == "success"
+    req_body = json.loads(route.calls[0].request.content)
+    assert req_body["tag"]["name"] == "bug"
 
 
 @pytest.mark.asyncio
 @respx.mock
 async def test_update_space_tag(server):
-    respx.put(f"{CLICKUP_BASE}/space/s1/tag/bug").mock(
+    route = respx.put(f"{CLICKUP_BASE}/space/s1/tag/bug").mock(
         return_value=httpx.Response(200, json={})
     )
     result = await server.call_tool("clickup_update_space_tag", {
         "space_id": "s1", "tag_name": "bug", "new_name": "defect",
     })
     assert _get_result_data(result)["status"] == "success"
+    req_body = json.loads(route.calls[0].request.content)
+    assert req_body["tag"]["name"] == "defect"
 
 
 @pytest.mark.asyncio
@@ -739,11 +782,13 @@ async def test_get_goals(server):
 @pytest.mark.asyncio
 @respx.mock
 async def test_create_goal(server):
-    respx.post(f"{CLICKUP_BASE}/team/team_123/goal").mock(
+    route = respx.post(f"{CLICKUP_BASE}/team/team_123/goal").mock(
         return_value=httpx.Response(200, json={"goal": {"id": "g_new"}})
     )
     result = await server.call_tool("clickup_create_goal", {"name": "Q1 Target"})
     assert _get_result_data(result)["status"] == "success"
+    req_body = json.loads(route.calls[0].request.content)
+    assert req_body["name"] == "Q1 Target"
 
 
 @pytest.mark.asyncio
@@ -759,11 +804,13 @@ async def test_get_goal(server):
 @pytest.mark.asyncio
 @respx.mock
 async def test_update_goal(server):
-    respx.put(f"{CLICKUP_BASE}/goal/g1").mock(
+    route = respx.put(f"{CLICKUP_BASE}/goal/g1").mock(
         return_value=httpx.Response(200, json={"goal": {"id": "g1"}})
     )
     result = await server.call_tool("clickup_update_goal", {"goal_id": "g1", "name": "Updated"})
     assert _get_result_data(result)["status"] == "success"
+    req_body = json.loads(route.calls[0].request.content)
+    assert req_body["name"] == "Updated"
 
 
 @pytest.mark.asyncio
@@ -777,25 +824,30 @@ async def test_delete_goal(server):
 @pytest.mark.asyncio
 @respx.mock
 async def test_create_key_result(server):
-    respx.post(f"{CLICKUP_BASE}/goal/g1/key_result").mock(
+    route = respx.post(f"{CLICKUP_BASE}/goal/g1/key_result").mock(
         return_value=httpx.Response(200, json={"key_result": {"id": "kr_1"}})
     )
     result = await server.call_tool("clickup_create_key_result", {
         "goal_id": "g1", "name": "Revenue", "type": "currency",
     })
     assert _get_result_data(result)["status"] == "success"
+    req_body = json.loads(route.calls[0].request.content)
+    assert req_body["name"] == "Revenue"
+    assert req_body["type"] == "currency"
 
 
 @pytest.mark.asyncio
 @respx.mock
 async def test_update_key_result(server):
-    respx.put(f"{CLICKUP_BASE}/key_result/kr_1").mock(
+    route = respx.put(f"{CLICKUP_BASE}/key_result/kr_1").mock(
         return_value=httpx.Response(200, json={"key_result": {"id": "kr_1"}})
     )
     result = await server.call_tool("clickup_update_key_result", {
         "key_result_id": "kr_1", "steps_current": 50,
     })
     assert _get_result_data(result)["status"] == "success"
+    req_body = json.loads(route.calls[0].request.content)
+    assert req_body["steps_current"] == 50
 
 
 @pytest.mark.asyncio
@@ -845,13 +897,16 @@ async def test_get_time_entry_tags(server):
 @pytest.mark.asyncio
 @respx.mock
 async def test_add_time_entry_tags(server):
-    respx.post(f"{CLICKUP_BASE}/team/team_123/time_entries/tags").mock(
+    route = respx.post(f"{CLICKUP_BASE}/team/team_123/time_entries/tags").mock(
         return_value=httpx.Response(200, json={})
     )
     result = await server.call_tool("clickup_add_time_entry_tags", {
         "time_entry_ids": ["te_1"], "tags": [{"name": "billable"}],
     })
     assert _get_result_data(result)["status"] == "success"
+    req_body = json.loads(route.calls[0].request.content)
+    assert req_body["time_entry_ids"] == ["te_1"]
+    assert req_body["tags"] == [{"name": "billable"}]
 
 
 @pytest.mark.asyncio
@@ -869,13 +924,16 @@ async def test_remove_time_entry_tags(server):
 @pytest.mark.asyncio
 @respx.mock
 async def test_rename_time_entry_tag(server):
-    respx.put(f"{CLICKUP_BASE}/team/team_123/time_entries/tags").mock(
+    route = respx.put(f"{CLICKUP_BASE}/team/team_123/time_entries/tags").mock(
         return_value=httpx.Response(200, json={})
     )
     result = await server.call_tool("clickup_rename_time_entry_tag", {
         "name": "billable", "new_name": "invoiced",
     })
     assert _get_result_data(result)["status"] == "success"
+    req_body = json.loads(route.calls[0].request.content)
+    assert req_body["tag"]["name"] == "billable"
+    assert req_body["new_tag"]["name"] == "invoiced"
 
 
 # --- Group L: Views ---
@@ -894,13 +952,16 @@ async def test_get_workspace_views(server):
 @pytest.mark.asyncio
 @respx.mock
 async def test_create_workspace_view(server):
-    respx.post(f"{CLICKUP_BASE}/team/team_123/view").mock(
+    route = respx.post(f"{CLICKUP_BASE}/team/team_123/view").mock(
         return_value=httpx.Response(200, json={"view": {"id": "v_new"}})
     )
     result = await server.call_tool("clickup_create_workspace_view", {
         "name": "Board", "type": "board",
     })
     assert _get_result_data(result)["status"] == "success"
+    req_body = json.loads(route.calls[0].request.content)
+    assert req_body["name"] == "Board"
+    assert req_body["type"] == "board"
 
 
 @pytest.mark.asyncio
@@ -916,13 +977,16 @@ async def test_get_space_views(server):
 @pytest.mark.asyncio
 @respx.mock
 async def test_create_space_view(server):
-    respx.post(f"{CLICKUP_BASE}/space/s1/view").mock(
+    route = respx.post(f"{CLICKUP_BASE}/space/s1/view").mock(
         return_value=httpx.Response(200, json={"view": {"id": "v2"}})
     )
     result = await server.call_tool("clickup_create_space_view", {
         "space_id": "s1", "name": "Calendar", "type": "calendar",
     })
     assert _get_result_data(result)["status"] == "success"
+    req_body = json.loads(route.calls[0].request.content)
+    assert req_body["name"] == "Calendar"
+    assert req_body["type"] == "calendar"
 
 
 @pytest.mark.asyncio
@@ -938,13 +1002,16 @@ async def test_get_folder_views(server):
 @pytest.mark.asyncio
 @respx.mock
 async def test_create_folder_view(server):
-    respx.post(f"{CLICKUP_BASE}/folder/f1/view").mock(
+    route = respx.post(f"{CLICKUP_BASE}/folder/f1/view").mock(
         return_value=httpx.Response(200, json={"view": {"id": "v3"}})
     )
     result = await server.call_tool("clickup_create_folder_view", {
         "folder_id": "f1", "name": "Gantt", "type": "gantt",
     })
     assert _get_result_data(result)["status"] == "success"
+    req_body = json.loads(route.calls[0].request.content)
+    assert req_body["name"] == "Gantt"
+    assert req_body["type"] == "gantt"
 
 
 @pytest.mark.asyncio
@@ -960,13 +1027,16 @@ async def test_get_list_views(server):
 @pytest.mark.asyncio
 @respx.mock
 async def test_create_list_view(server):
-    respx.post(f"{CLICKUP_BASE}/list/l1/view").mock(
+    route = respx.post(f"{CLICKUP_BASE}/list/l1/view").mock(
         return_value=httpx.Response(200, json={"view": {"id": "v4"}})
     )
     result = await server.call_tool("clickup_create_list_view", {
         "list_id": "l1", "name": "Table", "type": "table",
     })
     assert _get_result_data(result)["status"] == "success"
+    req_body = json.loads(route.calls[0].request.content)
+    assert req_body["name"] == "Table"
+    assert req_body["type"] == "table"
 
 
 @pytest.mark.asyncio
@@ -982,11 +1052,13 @@ async def test_get_view(server):
 @pytest.mark.asyncio
 @respx.mock
 async def test_update_view(server):
-    respx.put(f"{CLICKUP_BASE}/view/v1").mock(
+    route = respx.put(f"{CLICKUP_BASE}/view/v1").mock(
         return_value=httpx.Response(200, json={"view": {"id": "v1"}})
     )
     result = await server.call_tool("clickup_update_view", {"view_id": "v1", "name": "Renamed"})
     assert _get_result_data(result)["status"] == "success"
+    req_body = json.loads(route.calls[0].request.content)
+    assert req_body["name"] == "Renamed"
 
 
 @pytest.mark.asyncio
@@ -1023,25 +1095,30 @@ async def test_get_webhooks(server):
 @pytest.mark.asyncio
 @respx.mock
 async def test_create_webhook(server):
-    respx.post(f"{CLICKUP_BASE}/team/team_123/webhook").mock(
+    route = respx.post(f"{CLICKUP_BASE}/team/team_123/webhook").mock(
         return_value=httpx.Response(200, json={"id": "wh_new", "webhook": {"id": "wh_new"}})
     )
     result = await server.call_tool("clickup_create_webhook", {
         "endpoint": "https://example.com/hook", "events": ["taskCreated"],
     })
     assert _get_result_data(result)["status"] == "success"
+    req_body = json.loads(route.calls[0].request.content)
+    assert req_body["endpoint"] == "https://example.com/hook"
+    assert req_body["events"] == ["taskCreated"]
 
 
 @pytest.mark.asyncio
 @respx.mock
 async def test_update_webhook(server):
-    respx.put(f"{CLICKUP_BASE}/webhook/wh_1").mock(
+    route = respx.put(f"{CLICKUP_BASE}/webhook/wh_1").mock(
         return_value=httpx.Response(200, json={"id": "wh_1"})
     )
     result = await server.call_tool("clickup_update_webhook", {
         "webhook_id": "wh_1", "status": "inactive",
     })
     assert _get_result_data(result)["status"] == "success"
+    req_body = json.loads(route.calls[0].request.content)
+    assert req_body["status"] == "inactive"
 
 
 @pytest.mark.asyncio

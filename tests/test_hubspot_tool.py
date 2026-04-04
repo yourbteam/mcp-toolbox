@@ -53,12 +53,14 @@ async def test_api_error_429(server):
 @pytest.mark.asyncio
 @respx.mock
 async def test_create_contact(server):
-    respx.post(f"{HB}/crm/v3/objects/contacts").mock(
+    route = respx.post(f"{HB}/crm/v3/objects/contacts").mock(
         return_value=httpx.Response(201, json={"id": "1"})
     )
     assert _r(await server.call_tool("hubspot_create_contact", {
         "email": "j@e.com",
     }))["status"] == "success"
+    body = json.loads(route.calls[0].request.content)
+    assert body["properties"]["email"] == "j@e.com"
 
 @pytest.mark.asyncio
 @respx.mock
@@ -73,12 +75,14 @@ async def test_get_contact(server):
 @pytest.mark.asyncio
 @respx.mock
 async def test_update_contact(server):
-    respx.patch(f"{HB}/crm/v3/objects/contacts/1").mock(
+    route = respx.patch(f"{HB}/crm/v3/objects/contacts/1").mock(
         return_value=httpx.Response(200, json={"id": "1"})
     )
     assert _r(await server.call_tool("hubspot_update_contact", {
         "contact_id": "1", "firstname": "John",
     }))["status"] == "success"
+    body = json.loads(route.calls[0].request.content)
+    assert body["properties"]["firstname"] == "John"
 
 @pytest.mark.asyncio
 @respx.mock
@@ -101,24 +105,29 @@ async def test_list_contacts(server):
 @pytest.mark.asyncio
 @respx.mock
 async def test_search_contacts(server):
-    respx.post(f"{HB}/crm/v3/objects/contacts/search").mock(
+    route = respx.post(f"{HB}/crm/v3/objects/contacts/search").mock(
         return_value=httpx.Response(200, json={"results": [{"id": "1"}]})
     )
     assert _r(await server.call_tool("hubspot_search_contacts", {
         "query": "john",
     }))["count"] == 1
+    body = json.loads(route.calls[0].request.content)
+    assert body["query"] == "john"
+    assert body["limit"] == 10
 
 # --- Companies ---
 
 @pytest.mark.asyncio
 @respx.mock
 async def test_create_company(server):
-    respx.post(f"{HB}/crm/v3/objects/companies").mock(
+    route = respx.post(f"{HB}/crm/v3/objects/companies").mock(
         return_value=httpx.Response(201, json={"id": "1"})
     )
     assert _r(await server.call_tool("hubspot_create_company", {
         "name": "Acme",
     }))["status"] == "success"
+    body = json.loads(route.calls[0].request.content)
+    assert body["properties"]["name"] == "Acme"
 
 @pytest.mark.asyncio
 @respx.mock
@@ -133,12 +142,14 @@ async def test_get_company(server):
 @pytest.mark.asyncio
 @respx.mock
 async def test_update_company(server):
-    respx.patch(f"{HB}/crm/v3/objects/companies/1").mock(
+    route = respx.patch(f"{HB}/crm/v3/objects/companies/1").mock(
         return_value=httpx.Response(200, json={"id": "1"})
     )
     assert _r(await server.call_tool("hubspot_update_company", {
         "company_id": "1", "name": "New Name",
     }))["status"] == "success"
+    body = json.loads(route.calls[0].request.content)
+    assert body["properties"]["name"] == "New Name"
 
 @pytest.mark.asyncio
 @respx.mock
@@ -171,12 +182,14 @@ async def test_search_companies(server):
 @pytest.mark.asyncio
 @respx.mock
 async def test_create_deal(server):
-    respx.post(f"{HB}/crm/v3/objects/deals").mock(
+    route = respx.post(f"{HB}/crm/v3/objects/deals").mock(
         return_value=httpx.Response(201, json={"id": "1"})
     )
     assert _r(await server.call_tool("hubspot_create_deal", {
         "dealname": "Big Deal",
     }))["status"] == "success"
+    body = json.loads(route.calls[0].request.content)
+    assert body["properties"]["dealname"] == "Big Deal"
 
 @pytest.mark.asyncio
 @respx.mock
@@ -189,12 +202,14 @@ async def test_get_deal(server):
 @pytest.mark.asyncio
 @respx.mock
 async def test_update_deal(server):
-    respx.patch(f"{HB}/crm/v3/objects/deals/1").mock(
+    route = respx.patch(f"{HB}/crm/v3/objects/deals/1").mock(
         return_value=httpx.Response(200, json={"id": "1"})
     )
     assert _r(await server.call_tool("hubspot_update_deal", {
         "deal_id": "1", "amount": "5000",
     }))["status"] == "success"
+    body = json.loads(route.calls[0].request.content)
+    assert body["properties"]["amount"] == "5000"
 
 @pytest.mark.asyncio
 @respx.mock
@@ -224,12 +239,14 @@ async def test_search_deals(server):
 @pytest.mark.asyncio
 @respx.mock
 async def test_create_ticket(server):
-    respx.post(f"{HB}/crm/v3/objects/tickets").mock(
+    route = respx.post(f"{HB}/crm/v3/objects/tickets").mock(
         return_value=httpx.Response(201, json={"id": "1"})
     )
     assert _r(await server.call_tool("hubspot_create_ticket", {
         "subject": "Bug",
     }))["status"] == "success"
+    body = json.loads(route.calls[0].request.content)
+    assert body["properties"]["subject"] == "Bug"
 
 @pytest.mark.asyncio
 @respx.mock
@@ -243,12 +260,14 @@ async def test_get_ticket(server):
 @pytest.mark.asyncio
 @respx.mock
 async def test_update_ticket(server):
-    respx.patch(f"{HB}/crm/v3/objects/tickets/1").mock(
+    route = respx.patch(f"{HB}/crm/v3/objects/tickets/1").mock(
         return_value=httpx.Response(200, json={"id": "1"})
     )
     assert _r(await server.call_tool("hubspot_update_ticket", {
         "ticket_id": "1", "subject": "Fixed",
     }))["status"] == "success"
+    body = json.loads(route.calls[0].request.content)
+    assert body["properties"]["subject"] == "Fixed"
 
 @pytest.mark.asyncio
 @respx.mock
@@ -278,12 +297,15 @@ async def test_search_tickets(server):
 @pytest.mark.asyncio
 @respx.mock
 async def test_create_note(server):
-    respx.post(f"{HB}/crm/v3/objects/notes").mock(
+    route = respx.post(f"{HB}/crm/v3/objects/notes").mock(
         return_value=httpx.Response(201, json={"id": "1"})
     )
     assert _r(await server.call_tool("hubspot_create_note", {
         "body": "Called client",
     }))["status"] == "success"
+    body = json.loads(route.calls[0].request.content)
+    assert body["properties"]["hs_note_body"] == "Called client"
+    assert "hs_timestamp" in body["properties"]
 
 @pytest.mark.asyncio
 @respx.mock
@@ -304,12 +326,14 @@ async def test_list_notes(server):
 @pytest.mark.asyncio
 @respx.mock
 async def test_update_note(server):
-    respx.patch(f"{HB}/crm/v3/objects/notes/1").mock(
+    route = respx.patch(f"{HB}/crm/v3/objects/notes/1").mock(
         return_value=httpx.Response(200, json={"id": "1"})
     )
     assert _r(await server.call_tool("hubspot_update_note", {
         "note_id": "1", "body": "Updated",
     }))["status"] == "success"
+    body = json.loads(route.calls[0].request.content)
+    assert body["properties"]["hs_note_body"] == "Updated"
 
 @pytest.mark.asyncio
 @respx.mock
@@ -331,7 +355,7 @@ async def test_search_notes(server):
 @pytest.mark.asyncio
 @respx.mock
 async def test_create_association(server):
-    respx.put(f"{HB}/crm/v4/objects/contacts/1/associations/companies/2").mock(
+    route = respx.put(f"{HB}/crm/v4/objects/contacts/1/associations/companies/2").mock(
         return_value=httpx.Response(200, json={})
     )
     assert _r(await server.call_tool("hubspot_create_association", {
@@ -339,6 +363,8 @@ async def test_create_association(server):
         "to_object_type": "companies", "to_object_id": "2",
         "association_type_id": 1,
     }))["status"] == "success"
+    body = json.loads(route.calls[0].request.content)
+    assert body == [{"associationCategory": "HUBSPOT_DEFINED", "associationTypeId": 1}]
 
 @pytest.mark.asyncio
 @respx.mock
@@ -436,34 +462,44 @@ async def test_get_property(server):
 @pytest.mark.asyncio
 @respx.mock
 async def test_create_property(server):
-    respx.post(f"{HB}/crm/v3/properties/contacts").mock(
+    route = respx.post(f"{HB}/crm/v3/properties/contacts").mock(
         return_value=httpx.Response(201, json={"name": "custom_field"})
     )
     assert _r(await server.call_tool("hubspot_create_property", {
         "object_type": "contacts", "name": "custom_field",
         "label": "Custom Field", "type": "string", "field_type": "text",
     }))["status"] == "success"
+    body = json.loads(route.calls[0].request.content)
+    assert body["name"] == "custom_field"
+    assert body["label"] == "Custom Field"
+    assert body["type"] == "string"
+    assert body["fieldType"] == "text"
+    assert body["groupName"] == "contactinformation"
 
 # --- Batch ---
 
 @pytest.mark.asyncio
 @respx.mock
 async def test_batch_create(server):
-    respx.post(f"{HB}/crm/v3/objects/contacts/batch/create").mock(
+    route = respx.post(f"{HB}/crm/v3/objects/contacts/batch/create").mock(
         return_value=httpx.Response(200, json={"results": [{"id": "1"}]})
     )
     assert _r(await server.call_tool("hubspot_batch_create", {
         "object_type": "contacts",
         "inputs": [{"properties": {"email": "a@b.com"}}],
     }))["status"] == "success"
+    body = json.loads(route.calls[0].request.content)
+    assert body == {"inputs": [{"properties": {"email": "a@b.com"}}]}
 
 @pytest.mark.asyncio
 @respx.mock
 async def test_batch_update(server):
-    respx.post(f"{HB}/crm/v3/objects/contacts/batch/update").mock(
+    route = respx.post(f"{HB}/crm/v3/objects/contacts/batch/update").mock(
         return_value=httpx.Response(200, json={"results": [{"id": "1"}]})
     )
     assert _r(await server.call_tool("hubspot_batch_update", {
         "object_type": "contacts",
         "inputs": [{"id": "1", "properties": {"firstname": "Jane"}}],
     }))["status"] == "success"
+    body = json.loads(route.calls[0].request.content)
+    assert body == {"inputs": [{"id": "1", "properties": {"firstname": "Jane"}}]}

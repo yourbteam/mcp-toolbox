@@ -113,13 +113,15 @@ async def test_get_spreadsheet(server):
 @pytest.mark.asyncio
 @respx.mock
 async def test_batch_update_spreadsheet(server):
-    respx.post(f"{BASE}/{SID}:batchUpdate").mock(
+    route = respx.post(f"{BASE}/{SID}:batchUpdate").mock(
         return_value=httpx.Response(200, json={"replies": []}),
     )
     _ok(await server.call_tool(
         "sheets_batch_update_spreadsheet",
         {"requests": [{"addSheet": {"properties": {"title": "X"}}}]},
     ))
+    body = json.loads(route.calls[0].request.content)
+    assert body["requests"][0]["addSheet"]["properties"]["title"] == "X"
 
 
 # --- Tier 2: Sheet Operations ---
@@ -127,41 +129,51 @@ async def test_batch_update_spreadsheet(server):
 @pytest.mark.asyncio
 @respx.mock
 async def test_add_sheet(server):
-    respx.post(f"{BASE}/{SID}:batchUpdate").mock(
+    route = respx.post(f"{BASE}/{SID}:batchUpdate").mock(
         return_value=httpx.Response(200, json={"replies": [{}]}),
     )
     _ok(await server.call_tool("sheets_add_sheet", {"title": "New"}))
+    body = json.loads(route.calls[0].request.content)
+    assert body["requests"][0]["addSheet"]["properties"]["title"] == "New"
 
 
 @pytest.mark.asyncio
 @respx.mock
 async def test_delete_sheet(server):
-    respx.post(f"{BASE}/{SID}:batchUpdate").mock(
+    route = respx.post(f"{BASE}/{SID}:batchUpdate").mock(
         return_value=httpx.Response(200, json={"replies": []}),
     )
     _ok(await server.call_tool("sheets_delete_sheet", {"sheet_id": 1}))
+    body = json.loads(route.calls[0].request.content)
+    assert body["requests"][0]["deleteSheet"]["sheetId"] == 1
 
 
 @pytest.mark.asyncio
 @respx.mock
 async def test_copy_sheet(server):
-    respx.post(f"{BASE}/{SID}/sheets/0:copyTo").mock(
+    route = respx.post(f"{BASE}/{SID}/sheets/0:copyTo").mock(
         return_value=httpx.Response(200, json={"sheetId": 99}),
     )
     _ok(await server.call_tool("sheets_copy_sheet", {
         "sheet_id": 0, "destination_spreadsheet_id": "other",
     }))
+    body = json.loads(route.calls[0].request.content)
+    assert body["destinationSpreadsheetId"] == "other"
 
 
 @pytest.mark.asyncio
 @respx.mock
 async def test_rename_sheet(server):
-    respx.post(f"{BASE}/{SID}:batchUpdate").mock(
+    route = respx.post(f"{BASE}/{SID}:batchUpdate").mock(
         return_value=httpx.Response(200, json={"replies": []}),
     )
     _ok(await server.call_tool(
         "sheets_rename_sheet", {"sheet_id": 0, "title": "Renamed"},
     ))
+    body = json.loads(route.calls[0].request.content)
+    props = body["requests"][0]["updateSheetProperties"]["properties"]
+    assert props["title"] == "Renamed"
+    assert props["sheetId"] == 0
 
 
 # --- Tier 3: Cell/Range Value Operations ---
@@ -182,25 +194,32 @@ async def test_read_values(server):
 @pytest.mark.asyncio
 @respx.mock
 async def test_write_values(server):
-    respx.put(f"{BASE}/{SID}/values/Sheet1!A1:B2").mock(
+    route = respx.put(f"{BASE}/{SID}/values/Sheet1!A1:B2").mock(
         return_value=httpx.Response(200, json={"updatedCells": 4}),
     )
     _ok(await server.call_tool("sheets_write_values", {
         "range": "Sheet1!A1:B2",
         "values": [["a", "b"], ["c", "d"]],
     }))
+    body = json.loads(route.calls[0].request.content)
+    assert body["range"] == "Sheet1!A1:B2"
+    assert body["majorDimension"] == "ROWS"
+    assert body["values"] == [["a", "b"], ["c", "d"]]
 
 
 @pytest.mark.asyncio
 @respx.mock
 async def test_append_values(server):
-    respx.post(f"{BASE}/{SID}/values/Sheet1!A:D:append").mock(
+    route = respx.post(f"{BASE}/{SID}/values/Sheet1!A:D:append").mock(
         return_value=httpx.Response(200, json={"updates": {}}),
     )
     _ok(await server.call_tool("sheets_append_values", {
         "range": "Sheet1!A:D",
         "values": [["e", "f"]],
     }))
+    body = json.loads(route.calls[0].request.content)
+    assert body["values"] == [["e", "f"]]
+    assert body["majorDimension"] == "ROWS"
 
 
 @pytest.mark.asyncio
@@ -228,12 +247,15 @@ async def test_batch_get_values(server):
 @pytest.mark.asyncio
 @respx.mock
 async def test_batch_update_values(server):
-    respx.post(f"{BASE}/{SID}/values:batchUpdate").mock(
+    route = respx.post(f"{BASE}/{SID}/values:batchUpdate").mock(
         return_value=httpx.Response(200, json={"totalUpdatedCells": 2}),
     )
     _ok(await server.call_tool("sheets_batch_update_values", {
         "data": [{"range": "A1", "values": [["x"]]}],
     }))
+    body = json.loads(route.calls[0].request.content)
+    assert body["data"][0]["range"] == "A1"
+    assert body["data"][0]["values"] == [["x"]]
 
 
 @pytest.mark.asyncio
@@ -252,13 +274,17 @@ async def test_batch_clear_values(server):
 @pytest.mark.asyncio
 @respx.mock
 async def test_format_cells(server):
-    respx.post(f"{BASE}/{SID}:batchUpdate").mock(
+    route = respx.post(f"{BASE}/{SID}:batchUpdate").mock(
         return_value=httpx.Response(200, json={"replies": []}),
     )
     _ok(await server.call_tool("sheets_format_cells", {
         "sheet_id": 0, "start_row": 0, "end_row": 1,
         "start_column": 0, "end_column": 5, "bold": True,
     }))
+    body = json.loads(route.calls[0].request.content)
+    req0 = body["requests"][0]["repeatCell"]
+    assert req0["range"]["sheetId"] == 0
+    assert req0["cell"]["userEnteredFormat"]["textFormat"]["bold"] is True
 
 
 @pytest.mark.asyncio
@@ -294,13 +320,19 @@ async def test_update_borders_no_style(server):
 @pytest.mark.asyncio
 @respx.mock
 async def test_merge_cells(server):
-    respx.post(f"{BASE}/{SID}:batchUpdate").mock(
+    route = respx.post(f"{BASE}/{SID}:batchUpdate").mock(
         return_value=httpx.Response(200, json={"replies": []}),
     )
     _ok(await server.call_tool("sheets_merge_cells", {
         "sheet_id": 0, "start_row": 0, "end_row": 2,
         "start_column": 0, "end_column": 3,
     }))
+    body = json.loads(route.calls[0].request.content)
+    merge = body["requests"][0]["mergeCells"]
+    assert merge["mergeType"] == "MERGE_ALL"
+    assert merge["range"]["sheetId"] == 0
+    assert merge["range"]["startRowIndex"] == 0
+    assert merge["range"]["endColumnIndex"] == 3
 
 
 @pytest.mark.asyncio

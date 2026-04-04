@@ -86,12 +86,15 @@ async def test_get_calendar(server):
 @pytest.mark.asyncio
 @respx.mock
 async def test_create_calendar(server):
-    respx.post(f"{GRAPH}/users/{U}/calendars").mock(
+    route = respx.post(f"{GRAPH}/users/{U}/calendars").mock(
         return_value=httpx.Response(201, json={"id": "c_new"})
     )
     assert _r(await server.call_tool("calendar_create_calendar", {
         "name": "Work",
     }))["status"] == "success"
+    req = route.calls[0].request
+    body = json.loads(req.content)
+    assert body["name"] == "Work"
 
 
 @pytest.mark.asyncio
@@ -110,7 +113,7 @@ async def test_delete_calendar(server):
 @pytest.mark.asyncio
 @respx.mock
 async def test_create_event(server):
-    respx.post(f"{GRAPH}/users/{U}/calendar/events").mock(
+    route = respx.post(f"{GRAPH}/users/{U}/calendar/events").mock(
         return_value=httpx.Response(201, json={"id": "e1"})
     )
     assert _r(await server.call_tool("calendar_create_event", {
@@ -118,6 +121,13 @@ async def test_create_event(server):
         "start_datetime": "2026-04-15T09:00:00",
         "end_datetime": "2026-04-15T09:30:00",
     }))["status"] == "success"
+    req = route.calls[0].request
+    body = json.loads(req.content)
+    assert body["subject"] == "Standup"
+    assert body["start"] == {"dateTime": "2026-04-15T09:00:00", "timeZone": "UTC"}
+    assert body["end"] == {"dateTime": "2026-04-15T09:30:00", "timeZone": "UTC"}
+    assert body["isAllDay"] is False
+    assert body["isOnlineMeeting"] is False
 
 
 @pytest.mark.asyncio
@@ -134,12 +144,15 @@ async def test_get_event(server):
 @pytest.mark.asyncio
 @respx.mock
 async def test_update_event(server):
-    respx.patch(f"{GRAPH}/users/{U}/events/e1").mock(
+    route = respx.patch(f"{GRAPH}/users/{U}/events/e1").mock(
         return_value=httpx.Response(200, json={"id": "e1"})
     )
     assert _r(await server.call_tool("calendar_update_event", {
         "event_id": "e1", "subject": "Updated",
     }))["status"] == "success"
+    req = route.calls[0].request
+    body = json.loads(req.content)
+    assert body["subject"] == "Updated"
 
 
 @pytest.mark.asyncio
@@ -170,34 +183,43 @@ async def test_list_events(server):
 @pytest.mark.asyncio
 @respx.mock
 async def test_accept_event(server):
-    respx.post(f"{GRAPH}/users/{U}/events/e1/accept").mock(
+    route = respx.post(f"{GRAPH}/users/{U}/events/e1/accept").mock(
         return_value=httpx.Response(202)
     )
     assert _r(await server.call_tool("calendar_accept_event", {
         "event_id": "e1",
     }))["status"] == "success"
+    req = route.calls[0].request
+    body = json.loads(req.content)
+    assert body["sendResponse"] is True
 
 
 @pytest.mark.asyncio
 @respx.mock
 async def test_decline_event(server):
-    respx.post(f"{GRAPH}/users/{U}/events/e1/decline").mock(
+    route = respx.post(f"{GRAPH}/users/{U}/events/e1/decline").mock(
         return_value=httpx.Response(202)
     )
     assert _r(await server.call_tool("calendar_decline_event", {
         "event_id": "e1",
     }))["status"] == "success"
+    req = route.calls[0].request
+    body = json.loads(req.content)
+    assert body["sendResponse"] is True
 
 
 @pytest.mark.asyncio
 @respx.mock
 async def test_tentatively_accept_event(server):
-    respx.post(f"{GRAPH}/users/{U}/events/e1/tentativelyAccept").mock(
+    route = respx.post(f"{GRAPH}/users/{U}/events/e1/tentativelyAccept").mock(
         return_value=httpx.Response(202)
     )
     assert _r(await server.call_tool("calendar_tentatively_accept_event", {
         "event_id": "e1",
     }))["status"] == "success"
+    req = route.calls[0].request
+    body = json.loads(req.content)
+    assert body["sendResponse"] is True
 
 
 # --- Scheduling ---
@@ -205,7 +227,7 @@ async def test_tentatively_accept_event(server):
 @pytest.mark.asyncio
 @respx.mock
 async def test_get_schedule(server):
-    respx.post(f"{GRAPH}/users/{U}/calendar/getSchedule").mock(
+    route = respx.post(f"{GRAPH}/users/{U}/calendar/getSchedule").mock(
         return_value=httpx.Response(200, json={"value": [{"scheduleId": "u1"}]})
     )
     assert _r(await server.call_tool("calendar_get_schedule", {
@@ -213,12 +235,18 @@ async def test_get_schedule(server):
         "start_datetime": "2026-04-15T08:00:00",
         "end_datetime": "2026-04-15T18:00:00",
     }))["count"] == 1
+    req = route.calls[0].request
+    body = json.loads(req.content)
+    assert body["schedules"] == ["u1@example.com"]
+    assert body["startTime"] == {"dateTime": "2026-04-15T08:00:00", "timeZone": "UTC"}
+    assert body["endTime"] == {"dateTime": "2026-04-15T18:00:00", "timeZone": "UTC"}
+    assert body["availabilityViewInterval"] == 30
 
 
 @pytest.mark.asyncio
 @respx.mock
 async def test_find_meeting_times(server):
-    respx.post(f"{GRAPH}/users/{U}/findMeetingTimes").mock(
+    route = respx.post(f"{GRAPH}/users/{U}/findMeetingTimes").mock(
         return_value=httpx.Response(200, json={
             "meetingTimeSuggestions": [{"confidence": 100}],
         })
@@ -226,6 +254,9 @@ async def test_find_meeting_times(server):
     assert _r(await server.call_tool("calendar_find_meeting_times", {
         "attendees": [{"emailAddress": {"address": "a@e.com"}}],
     }))["status"] == "success"
+    req = route.calls[0].request
+    body = json.loads(req.content)
+    assert body["attendees"] == [{"emailAddress": {"address": "a@e.com"}}]
 
 
 # --- Recurring Events ---
@@ -248,23 +279,31 @@ async def test_list_event_instances(server):
 @pytest.mark.asyncio
 @respx.mock
 async def test_forward_event(server):
-    respx.post(f"{GRAPH}/users/{U}/events/e1/forward").mock(
+    route = respx.post(f"{GRAPH}/users/{U}/events/e1/forward").mock(
         return_value=httpx.Response(202)
     )
     assert _r(await server.call_tool("calendar_forward_event", {
         "event_id": "e1", "to": "other@example.com",
     }))["status"] == "success"
+    req = route.calls[0].request
+    body = json.loads(req.content)
+    assert body["toRecipients"] == [
+        {"emailAddress": {"address": "other@example.com"}}
+    ]
 
 
 @pytest.mark.asyncio
 @respx.mock
 async def test_cancel_event(server):
-    respx.post(f"{GRAPH}/users/{U}/events/e1/cancel").mock(
+    route = respx.post(f"{GRAPH}/users/{U}/events/e1/cancel").mock(
         return_value=httpx.Response(202)
     )
     assert _r(await server.call_tool("calendar_cancel_event", {
         "event_id": "e1",
     }))["status"] == "success"
+    req = route.calls[0].request
+    body = json.loads(req.content)
+    assert body == {}
 
 
 # --- Event Attachments ---
@@ -274,12 +313,18 @@ async def test_cancel_event(server):
 async def test_add_event_attachment(server, tmp_path):
     test_file = tmp_path / "agenda.pdf"
     test_file.write_bytes(b"PDF content")
-    respx.post(f"{GRAPH}/users/{U}/events/e1/attachments").mock(
+    route = respx.post(f"{GRAPH}/users/{U}/events/e1/attachments").mock(
         return_value=httpx.Response(201, json={"id": "att1"})
     )
     assert _r(await server.call_tool("calendar_add_event_attachment", {
         "event_id": "e1", "file_path": str(test_file),
     }))["status"] == "success"
+    req = route.calls[0].request
+    body = json.loads(req.content)
+    assert body["@odata.type"] == "#microsoft.graph.fileAttachment"
+    assert body["name"] == "agenda.pdf"
+    assert body["contentType"] == "application/octet-stream"
+    assert "contentBytes" in body
 
 
 @pytest.mark.asyncio
@@ -320,12 +365,17 @@ async def test_delete_event_attachment(server):
 @pytest.mark.asyncio
 @respx.mock
 async def test_snooze_reminder(server):
-    respx.post(f"{GRAPH}/users/{U}/events/e1/snoozeReminder").mock(
+    route = respx.post(f"{GRAPH}/users/{U}/events/e1/snoozeReminder").mock(
         return_value=httpx.Response(200, json={})
     )
     assert _r(await server.call_tool("calendar_snooze_reminder", {
         "event_id": "e1", "new_reminder_time": "2026-04-15T08:45:00",
     }))["status"] == "success"
+    req = route.calls[0].request
+    body = json.loads(req.content)
+    assert body["newReminderTime"] == {
+        "dateTime": "2026-04-15T08:45:00", "timeZone": "UTC",
+    }
 
 
 @pytest.mark.asyncio

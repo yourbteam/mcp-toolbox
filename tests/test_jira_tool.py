@@ -57,12 +57,17 @@ async def test_api_error_429(server):
 @pytest.mark.asyncio
 @respx.mock
 async def test_create_issue(server):
-    respx.post(f"{API}/issue").mock(
+    route = respx.post(f"{API}/issue").mock(
         return_value=httpx.Response(201, json={"id": "1", "key": "P-1"}),
     )
     assert _r(await server.call_tool("jira_create_issue", {
         "project_key": "P", "summary": "Bug", "issue_type": "Bug",
     }))["status"] == "success"
+    body = json.loads(route.calls[0].request.content)
+    assert "fields" in body
+    assert body["fields"]["project"] == {"key": "P"}
+    assert body["fields"]["summary"] == "Bug"
+    assert body["fields"]["issuetype"] == {"name": "Bug"}
 
 @pytest.mark.asyncio
 @respx.mock
@@ -75,11 +80,13 @@ async def test_get_issue(server):
 @pytest.mark.asyncio
 @respx.mock
 async def test_update_issue(server):
-    respx.put(f"{API}/issue/P-1").mock(
+    route = respx.put(f"{API}/issue/P-1").mock(
         return_value=httpx.Response(204),
     )
     result = await server.call_tool("jira_update_issue", {"issue_key": "P-1", "summary": "Fixed"})
     assert _r(result)["status"] == "success"
+    body = json.loads(route.calls[0].request.content)
+    assert body == {"fields": {"summary": "Fixed"}}
 
 @pytest.mark.asyncio
 @respx.mock
@@ -93,21 +100,26 @@ async def test_delete_issue(server):
 @pytest.mark.asyncio
 @respx.mock
 async def test_search_issues(server):
-    respx.post(f"{API}/search/jql").mock(
+    route = respx.post(f"{API}/search/jql").mock(
         return_value=httpx.Response(200, json={"issues": [{"key": "P-1"}]}),
     )
     assert _r(await server.call_tool("jira_search_issues", {"jql": "project=P"}))["count"] == 1
+    body = json.loads(route.calls[0].request.content)
+    assert body["jql"] == "project=P"
+    assert body["maxResults"] == 50
 
 @pytest.mark.asyncio
 @respx.mock
 async def test_transition_issue(server):
-    respx.post(f"{API}/issue/P-1/transitions").mock(
+    route = respx.post(f"{API}/issue/P-1/transitions").mock(
         return_value=httpx.Response(204),
     )
     result = await server.call_tool("jira_transition_issue", {
         "issue_key": "P-1", "transition_id": "5",
     })
     assert _r(result)["status"] == "success"
+    body = json.loads(route.calls[0].request.content)
+    assert body == {"transition": {"id": "5"}}
 
 @pytest.mark.asyncio
 @respx.mock
@@ -120,20 +132,26 @@ async def test_list_transitions(server):
 @pytest.mark.asyncio
 @respx.mock
 async def test_assign_issue(server):
-    respx.put(f"{API}/issue/P-1/assignee").mock(
+    route = respx.put(f"{API}/issue/P-1/assignee").mock(
         return_value=httpx.Response(204),
     )
     result = await server.call_tool("jira_assign_issue", {"issue_key": "P-1", "account_id": "abc"})
     assert _r(result)["status"] == "success"
+    body = json.loads(route.calls[0].request.content)
+    assert body == {"accountId": "abc"}
 
 @pytest.mark.asyncio
 @respx.mock
 async def test_add_comment(server):
-    respx.post(f"{API}/issue/P-1/comment").mock(
+    route = respx.post(f"{API}/issue/P-1/comment").mock(
         return_value=httpx.Response(201, json={"id": "c1"}),
     )
     result = await server.call_tool("jira_add_comment", {"issue_key": "P-1", "body": "Note"})
     assert _r(result)["status"] == "success"
+    body = json.loads(route.calls[0].request.content)
+    assert body["body"]["type"] == "doc"
+    assert body["body"]["version"] == 1
+    assert body["body"]["content"][0]["content"][0]["text"] == "Note"
 
 @pytest.mark.asyncio
 @respx.mock
@@ -146,13 +164,16 @@ async def test_list_comments(server):
 @pytest.mark.asyncio
 @respx.mock
 async def test_update_comment(server):
-    respx.put(f"{API}/issue/P-1/comment/c1").mock(
+    route = respx.put(f"{API}/issue/P-1/comment/c1").mock(
         return_value=httpx.Response(200, json={"id": "c1"}),
     )
     result = await server.call_tool("jira_update_comment", {
         "issue_key": "P-1", "comment_id": "c1", "body": "Edited",
     })
     assert _r(result)["status"] == "success"
+    body = json.loads(route.calls[0].request.content)
+    assert body["body"]["type"] == "doc"
+    assert body["body"]["content"][0]["content"][0]["text"] == "Edited"
 
 @pytest.mark.asyncio
 @respx.mock
@@ -267,11 +288,13 @@ async def test_get_sprint_issues(server):
 @pytest.mark.asyncio
 @respx.mock
 async def test_move_to_sprint(server):
-    respx.post(f"{AGILE}/sprint/1/issue").mock(
+    route = respx.post(f"{AGILE}/sprint/1/issue").mock(
         return_value=httpx.Response(204),
     )
     result = await server.call_tool("jira_move_to_sprint", {"sprint_id": 1, "issue_keys": ["P-1"]})
     assert _r(result)["status"] == "success"
+    body = json.loads(route.calls[0].request.content)
+    assert body == {"issues": ["P-1"]}
 
 # --- Users ---
 
@@ -314,11 +337,13 @@ async def test_list_statuses(server):
 @pytest.mark.asyncio
 @respx.mock
 async def test_add_worklog(server):
-    respx.post(f"{API}/issue/P-1/worklog").mock(
+    route = respx.post(f"{API}/issue/P-1/worklog").mock(
         return_value=httpx.Response(201, json={"id": "w1"}),
     )
     result = await server.call_tool("jira_add_worklog", {"issue_key": "P-1", "time_spent": "2h"})
     assert _r(result)["status"] == "success"
+    body = json.loads(route.calls[0].request.content)
+    assert body["timeSpent"] == "2h"
 
 @pytest.mark.asyncio
 @respx.mock
@@ -331,13 +356,15 @@ async def test_list_worklogs(server):
 @pytest.mark.asyncio
 @respx.mock
 async def test_update_worklog(server):
-    respx.put(f"{API}/issue/P-1/worklog/w1").mock(
+    route = respx.put(f"{API}/issue/P-1/worklog/w1").mock(
         return_value=httpx.Response(200, json={"id": "w1"}),
     )
     result = await server.call_tool("jira_update_worklog", {
         "issue_key": "P-1", "worklog_id": "w1", "time_spent": "3h",
     })
     assert _r(result)["status"] == "success"
+    body = json.loads(route.calls[0].request.content)
+    assert body == {"timeSpent": "3h"}
 
 @pytest.mark.asyncio
 @respx.mock
@@ -361,11 +388,13 @@ async def test_get_watchers(server):
 @pytest.mark.asyncio
 @respx.mock
 async def test_add_watcher(server):
-    respx.post(f"{API}/issue/P-1/watchers").mock(
+    route = respx.post(f"{API}/issue/P-1/watchers").mock(
         return_value=httpx.Response(204),
     )
     result = await server.call_tool("jira_add_watcher", {"issue_key": "P-1", "account_id": "u1"})
     assert _r(result)["status"] == "success"
+    body = json.loads(route.calls[0].request.content)
+    assert body == "u1"
 
 @pytest.mark.asyncio
 @respx.mock
@@ -381,12 +410,16 @@ async def test_remove_watcher(server):
 @pytest.mark.asyncio
 @respx.mock
 async def test_create_issue_link(server):
-    respx.post(f"{API}/issueLink").mock(
+    route = respx.post(f"{API}/issueLink").mock(
         return_value=httpx.Response(201, json={}),
     )
     assert _r(await server.call_tool("jira_create_issue_link", {
         "type_name": "Blocks", "inward_issue_key": "P-1", "outward_issue_key": "P-2",
     }))["status"] == "success"
+    body = json.loads(route.calls[0].request.content)
+    assert body["type"] == {"name": "Blocks"}
+    assert body["inwardIssue"] == {"key": "P-1"}
+    assert body["outwardIssue"] == {"key": "P-2"}
 
 @pytest.mark.asyncio
 @respx.mock
@@ -418,13 +451,15 @@ async def test_list_components(server):
 @pytest.mark.asyncio
 @respx.mock
 async def test_create_component(server):
-    respx.post(f"{API}/component").mock(
+    route = respx.post(f"{API}/component").mock(
         return_value=httpx.Response(201, json={"id": "1"}),
     )
     result = await server.call_tool("jira_create_component", {
         "project_key": "P", "name": "Backend",
     })
     assert _r(result)["status"] == "success"
+    body = json.loads(route.calls[0].request.content)
+    assert body == {"project": "P", "name": "Backend"}
 
 # --- Versions ---
 
@@ -439,11 +474,13 @@ async def test_list_versions(server):
 @pytest.mark.asyncio
 @respx.mock
 async def test_create_version(server):
-    respx.post(f"{API}/version").mock(
+    route = respx.post(f"{API}/version").mock(
         return_value=httpx.Response(201, json={"id": "1"}),
     )
     result = await server.call_tool("jira_create_version", {"project_id": "10001", "name": "v1.0"})
     assert _r(result)["status"] == "success"
+    body = json.loads(route.calls[0].request.content)
+    assert body == {"projectId": 10001, "name": "v1.0"}
 
 # --- Labels ---
 
@@ -460,7 +497,7 @@ async def test_list_labels(server):
 @pytest.mark.asyncio
 @respx.mock
 async def test_bulk_create_issues(server):
-    respx.post(f"{API}/issue/bulk").mock(
+    route = respx.post(f"{API}/issue/bulk").mock(
         return_value=httpx.Response(201, json={"issues": [{"id": "1"}], "errors": []}),
     )
     assert _r(await server.call_tool("jira_bulk_create_issues", {
@@ -469,3 +506,7 @@ async def test_bulk_create_issues(server):
             "issuetype": {"name": "Task"},
         }}],
     }))["count"] == 1
+    body = json.loads(route.calls[0].request.content)
+    assert "issueUpdates" in body
+    assert body["issueUpdates"][0]["fields"]["project"] == {"key": "P"}
+    assert body["issueUpdates"][0]["fields"]["summary"] == "Test"

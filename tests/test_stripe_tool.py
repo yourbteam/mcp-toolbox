@@ -70,10 +70,13 @@ async def test_api_error(server):
 @pytest.mark.asyncio
 @respx.mock
 async def test_create_customer(server):
-    respx.post(f"{BASE}/customers").mock(
+    route = respx.post(f"{BASE}/customers").mock(
         return_value=httpx.Response(200, json={"id": "cus_1", "email": "a@b.com"}),
     )
     _ok(await server.call_tool("stripe_create_customer", {"email": "a@b.com"}))
+    req = route.calls[0].request
+    form = dict(httpx.QueryParams(req.content.decode()))
+    assert form["email"] == "a@b.com"
 
 
 @pytest.mark.asyncio
@@ -88,12 +91,14 @@ async def test_get_customer(server):
 @pytest.mark.asyncio
 @respx.mock
 async def test_update_customer(server):
-    respx.post(f"{BASE}/customers/cus_1").mock(
+    route = respx.post(f"{BASE}/customers/cus_1").mock(
         return_value=httpx.Response(200, json={"id": "cus_1", "name": "New"}),
     )
     _ok(await server.call_tool(
         "stripe_update_customer", {"customer_id": "cus_1", "name": "New"},
     ))
+    form = dict(httpx.QueryParams(route.calls[0].request.content.decode()))
+    assert form["name"] == "New"
 
 
 @pytest.mark.asyncio
@@ -138,12 +143,15 @@ async def test_search_customers(server):
 @pytest.mark.asyncio
 @respx.mock
 async def test_create_payment_intent(server):
-    respx.post(f"{BASE}/payment_intents").mock(
+    route = respx.post(f"{BASE}/payment_intents").mock(
         return_value=httpx.Response(200, json={"id": "pi_1", "amount": 1000}),
     )
     _ok(await server.call_tool(
         "stripe_create_payment_intent", {"amount": 1000, "currency": "usd"},
     ))
+    form = dict(httpx.QueryParams(route.calls[0].request.content.decode()))
+    assert form["amount"] == "1000"
+    assert form["currency"] == "usd"
 
 
 @pytest.mark.asyncio
@@ -160,13 +168,15 @@ async def test_get_payment_intent(server):
 @pytest.mark.asyncio
 @respx.mock
 async def test_update_payment_intent(server):
-    respx.post(f"{BASE}/payment_intents/pi_1").mock(
+    route = respx.post(f"{BASE}/payment_intents/pi_1").mock(
         return_value=httpx.Response(200, json={"id": "pi_1"}),
     )
     _ok(await server.call_tool(
         "stripe_update_payment_intent",
         {"payment_intent_id": "pi_1", "amount": 2000},
     ))
+    form = dict(httpx.QueryParams(route.calls[0].request.content.decode()))
+    assert form["amount"] == "2000"
 
 
 @pytest.mark.asyncio
@@ -205,12 +215,15 @@ async def test_list_payment_intents(server):
 @pytest.mark.asyncio
 @respx.mock
 async def test_create_charge(server):
-    respx.post(f"{BASE}/charges").mock(
+    route = respx.post(f"{BASE}/charges").mock(
         return_value=httpx.Response(200, json={"id": "ch_1"}),
     )
     _ok(await server.call_tool(
         "stripe_create_charge", {"amount": 500, "currency": "usd"},
     ))
+    form = dict(httpx.QueryParams(route.calls[0].request.content.decode()))
+    assert form["amount"] == "500"
+    assert form["currency"] == "usd"
 
 
 @pytest.mark.asyncio
@@ -225,12 +238,14 @@ async def test_get_charge(server):
 @pytest.mark.asyncio
 @respx.mock
 async def test_update_charge(server):
-    respx.post(f"{BASE}/charges/ch_1").mock(
+    route = respx.post(f"{BASE}/charges/ch_1").mock(
         return_value=httpx.Response(200, json={"id": "ch_1"}),
     )
     _ok(await server.call_tool(
         "stripe_update_charge", {"charge_id": "ch_1", "description": "test"},
     ))
+    form = dict(httpx.QueryParams(route.calls[0].request.content.decode()))
+    assert form["description"] == "test"
 
 
 @pytest.mark.asyncio
@@ -256,10 +271,12 @@ async def test_capture_charge(server):
 @pytest.mark.asyncio
 @respx.mock
 async def test_create_invoice(server):
-    respx.post(f"{BASE}/invoices").mock(
+    route = respx.post(f"{BASE}/invoices").mock(
         return_value=httpx.Response(200, json={"id": "in_1"}),
     )
     _ok(await server.call_tool("stripe_create_invoice", {"customer": "cus_1"}))
+    form = dict(httpx.QueryParams(route.calls[0].request.content.decode()))
+    assert form["customer"] == "cus_1"
 
 
 @pytest.mark.asyncio
@@ -274,12 +291,14 @@ async def test_get_invoice(server):
 @pytest.mark.asyncio
 @respx.mock
 async def test_update_invoice(server):
-    respx.post(f"{BASE}/invoices/in_1").mock(
+    route = respx.post(f"{BASE}/invoices/in_1").mock(
         return_value=httpx.Response(200, json={"id": "in_1"}),
     )
     _ok(await server.call_tool(
         "stripe_update_invoice", {"invoice_id": "in_1", "description": "x"},
     ))
+    form = dict(httpx.QueryParams(route.calls[0].request.content.decode()))
+    assert form["description"] == "x"
 
 
 @pytest.mark.asyncio
@@ -417,12 +436,15 @@ async def test_list_invoice_items(server):
 @pytest.mark.asyncio
 @respx.mock
 async def test_create_subscription(server):
-    respx.post(f"{BASE}/subscriptions").mock(
+    route = respx.post(f"{BASE}/subscriptions").mock(
         return_value=httpx.Response(200, json={"id": "sub_1"}),
     )
     _ok(await server.call_tool("stripe_create_subscription", {
         "customer": "cus_1", "items": [{"price": "price_1"}],
     }))
+    form = dict(httpx.QueryParams(route.calls[0].request.content.decode()))
+    assert form["customer"] == "cus_1"
+    assert form["items[0][price]"] == "price_1"
 
 
 @pytest.mark.asyncio
@@ -439,12 +461,14 @@ async def test_get_subscription(server):
 @pytest.mark.asyncio
 @respx.mock
 async def test_update_subscription(server):
-    respx.post(f"{BASE}/subscriptions/sub_1").mock(
+    route = respx.post(f"{BASE}/subscriptions/sub_1").mock(
         return_value=httpx.Response(200, json={"id": "sub_1"}),
     )
     _ok(await server.call_tool("stripe_update_subscription", {
         "subscription_id": "sub_1", "cancel_at_period_end": True,
     }))
+    form = dict(httpx.QueryParams(route.calls[0].request.content.decode()))
+    assert form["cancel_at_period_end"] == "true"
 
 
 @pytest.mark.asyncio
@@ -483,10 +507,12 @@ async def test_resume_subscription(server):
 @pytest.mark.asyncio
 @respx.mock
 async def test_create_product(server):
-    respx.post(f"{BASE}/products").mock(
+    route = respx.post(f"{BASE}/products").mock(
         return_value=httpx.Response(200, json={"id": "prod_1"}),
     )
     _ok(await server.call_tool("stripe_create_product", {"name": "Widget"}))
+    form = dict(httpx.QueryParams(route.calls[0].request.content.decode()))
+    assert form["name"] == "Widget"
 
 
 @pytest.mark.asyncio
@@ -501,12 +527,14 @@ async def test_get_product(server):
 @pytest.mark.asyncio
 @respx.mock
 async def test_update_product(server):
-    respx.post(f"{BASE}/products/prod_1").mock(
+    route = respx.post(f"{BASE}/products/prod_1").mock(
         return_value=httpx.Response(200, json={"id": "prod_1"}),
     )
     _ok(await server.call_tool(
         "stripe_update_product", {"product_id": "prod_1", "name": "New"},
     ))
+    form = dict(httpx.QueryParams(route.calls[0].request.content.decode()))
+    assert form["name"] == "New"
 
 
 @pytest.mark.asyncio
@@ -532,12 +560,16 @@ async def test_list_products(server):
 @pytest.mark.asyncio
 @respx.mock
 async def test_create_price(server):
-    respx.post(f"{BASE}/prices").mock(
+    route = respx.post(f"{BASE}/prices").mock(
         return_value=httpx.Response(200, json={"id": "price_1"}),
     )
     _ok(await server.call_tool("stripe_create_price", {
         "unit_amount": 1000, "currency": "usd", "product": "prod_1",
     }))
+    form = dict(httpx.QueryParams(route.calls[0].request.content.decode()))
+    assert form["unit_amount"] == "1000"
+    assert form["currency"] == "usd"
+    assert form["product"] == "prod_1"
 
 
 @pytest.mark.asyncio
@@ -552,12 +584,14 @@ async def test_get_price(server):
 @pytest.mark.asyncio
 @respx.mock
 async def test_update_price(server):
-    respx.post(f"{BASE}/prices/price_1").mock(
+    route = respx.post(f"{BASE}/prices/price_1").mock(
         return_value=httpx.Response(200, json={"id": "price_1"}),
     )
     _ok(await server.call_tool(
         "stripe_update_price", {"price_id": "price_1", "active": False},
     ))
+    form = dict(httpx.QueryParams(route.calls[0].request.content.decode()))
+    assert form["active"] == "false"
 
 
 @pytest.mark.asyncio
@@ -574,12 +608,14 @@ async def test_list_prices(server):
 @pytest.mark.asyncio
 @respx.mock
 async def test_create_payment_method(server):
-    respx.post(f"{BASE}/payment_methods").mock(
+    route = respx.post(f"{BASE}/payment_methods").mock(
         return_value=httpx.Response(200, json={"id": "pm_1"}),
     )
     _ok(await server.call_tool(
         "stripe_create_payment_method", {"type": "card"},
     ))
+    form = dict(httpx.QueryParams(route.calls[0].request.content.decode()))
+    assert form["type"] == "card"
 
 
 @pytest.mark.asyncio
@@ -607,13 +643,15 @@ async def test_list_payment_methods(server):
 @pytest.mark.asyncio
 @respx.mock
 async def test_attach_payment_method(server):
-    respx.post(f"{BASE}/payment_methods/pm_1/attach").mock(
+    route = respx.post(f"{BASE}/payment_methods/pm_1/attach").mock(
         return_value=httpx.Response(200, json={"id": "pm_1"}),
     )
     _ok(await server.call_tool(
         "stripe_attach_payment_method",
         {"payment_method_id": "pm_1", "customer": "cus_1"},
     ))
+    form = dict(httpx.QueryParams(route.calls[0].request.content.decode()))
+    assert form["customer"] == "cus_1"
 
 
 @pytest.mark.asyncio
@@ -638,10 +676,12 @@ async def test_create_refund_no_source(server):
 @pytest.mark.asyncio
 @respx.mock
 async def test_create_refund(server):
-    respx.post(f"{BASE}/refunds").mock(
+    route = respx.post(f"{BASE}/refunds").mock(
         return_value=httpx.Response(200, json={"id": "re_1"}),
     )
     _ok(await server.call_tool("stripe_create_refund", {"charge": "ch_1"}))
+    form = dict(httpx.QueryParams(route.calls[0].request.content.decode()))
+    assert form["charge"] == "ch_1"
 
 
 @pytest.mark.asyncio
@@ -698,12 +738,15 @@ async def test_list_balance_transactions(server):
 @pytest.mark.asyncio
 @respx.mock
 async def test_create_payout(server):
-    respx.post(f"{BASE}/payouts").mock(
+    route = respx.post(f"{BASE}/payouts").mock(
         return_value=httpx.Response(200, json={"id": "po_1"}),
     )
     _ok(await server.call_tool(
         "stripe_create_payout", {"amount": 1000, "currency": "usd"},
     ))
+    form = dict(httpx.QueryParams(route.calls[0].request.content.decode()))
+    assert form["amount"] == "1000"
+    assert form["currency"] == "usd"
 
 
 @pytest.mark.asyncio
@@ -729,12 +772,15 @@ async def test_list_payouts(server):
 @pytest.mark.asyncio
 @respx.mock
 async def test_create_coupon(server):
-    respx.post(f"{BASE}/coupons").mock(
+    route = respx.post(f"{BASE}/coupons").mock(
         return_value=httpx.Response(200, json={"id": "coup_1"}),
     )
     _ok(await server.call_tool(
         "stripe_create_coupon", {"percent_off": 25.0},
     ))
+    form = dict(httpx.QueryParams(route.calls[0].request.content.decode()))
+    assert form["percent_off"] == "25.0"
+    assert form["duration"] == "once"
 
 
 @pytest.mark.asyncio
@@ -780,12 +826,14 @@ async def test_list_coupons(server):
 @pytest.mark.asyncio
 @respx.mock
 async def test_create_promotion_code(server):
-    respx.post(f"{BASE}/promotion_codes").mock(
+    route = respx.post(f"{BASE}/promotion_codes").mock(
         return_value=httpx.Response(200, json={"id": "promo_1"}),
     )
     _ok(await server.call_tool(
         "stripe_create_promotion_code", {"coupon": "coup_1"},
     ))
+    form = dict(httpx.QueryParams(route.calls[0].request.content.decode()))
+    assert form["coupon"] == "coup_1"
 
 
 @pytest.mark.asyncio
@@ -845,12 +893,15 @@ async def test_list_events(server):
 @pytest.mark.asyncio
 @respx.mock
 async def test_create_webhook_endpoint(server):
-    respx.post(f"{BASE}/webhook_endpoints").mock(
+    route = respx.post(f"{BASE}/webhook_endpoints").mock(
         return_value=httpx.Response(200, json={"id": "we_1"}),
     )
     _ok(await server.call_tool("stripe_create_webhook_endpoint", {
         "url": "https://example.com/wh", "enabled_events": ["invoice.paid"],
     }))
+    form = dict(httpx.QueryParams(route.calls[0].request.content.decode()))
+    assert form["url"] == "https://example.com/wh"
+    assert form["enabled_events[0]"] == "invoice.paid"
 
 
 @pytest.mark.asyncio

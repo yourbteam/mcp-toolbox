@@ -162,7 +162,7 @@ async def test_no_document_id_error(server):
 @pytest.mark.asyncio
 @respx.mock
 async def test_create_document(server):
-    respx.post(f"{BASE}/").mock(
+    route = respx.post(f"{BASE}/").mock(
         return_value=httpx.Response(200, json={
             "documentId": "new1",
             "title": "My Doc",
@@ -173,6 +173,8 @@ async def test_create_document(server):
         {"title": "My Doc"},
     ))
     assert r["documentId"] == "new1"
+    body = json.loads(route.calls[0].request.content)
+    assert body["title"] == "My Doc"
 
 
 @pytest.mark.asyncio
@@ -233,7 +235,7 @@ async def test_batch_update(server):
 @pytest.mark.asyncio
 @respx.mock
 async def test_insert_text(server):
-    respx.post(
+    route = respx.post(
         f"{BASE}/{DID}:batchUpdate",
     ).mock(return_value=BATCH_OK)
     _ok(await server.call_tool(
@@ -242,6 +244,11 @@ async def test_insert_text(server):
             "index": 1,
         },
     ))
+    body = json.loads(route.calls[0].request.content)
+    req0 = body["requests"][0]
+    assert "insertText" in req0
+    assert req0["insertText"]["text"] == "Hello World"
+    assert req0["insertText"]["location"]["index"] == 1
 
 
 @pytest.mark.asyncio
@@ -262,7 +269,7 @@ async def test_insert_text_with_segment(server):
 @pytest.mark.asyncio
 @respx.mock
 async def test_delete_content(server):
-    respx.post(
+    route = respx.post(
         f"{BASE}/{DID}:batchUpdate",
     ).mock(return_value=BATCH_OK)
     _ok(await server.call_tool(
@@ -271,12 +278,18 @@ async def test_delete_content(server):
             "end_index": 10,
         },
     ))
+    body = json.loads(route.calls[0].request.content)
+    req0 = body["requests"][0]
+    assert "deleteContentRange" in req0
+    rng = req0["deleteContentRange"]["range"]
+    assert rng["startIndex"] == 1
+    assert rng["endIndex"] == 10
 
 
 @pytest.mark.asyncio
 @respx.mock
 async def test_replace_all_text(server):
-    respx.post(
+    route = respx.post(
         f"{BASE}/{DID}:batchUpdate",
     ).mock(return_value=BATCH_OK)
     _ok(await server.call_tool(
@@ -285,6 +298,11 @@ async def test_replace_all_text(server):
             "replace_text": "bar",
         },
     ))
+    body = json.loads(route.calls[0].request.content)
+    req0 = body["requests"][0]
+    assert "replaceAllText" in req0
+    assert req0["replaceAllText"]["containsText"]["text"] == "foo"
+    assert req0["replaceAllText"]["replaceText"] == "bar"
 
 
 # ==========================================
@@ -424,7 +442,7 @@ async def test_update_paragraph_style_no_fields(
 @pytest.mark.asyncio
 @respx.mock
 async def test_insert_table(server):
-    respx.post(
+    route = respx.post(
         f"{BASE}/{DID}:batchUpdate",
     ).mock(return_value=BATCH_OK)
     _ok(await server.call_tool(
@@ -434,6 +452,11 @@ async def test_insert_table(server):
             "index": 1,
         },
     ))
+    body = json.loads(route.calls[0].request.content)
+    req0 = body["requests"][0]
+    assert "insertTable" in req0
+    assert req0["insertTable"]["rows"] == 3
+    assert req0["insertTable"]["columns"] == 2
 
 
 @pytest.mark.asyncio
@@ -529,7 +552,7 @@ async def test_insert_inline_image_sized(server):
 @pytest.mark.asyncio
 @respx.mock
 async def test_insert_page_break(server):
-    respx.post(
+    route = respx.post(
         f"{BASE}/{DID}:batchUpdate",
     ).mock(return_value=BATCH_OK)
     _ok(await server.call_tool(
@@ -537,6 +560,10 @@ async def test_insert_page_break(server):
             "index": 10,
         },
     ))
+    body = json.loads(route.calls[0].request.content)
+    req0 = body["requests"][0]
+    assert "insertPageBreak" in req0
+    assert req0["insertPageBreak"]["location"]["index"] == 10
 
 
 # ==========================================
@@ -669,7 +696,7 @@ async def test_pin_table_header_rows(server):
 @pytest.mark.asyncio
 @respx.mock
 async def test_create_named_range(server):
-    respx.post(
+    route = respx.post(
         f"{BASE}/{DID}:batchUpdate",
     ).mock(return_value=BATCH_OK)
     _ok(await server.call_tool(
@@ -679,6 +706,10 @@ async def test_create_named_range(server):
             "end_index": 10,
         },
     ))
+    body = json.loads(route.calls[0].request.content)
+    req0 = body["requests"][0]
+    assert "createNamedRange" in req0
+    assert req0["createNamedRange"]["name"] == "my_range"
 
 
 @pytest.mark.asyncio
@@ -728,7 +759,7 @@ async def test_delete_named_range_no_id_or_name(
 @pytest.mark.asyncio
 @respx.mock
 async def test_create_paragraph_bullets(server):
-    respx.post(
+    route = respx.post(
         f"{BASE}/{DID}:batchUpdate",
     ).mock(return_value=BATCH_OK)
     _ok(await server.call_tool(
@@ -739,6 +770,10 @@ async def test_create_paragraph_bullets(server):
                 "BULLET_DISC_CIRCLE_SQUARE",
         },
     ))
+    body = json.loads(route.calls[0].request.content)
+    req0 = body["requests"][0]
+    assert "createParagraphBullets" in req0
+    assert req0["createParagraphBullets"]["bulletPreset"] == "BULLET_DISC_CIRCLE_SQUARE"
 
 
 @pytest.mark.asyncio
@@ -870,7 +905,7 @@ async def test_update_section_style_no_fields(
 @pytest.mark.asyncio
 @respx.mock
 async def test_create_header(server):
-    respx.post(
+    route = respx.post(
         f"{BASE}/{DID}:batchUpdate",
     ).mock(return_value=BATCH_OK)
     _ok(await server.call_tool(
@@ -878,6 +913,9 @@ async def test_create_header(server):
             "section_break_index": 0,
         },
     ))
+    body = json.loads(route.calls[0].request.content)
+    req0 = body["requests"][0]
+    assert "createHeader" in req0
 
 
 @pytest.mark.asyncio
@@ -987,7 +1025,7 @@ async def test_replace_named_range_no_id_or_name(
 @pytest.mark.asyncio
 @respx.mock
 async def test_replace_image(server):
-    respx.post(
+    route = respx.post(
         f"{BASE}/{DID}:batchUpdate",
     ).mock(return_value=BATCH_OK)
     _ok(await server.call_tool(
@@ -996,6 +1034,11 @@ async def test_replace_image(server):
             "uri": "https://example.com/new.png",
         },
     ))
+    body = json.loads(route.calls[0].request.content)
+    req0 = body["requests"][0]
+    assert "replaceImage" in req0
+    assert req0["replaceImage"]["imageObjectId"] == "kix.img1"
+    assert req0["replaceImage"]["uri"] == "https://example.com/new.png"
 
 
 @pytest.mark.asyncio

@@ -163,7 +163,7 @@ async def test_get_file(server):
 @pytest.mark.asyncio
 @respx.mock
 async def test_create_file_folder(server):
-    respx.post(f"{BASE}/files").mock(
+    route = respx.post(f"{BASE}/files").mock(
         return_value=httpx.Response(200, json={
             "id": "f2", "name": "New Folder",
         }),
@@ -173,6 +173,10 @@ async def test_create_file_folder(server):
     ))
     assert r["status"] == "success"
     assert r["file"]["id"] == "f2"
+    req = route.calls[0].request
+    body = json.loads(req.content)
+    assert body["name"] == "New Folder"
+    assert "mimeType" in body
 
 
 @pytest.mark.asyncio
@@ -196,7 +200,7 @@ async def test_create_file_with_content(server):
 @pytest.mark.asyncio
 @respx.mock
 async def test_copy_file(server):
-    respx.post(f"{BASE}/files/f1/copy").mock(
+    route = respx.post(f"{BASE}/files/f1/copy").mock(
         return_value=httpx.Response(200, json={
             "id": "f1_copy", "name": "doc (copy)",
         }),
@@ -208,12 +212,15 @@ async def test_copy_file(server):
         },
     ))
     assert r["file"]["id"] == "f1_copy"
+    req = route.calls[0].request
+    body = json.loads(req.content)
+    assert body["name"] == "doc (copy)"
 
 
 @pytest.mark.asyncio
 @respx.mock
 async def test_update_file_metadata(server):
-    respx.patch(f"{BASE}/files/f1").mock(
+    route = respx.patch(f"{BASE}/files/f1").mock(
         return_value=httpx.Response(200, json={
             "id": "f1", "name": "renamed.txt",
         }),
@@ -226,6 +233,10 @@ async def test_update_file_metadata(server):
         },
     ))
     assert r["file"]["name"] == "renamed.txt"
+    req = route.calls[0].request
+    body = json.loads(req.content)
+    assert body["name"] == "renamed.txt"
+    assert body["starred"] is True
 
 
 @pytest.mark.asyncio
@@ -350,7 +361,7 @@ async def test_download_file_binary(server):
 @pytest.mark.asyncio
 @respx.mock
 async def test_stop_channel(server):
-    respx.post(f"{BASE}/channels/stop").mock(
+    route = respx.post(f"{BASE}/channels/stop").mock(
         return_value=httpx.Response(204),
     )
     r = _r(await server.call_tool(
@@ -360,6 +371,10 @@ async def test_stop_channel(server):
         },
     ))
     assert r["status_code"] == 204
+    req = route.calls[0].request
+    body = json.loads(req.content)
+    assert body["id"] == "ch1"
+    assert body["resourceId"] == "res1"
 
 
 # --- Tier 2: Permissions (5 tools) ---
@@ -412,7 +427,7 @@ async def test_get_permission(server):
 @pytest.mark.asyncio
 @respx.mock
 async def test_create_permission(server):
-    respx.post(
+    route = respx.post(
         f"{BASE}/files/f1/permissions",
     ).mock(
         return_value=httpx.Response(200, json={
@@ -430,12 +445,17 @@ async def test_create_permission(server):
         },
     ))
     assert r["permission"]["id"] == "p2"
+    req = route.calls[0].request
+    body = json.loads(req.content)
+    assert body["role"] == "reader"
+    assert body["type"] == "user"
+    assert body["emailAddress"] == "a@test.com"
 
 
 @pytest.mark.asyncio
 @respx.mock
 async def test_update_permission(server):
-    respx.patch(
+    route = respx.patch(
         f"{BASE}/files/f1/permissions/p1",
     ).mock(
         return_value=httpx.Response(200, json={
@@ -451,6 +471,9 @@ async def test_update_permission(server):
         },
     ))
     assert r["permission"]["role"] == "writer"
+    req = route.calls[0].request
+    body = json.loads(req.content)
+    assert body["role"] == "writer"
 
 
 @pytest.mark.asyncio
@@ -514,7 +537,7 @@ async def test_get_comment(server):
 @pytest.mark.asyncio
 @respx.mock
 async def test_create_comment(server):
-    respx.post(
+    route = respx.post(
         f"{BASE}/files/f1/comments",
     ).mock(
         return_value=httpx.Response(200, json={
@@ -528,6 +551,9 @@ async def test_create_comment(server):
         },
     ))
     assert r["comment"]["id"] == "c2"
+    req = route.calls[0].request
+    body = json.loads(req.content)
+    assert body["content"] == "Great work!"
 
 
 @pytest.mark.asyncio
@@ -614,7 +640,7 @@ async def test_get_reply(server):
 @pytest.mark.asyncio
 @respx.mock
 async def test_create_reply(server):
-    respx.post(
+    route = respx.post(
         f"{BASE}/files/f1/comments/c1/replies",
     ).mock(
         return_value=httpx.Response(200, json={
@@ -629,6 +655,9 @@ async def test_create_reply(server):
         },
     ))
     assert r["reply"]["id"] == "r2"
+    req = route.calls[0].request
+    body = json.loads(req.content)
+    assert body["content"] == "You're welcome"
 
 
 @pytest.mark.asyncio
@@ -812,7 +841,7 @@ async def test_list_changes(server):
 @pytest.mark.asyncio
 @respx.mock
 async def test_watch_changes(server):
-    respx.post(f"{BASE}/changes/watch").mock(
+    route = respx.post(f"{BASE}/changes/watch").mock(
         return_value=httpx.Response(200, json={
             "kind": "api#channel",
             "id": "ch1",
@@ -827,6 +856,11 @@ async def test_watch_changes(server):
         },
     ))
     assert r["channel"]["id"] == "ch1"
+    req = route.calls[0].request
+    body = json.loads(req.content)
+    assert body["id"] == "ch1"
+    assert body["address"] == "https://example.com/hook"
+    assert body["type"] == "web_hook"
 
 
 # --- Tier 7: Shared Drives (5 tools) ---
@@ -865,7 +899,7 @@ async def test_get_drive(server):
 @pytest.mark.asyncio
 @respx.mock
 async def test_create_drive(server):
-    respx.post(f"{BASE}/drives").mock(
+    route = respx.post(f"{BASE}/drives").mock(
         return_value=httpx.Response(200, json={
             "id": "d2", "name": "New Drive",
         }),
@@ -877,6 +911,9 @@ async def test_create_drive(server):
         },
     ))
     assert r["drive"]["id"] == "d2"
+    req = route.calls[0].request
+    body = json.loads(req.content)
+    assert body["name"] == "New Drive"
 
 
 @pytest.mark.asyncio
