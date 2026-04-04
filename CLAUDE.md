@@ -47,7 +47,8 @@ src/mcp_toolbox/
     ├── quickbooks_tool.py # 46 QuickBooks tools (customers, invoices, payments, reports)
     ├── github_tool.py     # 75 GitHub tools (repos, issues, PRs, actions, search)
     ├── gtasks_tool.py     # 14 Google Tasks tools (task lists, tasks, ordering)
-    └── gcal_tool.py       # 34 Google Calendar tools (calendars, events, ACLs, settings)
+    ├── gcal_tool.py       # 34 Google Calendar tools (calendars, events, ACLs, settings)
+    └── gdocs_tool.py      # 35 Google Docs tools (documents, text, tables, formatting)
 ```
 
 ## Integrations
@@ -195,6 +196,21 @@ src/mcp_toolbox/
 - **Config:** `STRIPE_API_KEY`
 - **HTTP:** Direct httpx with Bearer token, form-encoded requests (`data=` not `json=`)
 - **Note:** Uses `_flatten()` helper for Stripe bracket-notation nested params; pyright excluded
+
+### Google Docs (gdocs_tool.py) — 35 tools
+- **Documents (3):** create, get, batch update (raw requests)
+- **Text Content (3):** insert text, delete content, replace all text
+- **Formatting (2):** update text style, update paragraph style
+- **Structural (7):** insert table, table row/column CRUD, inline image, page break
+- **Table Formatting (6):** column properties, cell style, row style, merge/unmerge, pin headers
+- **Named Ranges (2):** create, delete
+- **Lists/Bullets (2):** create, delete paragraph bullets
+- **Section & Style (3):** insert section break, update document style, update section style
+- **Headers/Footers (5):** create/delete header, create/delete footer, create footnote
+- **Replace (2):** replace named range content, replace image
+- **Config:** `GOOGLE_SERVICE_ACCOUNT_JSON` (reuse), `GDOCS_DEFAULT_DOCUMENT_ID` (optional)
+- **Auth:** Service account with documents scope, auto-refresh
+- **HTTP:** httpx; most mutations via shared `_batch_update()` helper
 
 ### Google Calendar (gcal_tool.py) — 34 tools
 - **CalendarList (5):** list, get, insert, update, delete calendar list entries

@@ -8,9 +8,9 @@ def test_server_name():
 
 
 def test_server_has_tools():
-    # 2+14+81+19+28+39+13+28+4+23+43+44+77+27+46+75+14+34 = 611
+    # 2+14+81+19+28+39+13+28+4+23+43+44+77+27+46+75+14+34+35 = 646
     tools = mcp._tool_manager._tools
-    assert len(tools) == 611
+    assert len(tools) == 646
     expected_tools = {
         # Example tools
         "hello", "add",
@@ -320,5 +320,28 @@ def test_server_has_tools():
         "gcal_get_colors",
         "gcal_watch_events", "gcal_watch_calendar_list",
         "gcal_stop_channel",
+        # Google Docs tools (35)
+        "gdocs_create_document", "gdocs_get_document",
+        "gdocs_batch_update",
+        "gdocs_insert_text", "gdocs_delete_content",
+        "gdocs_replace_all_text",
+        "gdocs_update_text_style", "gdocs_update_paragraph_style",
+        "gdocs_insert_table", "gdocs_insert_table_row",
+        "gdocs_insert_table_column", "gdocs_delete_table_row",
+        "gdocs_delete_table_column", "gdocs_insert_inline_image",
+        "gdocs_insert_page_break",
+        "gdocs_update_table_column_properties",
+        "gdocs_update_table_cell_style", "gdocs_update_table_row_style",
+        "gdocs_merge_table_cells", "gdocs_unmerge_table_cells",
+        "gdocs_pin_table_header_rows",
+        "gdocs_create_named_range", "gdocs_delete_named_range",
+        "gdocs_create_paragraph_bullets",
+        "gdocs_delete_paragraph_bullets",
+        "gdocs_insert_section_break",
+        "gdocs_update_document_style", "gdocs_update_section_style",
+        "gdocs_create_header", "gdocs_create_footer",
+        "gdocs_delete_header", "gdocs_delete_footer",
+        "gdocs_create_footnote",
+        "gdocs_replace_named_range_content", "gdocs_replace_image",
     }
     assert set(tools.keys()) == expected_tools

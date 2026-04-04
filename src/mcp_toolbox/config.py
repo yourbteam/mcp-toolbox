@@ -56,6 +56,9 @@ JIRA_BASE_URL: str | None = os.getenv("JIRA_BASE_URL")
 JIRA_EMAIL: str | None = os.getenv("JIRA_EMAIL")
 JIRA_API_TOKEN: str | None = os.getenv("JIRA_API_TOKEN")
 
+# Google Docs
+GDOCS_DEFAULT_DOCUMENT_ID: str | None = os.getenv("GDOCS_DEFAULT_DOCUMENT_ID")
+
 # Google Calendar
 GCAL_DEFAULT_CALENDAR_ID: str | None = os.getenv("GCAL_DEFAULT_CALENDAR_ID")
 
