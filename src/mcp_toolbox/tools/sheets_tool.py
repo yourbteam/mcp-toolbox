@@ -1,5 +1,6 @@
 """Google Sheets integration — spreadsheet, sheet, values, formatting, charts."""
 
+import asyncio
 import json
 import logging
 
@@ -42,9 +43,9 @@ def _get_token() -> str:
     return _credentials.token
 
 
-def _get_client() -> httpx.AsyncClient:
+async def _get_client() -> httpx.AsyncClient:
     global _client
-    token = _get_token()
+    token = await asyncio.to_thread(_get_token)
     if _client is None:
         _client = httpx.AsyncClient(base_url=BASE, timeout=30.0)
     _client.headers["Authorization"] = f"Bearer {token}"
@@ -88,7 +89,7 @@ async def _req(
     method: str, url: str, json_body: dict | None = None,
     params: dict | None = None,
 ) -> dict | list:
-    client = _get_client()
+    client = await _get_client()
     kwargs: dict = {}
     if json_body is not None:
         kwargs["json"] = json_body
@@ -958,6 +959,10 @@ def register_tools(mcp: FastMCP) -> None:
             legend_position: BOTTOM_LEGEND, LEFT_LEGEND, etc.
         """
         sid = _sid(spreadsheet_id)
+        if source_end_column - source_start_column < 2:
+            raise ToolError(
+                "Chart requires at least 2 columns (domain + series)."
+            )
         domain_range = _grid_range(
             sheet_id, source_start_row, source_end_row,
             source_start_column, source_start_column + 1,

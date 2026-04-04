@@ -412,6 +412,16 @@ async def test_add_chart(server):
     }))
 
 
+@pytest.mark.asyncio
+async def test_add_chart_too_few_columns(server):
+    with pytest.raises(Exception, match="at least 2 columns"):
+        await server.call_tool("sheets_add_chart", {
+            "sheet_id": 0, "chart_type": "LINE",
+            "source_start_row": 0, "source_end_row": 10,
+            "source_start_column": 0, "source_end_column": 1,
+        })
+
+
 # --- Tier 8: Protection ---
 
 @pytest.mark.asyncio
