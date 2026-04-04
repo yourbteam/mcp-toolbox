@@ -713,7 +713,7 @@ def register_tools(mcp: FastMCP) -> None:  # noqa: C901
             filt["OwnerId"] = owner_id
         like: dict[str, str] = {}
         if name_like is not None:
-            like["Name"] = name_like
+            like["LastName"] = name_like
         return await _sobject_list(
             "Contact", fields or [], default, filt,
             order_by, order_dir, limit, offset,
@@ -1180,8 +1180,8 @@ def register_tools(mcp: FastMCP) -> None:  # noqa: C901
         _add(inp, "contactId", contact_id)
         _add(inp, "opportunityName", opportunity_name)
         if do_not_create_opportunity is not None:
-            inp["createOpportunity"] = (
-                not do_not_create_opportunity
+            inp["doNotCreateOpportunity"] = (
+                do_not_create_opportunity
             )
         _add(inp, "ownerId", owner_id)
         data = await _req(
@@ -2034,7 +2034,7 @@ def register_tools(mcp: FastMCP) -> None:  # noqa: C901
             folder_id: Filter by report folder ID
         """
         fields = [
-            "Id", "Name", "DeveloperName", "FolderName",
+            "Id", "Name", "DeveloperName", "Description",
         ]
         filt: dict[str, object] = {}
         if folder_id is not None:
@@ -2067,14 +2067,12 @@ def register_tools(mcp: FastMCP) -> None:  # noqa: C901
                     "reportFilters": filters,
                 },
             }
-        params: dict[str, str] = {}
-        if not include_details:
-            params["includeDetails"] = "false"
+        body = body or {}
+        body.setdefault("reportMetadata", {})["includeDetails"] = include_details
         data = await _req(
             "POST",
             f"analytics/reports/{report_id}",
             json_body=body,
-            params=params or None,
         )
         return _success(200, data=data)
 

@@ -737,7 +737,7 @@ def register_tools(mcp: FastMCP) -> None:
             release_date: Release date (YYYY-MM-DD)
             released: Whether released
         """
-        body: dict = {"projectId": project_id, "name": name}
+        body: dict = {"projectId": int(project_id), "name": name}
         if description:
             body["description"] = description
         if start_date:

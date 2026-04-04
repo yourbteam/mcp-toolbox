@@ -967,10 +967,6 @@ def register_tools(mcp: FastMCP) -> None:
             sheet_id, source_start_row, source_end_row,
             source_start_column, source_start_column + 1,
         )
-        series_range = _grid_range(
-            sheet_id, source_start_row, source_end_row,
-            source_start_column + 1, source_end_column,
-        )
         spec: dict = {
             "basicChart": {
                 "chartType": chart_type,
@@ -979,11 +975,11 @@ def register_tools(mcp: FastMCP) -> None:
                         "sourceRange": {"sources": [domain_range]}
                     }
                 }],
-                "series": [{
-                    "series": {
-                        "sourceRange": {"sources": [series_range]}
-                    }
-                }],
+                "series": [
+                    {"series": {"sourceRange": {"sources": [_grid_range(
+                        sheet_id, source_start_row, source_end_row, col, col + 1)]}}}
+                    for col in range(source_start_column + 1, source_end_column)
+                ],
             }
         }
         if title is not None:

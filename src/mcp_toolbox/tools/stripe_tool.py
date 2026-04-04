@@ -548,6 +548,7 @@ def register_tools(mcp: FastMCP) -> None:
             d["lines[0][description]"] = description
         if not d:
             raise ToolError("At least price or amount must be provided.")
+        d["lines[0][behavior]"] = "add"
         return _success(200, data=await _req("POST", f"/invoices/{invoice_id}/add_lines", data=d))
 
     # === INVOICE ITEMS ===

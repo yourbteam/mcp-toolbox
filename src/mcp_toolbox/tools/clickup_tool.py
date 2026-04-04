@@ -464,7 +464,6 @@ def register_tools(mcp: FastMCP) -> None:
         duration: int,
         description: str | None = None,
         start: str | int | None = None,
-        end: str | int | None = None,
     ) -> str:
         """Log a time entry on a ClickUp task.
 
@@ -473,15 +472,12 @@ def register_tools(mcp: FastMCP) -> None:
             duration: Duration in milliseconds
             description: Description of work done
             start: Start time (ISO datetime or Unix ms)
-            end: End time (ISO datetime or Unix ms)
         """
         body: dict = {"duration": duration}
         if description is not None:
             body["description"] = description
         if start is not None:
             body["start"] = _to_ms(start)
-        if end is not None:
-            body["end"] = _to_ms(end)
 
         data = await _request("POST", f"/task/{task_id}/time", json=body)
         return _success(200, data=data)
@@ -754,7 +750,6 @@ def register_tools(mcp: FastMCP) -> None:
         list_id: str,
         name: str | None = None,
         content: str | None = None,
-        status: str | None = None,
     ) -> str:
         """Update a ClickUp list.
 
@@ -762,15 +757,12 @@ def register_tools(mcp: FastMCP) -> None:
             list_id: List ID
             name: New list name
             content: List description
-            status: Default status
         """
         body: dict = {}
         if name is not None:
             body["name"] = name
         if content is not None:
             body["content"] = content
-        if status is not None:
-            body["status"] = status
         if not body:
             raise ToolError("At least one field to update must be provided.")
         data = await _request("PUT", f"/list/{list_id}", json=body)
@@ -946,7 +938,7 @@ def register_tools(mcp: FastMCP) -> None:
         if end is not None:
             body["end"] = _to_ms(end)
         if tags is not None:
-            body["tags"] = tags
+            body["tags"] = [{"name": t} for t in tags]
         if not body:
             raise ToolError("At least one field to update must be provided.")
         data = await _request("PUT", f"/team/{tid}/time_entries/{timer_id}", json=body)
@@ -1318,7 +1310,7 @@ def register_tools(mcp: FastMCP) -> None:
             team_id: Workspace ID (uses default if not provided)
         """
         tid = _get_team_id(team_id)
-        body = {"name": name, "new_name": new_name}
+        body = {"tag": {"name": name}, "new_tag": {"name": new_name}}
         data = await _request("PUT", f"/team/{tid}/time_entries/tags", json=body)
         return _success(200, data=data)
 
@@ -1442,20 +1434,16 @@ def register_tools(mcp: FastMCP) -> None:
     async def clickup_update_view(
         view_id: str,
         name: str | None = None,
-        type: str | None = None,
     ) -> str:
         """Update a ClickUp view.
 
         Args:
             view_id: View ID
             name: New view name
-            type: New view type
         """
         body: dict = {}
         if name is not None:
             body["name"] = name
-        if type is not None:
-            body["type"] = type
         if not body:
             raise ToolError("At least one field to update must be provided.")
         data = await _request("PUT", f"/view/{view_id}", json=body)

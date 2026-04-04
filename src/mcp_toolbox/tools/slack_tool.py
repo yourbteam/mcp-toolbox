@@ -290,7 +290,7 @@ def register_tools(mcp: FastMCP) -> None:
             topic: New topic text
         """
         result = await _call("conversations_setTopic", channel=channel, topic=topic)
-        return _success(200, topic=result.get("topic", {}).get("value", ""))
+        return _success(200, topic=result.get("topic", ""))
 
     @mcp.tool()
     async def slack_set_channel_purpose(channel: str, purpose: str) -> str:
@@ -303,7 +303,7 @@ def register_tools(mcp: FastMCP) -> None:
         result = await _call(
             "conversations_setPurpose", channel=channel, purpose=purpose
         )
-        return _success(200, purpose=result.get("purpose", {}).get("value", ""))
+        return _success(200, purpose=result.get("purpose", ""))
 
     # --- Users ---
 
@@ -453,8 +453,7 @@ def register_tools(mcp: FastMCP) -> None:
         if initial_comment:
             kwargs["initial_comment"] = initial_comment
         result = await _call("files_upload_v2", **kwargs)
-        files = result.get("files", [])
-        return _success(200, data=files[0] if files else result.get("file", {}))
+        return _success(200, data=result.get("file", {}))
 
     @mcp.tool()
     async def slack_delete_file(file_id: str) -> str:

@@ -293,7 +293,9 @@ async def test_list_meetings(server):
     respx.get(f"{GRAPH_BASE}/users/user@example.com/onlineMeetings").mock(
         return_value=httpx.Response(200, json={"value": [{"id": "m1"}]})
     )
-    result = await server.call_tool("teams_list_meetings", {})
+    result = await server.call_tool("teams_list_meetings", {
+        "join_web_url": "https://teams.microsoft.com/l/meetup/test",
+    })
     assert _get_result_data(result)["count"] == 1
 
 

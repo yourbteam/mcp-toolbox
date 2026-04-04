@@ -161,6 +161,7 @@ async def _upload_req(
     metadata: dict,
     content: str,
     mime_type: str,
+    params: dict | None = None,
 ) -> dict:
     """Multipart/related upload for file creation/update
     with text content."""
@@ -183,7 +184,10 @@ async def _upload_req(
         ),
         "Authorization": client.headers["Authorization"],
     }
-    full_url = f"{UPLOAD_BASE}{url}?uploadType=multipart"
+    qs = "uploadType=multipart"
+    if params:
+        qs += "&" + "&".join(f"{k}={v}" for k, v in params.items())
+    full_url = f"{UPLOAD_BASE}{url}?{qs}"
     try:
         response = await client.request(
             method,
@@ -316,7 +320,8 @@ def register_tools(mcp: FastMCP) -> None:  # noqa: C901
             mt = mime_type or "text/plain"
             metadata["mimeType"] = mt
             data = await _upload_req(
-                "POST", "/files", metadata, content, mt
+                "POST", "/files", metadata, content, mt,
+                params={"supportsAllDrives": "true"},
             )
         else:
             metadata["mimeType"] = mime_type or (
@@ -383,7 +388,8 @@ def register_tools(mcp: FastMCP) -> None:  # noqa: C901
             url = f"/files/{file_id}"
             # Need to add params to upload URL manually
             data = await _upload_req(
-                "PATCH", url, metadata, content, mt
+                "PATCH", url, metadata, content, mt,
+                params=params,
             )
         else:
             data = await _req(
@@ -414,7 +420,7 @@ def register_tools(mcp: FastMCP) -> None:  # noqa: C901
         """Export a Google Workspace file (Docs, Sheets,
         Slides) to a standard format like text/plain,
         text/csv, or application/pdf."""
-        params: dict = {"mimeType": mime_type}
+        params: dict = {"mimeType": mime_type, "supportsAllDrives": "true"}
         resp = await _raw_req(
             "GET", f"/files/{file_id}/export",
             params=params,
@@ -458,7 +464,7 @@ def register_tools(mcp: FastMCP) -> None:  # noqa: C901
         """Download file content (non-Google-Workspace
         files). For Docs/Sheets/Slides use
         gdrive_export_file instead."""
-        params: dict = {"alt": "media"}
+        params: dict = {"alt": "media", "supportsAllDrives": "true"}
         resp = await _raw_req(
             "GET", f"/files/{file_id}", params=params
         )
@@ -516,6 +522,7 @@ def register_tools(mcp: FastMCP) -> None:  # noqa: C901
         """List all permissions on a file or folder."""
         params: dict = {"supportsAllDrives": "true"}
         params["fields"] = fields or (
+            "nextPageToken,"
             "permissions(id,type,role,"
             "emailAddress,displayName,domain)"
         )

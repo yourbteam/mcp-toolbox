@@ -121,7 +121,7 @@ def register_tools(mcp: FastMCP) -> None:
         """
         body: dict = {
             "parent": {
-                "type": parent_type, parent_type: parent_id
+                parent_type: parent_id
             },
         }
         if parent_type == "database_id":

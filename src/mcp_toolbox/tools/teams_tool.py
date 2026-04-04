@@ -192,7 +192,6 @@ def register_tools(mcp: FastMCP) -> None:
         team_id: str,
         display_name: str | None = None,
         description: str | None = None,
-        visibility: str | None = None,
     ) -> str:
         """Update team settings.
 
@@ -200,15 +199,12 @@ def register_tools(mcp: FastMCP) -> None:
             team_id: Team ID
             display_name: New team name
             description: New description
-            visibility: 'public' or 'private'
         """
         body: dict = {}
         if display_name is not None:
             body["displayName"] = display_name
         if description is not None:
             body["description"] = description
-        if visibility is not None:
-            body["visibility"] = visibility
         if not body:
             raise ToolError("At least one field to update must be provided.")
         await _request("PATCH", f"/teams/{team_id}", json=body)
@@ -532,14 +528,26 @@ def register_tools(mcp: FastMCP) -> None:
         return _success(201, data=data)
 
     @mcp.tool()
-    async def teams_list_meetings(user_id: str | None = None) -> str:
-        """List online meetings for a user.
+    async def teams_list_meetings(
+        user_id: str | None = None,
+        join_web_url: str | None = None,
+    ) -> str:
+        """List online meetings for a user. The Graph API requires a $filter
+        parameter on this endpoint; provide join_web_url to filter by meeting
+        join URL.
 
         Args:
             user_id: User (falls back to O365_USER_ID)
+            join_web_url: Filter by joinWebUrl (required by Graph API)
         """
+        if join_web_url is None:
+            raise ToolError(
+                "The Graph API /onlineMeetings endpoint requires a $filter. "
+                "Provide join_web_url to filter by joinWebUrl."
+            )
         uid = _get_user_id(user_id)
-        data = await _request("GET", f"/users/{uid}/onlineMeetings")
+        params = {"$filter": f"joinWebUrl eq '{join_web_url}'"}
+        data = await _request("GET", f"/users/{uid}/onlineMeetings", params=params)
         meetings = data.get("value", []) if isinstance(data, dict) else data
         return _success(200, data=meetings, count=len(meetings))
 

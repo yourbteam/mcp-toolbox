@@ -146,7 +146,7 @@ async def _query(
     if where:
         q += f" WHERE {where}"
     if order_by:
-        q += f" ORDERBY {order_by}"
+        q += f" ORDER BY {order_by}"
     q += f" STARTPOSITION {start_position} MAXRESULTS {max_results}"
     data = await _req("GET", "/query", params={"query": q})
     resp = data.get("QueryResponse", {})
@@ -459,7 +459,7 @@ def register_tools(mcp: FastMCP) -> None:
             json_body={"Id": invoice_id, "SyncToken": sync_token},
             params={"operation": "delete"},
         )
-        return _success(200, data=data)
+        return _success(200, data=data.get("Invoice", data))
 
     # === TIER 3: PAYMENTS ===
 
@@ -498,7 +498,10 @@ def register_tools(mcp: FastMCP) -> None:
             body["DepositToAccountRef"] = {"value": deposit_to_account_ref}
         if invoice_refs is not None:
             body["Line"] = [
-                {"Amount": r.get("Amount", total_amt), "LinkedTxn": [r]}
+                {
+                    "Amount": r.get("Amount", total_amt),
+                    "LinkedTxn": [{"TxnId": r["TxnId"], "TxnType": r.get("TxnType", "Invoice")}],
+                }
                 for r in invoice_refs
             ]
         if payment_ref_num is not None:
@@ -559,7 +562,7 @@ def register_tools(mcp: FastMCP) -> None:
             json_body={"Id": payment_id, "SyncToken": sync_token},
             params={"operation": "delete"},
         )
-        return _success(200, data=data)
+        return _success(200, data=data.get("Payment", data))
 
     # === TIER 4: ITEMS ===
 
