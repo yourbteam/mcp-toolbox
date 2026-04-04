@@ -58,7 +58,7 @@ async def _req(
 ) -> dict | list:
     client = _get_client()
     kwargs: dict = {}
-    if data:
+    if data is not None:
         kwargs["data"] = _flatten(data)
     if params:
         kwargs["params"] = params
@@ -113,17 +113,17 @@ def register_tools(mcp: FastMCP) -> None:
             address: Address dict (line1, city, state, postal_code, country)
         """
         d: dict = {}
-        if email:
+        if email is not None:
             d["email"] = email
-        if name:
+        if name is not None:
             d["name"] = name
-        if phone:
+        if phone is not None:
             d["phone"] = phone
-        if description:
+        if description is not None:
             d["description"] = description
-        if metadata:
+        if metadata is not None:
             d["metadata"] = metadata
-        if address:
+        if address is not None:
             d["address"] = address
         return _success(200, data=await _req("POST", "/customers", data=d))
 
@@ -152,13 +152,13 @@ def register_tools(mcp: FastMCP) -> None:
             metadata: Updated metadata
         """
         d: dict = {}
-        if email:
+        if email is not None:
             d["email"] = email
-        if name:
+        if name is not None:
             d["name"] = name
-        if phone:
+        if phone is not None:
             d["phone"] = phone
-        if metadata:
+        if metadata is not None:
             d["metadata"] = metadata
         if not d:
             raise ToolError("At least one field to update must be provided.")
@@ -187,7 +187,7 @@ def register_tools(mcp: FastMCP) -> None:
         p: dict = {"limit": str(limit)}
         if starting_after:
             p["starting_after"] = starting_after
-        if email:
+        if email is not None:
             p["email"] = email
         return _list_result(await _req("GET", "/customers", params=p))
 
@@ -222,13 +222,13 @@ def register_tools(mcp: FastMCP) -> None:
             metadata: Metadata
         """
         d: dict = {"amount": amount, "currency": currency}
-        if customer:
+        if customer is not None:
             d["customer"] = customer
-        if description:
+        if description is not None:
             d["description"] = description
-        if payment_method:
+        if payment_method is not None:
             d["payment_method"] = payment_method
-        if metadata:
+        if metadata is not None:
             d["metadata"] = metadata
         return _success(200, data=await _req("POST", "/payment_intents", data=d))
 
@@ -257,9 +257,9 @@ def register_tools(mcp: FastMCP) -> None:
         d: dict = {}
         if amount is not None:
             d["amount"] = amount
-        if description:
+        if description is not None:
             d["description"] = description
-        if metadata:
+        if metadata is not None:
             d["metadata"] = metadata
         if not d:
             raise ToolError("At least one field to update must be provided.")
@@ -302,7 +302,7 @@ def register_tools(mcp: FastMCP) -> None:
         p: dict = {"limit": str(limit)}
         if starting_after:
             p["starting_after"] = starting_after
-        if customer:
+        if customer is not None:
             p["customer"] = customer
         return _list_result(await _req("GET", "/payment_intents", params=p))
 
@@ -325,11 +325,11 @@ def register_tools(mcp: FastMCP) -> None:
             description: Description
         """
         d: dict = {"amount": amount, "currency": currency}
-        if source:
+        if source is not None:
             d["source"] = source
-        if customer:
+        if customer is not None:
             d["customer"] = customer
-        if description:
+        if description is not None:
             d["description"] = description
         return _success(200, data=await _req("POST", "/charges", data=d))
 
@@ -354,9 +354,9 @@ def register_tools(mcp: FastMCP) -> None:
             metadata: Updated metadata
         """
         d: dict = {}
-        if description:
+        if description is not None:
             d["description"] = description
-        if metadata:
+        if metadata is not None:
             d["metadata"] = metadata
         if not d:
             raise ToolError("At least one field to update must be provided.")
@@ -377,7 +377,7 @@ def register_tools(mcp: FastMCP) -> None:
         p: dict = {"limit": str(limit)}
         if starting_after:
             p["starting_after"] = starting_after
-        if customer:
+        if customer is not None:
             p["customer"] = customer
         return _list_result(await _req("GET", "/charges", params=p))
 
@@ -414,13 +414,13 @@ def register_tools(mcp: FastMCP) -> None:
             collection_method: charge_automatically or send_invoice
         """
         d: dict = {"customer": customer}
-        if description:
+        if description is not None:
             d["description"] = description
-        if metadata:
+        if metadata is not None:
             d["metadata"] = metadata
         if auto_advance is not None:
             d["auto_advance"] = auto_advance
-        if collection_method:
+        if collection_method is not None:
             d["collection_method"] = collection_method
         return _success(200, data=await _req("POST", "/invoices", data=d))
 
@@ -445,9 +445,9 @@ def register_tools(mcp: FastMCP) -> None:
             metadata: Updated metadata
         """
         d: dict = {}
-        if description:
+        if description is not None:
             d["description"] = description
-        if metadata:
+        if metadata is not None:
             d["metadata"] = metadata
         if not d:
             raise ToolError("At least one field to update must be provided.")
@@ -502,7 +502,7 @@ def register_tools(mcp: FastMCP) -> None:
         p: dict = {"limit": str(limit)}
         if starting_after:
             p["starting_after"] = starting_after
-        if customer:
+        if customer is not None:
             p["customer"] = customer
         if status:
             p["status"] = status
@@ -538,14 +538,16 @@ def register_tools(mcp: FastMCP) -> None:
             description: Description
         """
         d: dict = {}
-        if price:
+        if price is not None:
             d["lines[0][price]"] = price
         if quantity is not None:
             d["lines[0][quantity]"] = str(quantity)
         if amount is not None:
             d["lines[0][amount]"] = str(amount)
-        if description:
+        if description is not None:
             d["lines[0][description]"] = description
+        if not d:
+            raise ToolError("At least price or amount must be provided.")
         return _success(200, data=await _req("POST", f"/invoices/{invoice_id}/add_lines", data=d))
 
     # === INVOICE ITEMS ===
@@ -569,15 +571,15 @@ def register_tools(mcp: FastMCP) -> None:
             invoice: Attach to specific invoice
         """
         d: dict = {"customer": customer}
-        if price:
+        if price is not None:
             d["price"] = price
         if amount is not None:
             d["amount"] = amount
-        if currency:
+        if currency is not None:
             d["currency"] = currency
-        if description:
+        if description is not None:
             d["description"] = description
-        if invoice:
+        if invoice is not None:
             d["invoice"] = invoice
         return _success(200, data=await _req("POST", "/invoiceitems", data=d))
 
@@ -606,9 +608,9 @@ def register_tools(mcp: FastMCP) -> None:
         d: dict = {}
         if amount is not None:
             d["amount"] = amount
-        if description:
+        if description is not None:
             d["description"] = description
-        if metadata:
+        if metadata is not None:
             d["metadata"] = metadata
         if not d:
             raise ToolError("At least one field to update must be provided.")
@@ -637,7 +639,7 @@ def register_tools(mcp: FastMCP) -> None:
         p: dict = {"limit": str(limit)}
         if starting_after:
             p["starting_after"] = starting_after
-        if customer:
+        if customer is not None:
             p["customer"] = customer
         return _list_result(await _req("GET", "/invoiceitems", params=p))
 
@@ -656,7 +658,7 @@ def register_tools(mcp: FastMCP) -> None:
             metadata: Metadata
         """
         d: dict = {"customer": customer, "items": items}
-        if metadata:
+        if metadata is not None:
             d["metadata"] = metadata
         return _success(200, data=await _req("POST", "/subscriptions", data=d))
 
@@ -681,7 +683,7 @@ def register_tools(mcp: FastMCP) -> None:
             cancel_at_period_end: Cancel at end of period
         """
         d: dict = {}
-        if metadata:
+        if metadata is not None:
             d["metadata"] = metadata
         if cancel_at_period_end is not None:
             d["cancel_at_period_end"] = cancel_at_period_end
@@ -714,7 +716,7 @@ def register_tools(mcp: FastMCP) -> None:
         p: dict = {"limit": str(limit)}
         if starting_after:
             p["starting_after"] = starting_after
-        if customer:
+        if customer is not None:
             p["customer"] = customer
         if status:
             p["status"] = status
@@ -743,9 +745,9 @@ def register_tools(mcp: FastMCP) -> None:
             metadata: Metadata
         """
         d: dict = {"name": name}
-        if description:
+        if description is not None:
             d["description"] = description
-        if metadata:
+        if metadata is not None:
             d["metadata"] = metadata
         return _success(200, data=await _req("POST", "/products", data=d))
 
@@ -772,11 +774,11 @@ def register_tools(mcp: FastMCP) -> None:
             metadata: Updated metadata
         """
         d: dict = {}
-        if name:
+        if name is not None:
             d["name"] = name
-        if description:
+        if description is not None:
             d["description"] = description
-        if metadata:
+        if metadata is not None:
             d["metadata"] = metadata
         if not d:
             raise ToolError("At least one field to update must be provided.")
@@ -822,7 +824,7 @@ def register_tools(mcp: FastMCP) -> None:
             recurring_interval: month, year, week, day (for subscriptions)
         """
         d: dict = {"unit_amount": unit_amount, "currency": currency, "product": product}
-        if recurring_interval:
+        if recurring_interval is not None:
             d["recurring"] = {"interval": recurring_interval}
         return _success(200, data=await _req("POST", "/prices", data=d))
 
@@ -847,7 +849,7 @@ def register_tools(mcp: FastMCP) -> None:
             active: Activate/deactivate
         """
         d: dict = {}
-        if metadata:
+        if metadata is not None:
             d["metadata"] = metadata
         if active is not None:
             d["active"] = active
@@ -870,7 +872,7 @@ def register_tools(mcp: FastMCP) -> None:
         p: dict = {"limit": str(limit)}
         if starting_after:
             p["starting_after"] = starting_after
-        if product:
+        if product is not None:
             p["product"] = product
         return _list_result(await _req("GET", "/prices", params=p))
 
@@ -887,7 +889,7 @@ def register_tools(mcp: FastMCP) -> None:
             card: Card details (number, exp_month, exp_year, cvc)
         """
         d: dict = {"type": type}
-        if card:
+        if card is not None:
             d["card"] = card
         return _success(200, data=await _req("POST", "/payment_methods", data=d))
 
@@ -963,14 +965,16 @@ def register_tools(mcp: FastMCP) -> None:
             amount: Partial refund amount (omit for full)
             reason: duplicate, fraudulent, requested_by_customer
         """
+        if not charge and not payment_intent:
+            raise ToolError("Either charge or payment_intent must be provided.")
         d: dict = {}
-        if charge:
+        if charge is not None:
             d["charge"] = charge
-        if payment_intent:
+        if payment_intent is not None:
             d["payment_intent"] = payment_intent
         if amount is not None:
             d["amount"] = amount
-        if reason:
+        if reason is not None:
             d["reason"] = reason
         return _success(200, data=await _req("POST", "/refunds", data=d))
 
@@ -993,7 +997,7 @@ def register_tools(mcp: FastMCP) -> None:
             metadata: Updated metadata
         """
         d: dict = {}
-        if metadata:
+        if metadata is not None:
             d["metadata"] = metadata
         if not d:
             raise ToolError("At least one field to update must be provided.")
@@ -1014,7 +1018,7 @@ def register_tools(mcp: FastMCP) -> None:
         p: dict = {"limit": str(limit)}
         if starting_after:
             p["starting_after"] = starting_after
-        if charge:
+        if charge is not None:
             p["charge"] = charge
         return _list_result(await _req("GET", "/refunds", params=p))
 
@@ -1101,11 +1105,11 @@ def register_tools(mcp: FastMCP) -> None:
             d["percent_off"] = percent_off
         if amount_off is not None:
             d["amount_off"] = amount_off
-        if currency:
+        if currency is not None:
             d["currency"] = currency
         if duration_in_months is not None:
             d["duration_in_months"] = duration_in_months
-        if name:
+        if name is not None:
             d["name"] = name
         return _success(200, data=await _req("POST", "/coupons", data=d))
 
@@ -1130,9 +1134,9 @@ def register_tools(mcp: FastMCP) -> None:
             metadata: Updated metadata
         """
         d: dict = {}
-        if name:
+        if name is not None:
             d["name"] = name
-        if metadata:
+        if metadata is not None:
             d["metadata"] = metadata
         if not d:
             raise ToolError("At least one field to update must be provided.")
@@ -1176,7 +1180,7 @@ def register_tools(mcp: FastMCP) -> None:
             max_redemptions: Max uses
         """
         d: dict = {"coupon": coupon}
-        if code:
+        if code is not None:
             d["code"] = code
         if max_redemptions is not None:
             d["max_redemptions"] = max_redemptions
@@ -1205,7 +1209,7 @@ def register_tools(mcp: FastMCP) -> None:
         d: dict = {}
         if active is not None:
             d["active"] = active
-        if metadata:
+        if metadata is not None:
             d["metadata"] = metadata
         if not d:
             raise ToolError("At least one field to update must be provided.")
@@ -1226,7 +1230,7 @@ def register_tools(mcp: FastMCP) -> None:
         p: dict = {"limit": str(limit)}
         if starting_after:
             p["starting_after"] = starting_after
-        if coupon:
+        if coupon is not None:
             p["coupon"] = coupon
         return _list_result(await _req("GET", "/promotion_codes", params=p))
 
@@ -1255,7 +1259,7 @@ def register_tools(mcp: FastMCP) -> None:
         p: dict = {"limit": str(limit)}
         if starting_after:
             p["starting_after"] = starting_after
-        if type:
+        if type is not None:
             p["type"] = type
         return _list_result(await _req("GET", "/events", params=p))
 
@@ -1274,7 +1278,7 @@ def register_tools(mcp: FastMCP) -> None:
             description: Description
         """
         d: dict = {"url": url, "enabled_events": enabled_events}
-        if description:
+        if description is not None:
             d["description"] = description
         return _success(200, data=await _req("POST", "/webhook_endpoints", data=d))
 
@@ -1303,11 +1307,11 @@ def register_tools(mcp: FastMCP) -> None:
             disabled: Disable the endpoint
         """
         d: dict = {}
-        if url:
+        if url is not None:
             d["url"] = url
-        if enabled_events:
+        if enabled_events is not None:
             d["enabled_events"] = enabled_events
-        if description:
+        if description is not None:
             d["description"] = description
         if disabled is not None:
             d["disabled"] = disabled

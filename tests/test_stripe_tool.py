@@ -349,6 +349,14 @@ async def test_add_invoice_line_item(server):
     ))
 
 
+@pytest.mark.asyncio
+async def test_add_invoice_line_item_no_data(server):
+    with pytest.raises(Exception, match="price or amount"):
+        await server.call_tool(
+            "stripe_add_invoice_line_item", {"invoice_id": "in_1"},
+        )
+
+
 # --- Invoice Items ---
 
 @pytest.mark.asyncio
@@ -620,6 +628,12 @@ async def test_detach_payment_method(server):
 
 
 # --- Refunds ---
+
+@pytest.mark.asyncio
+async def test_create_refund_no_source(server):
+    with pytest.raises(Exception, match="charge or payment_intent"):
+        await server.call_tool("stripe_create_refund", {})
+
 
 @pytest.mark.asyncio
 @respx.mock
