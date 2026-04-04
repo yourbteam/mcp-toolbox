@@ -91,4 +91,26 @@
 
 ---
 
+## Pending Hardening Tasks
+
+### HTTP Tool Security Hardening
+The Generic HTTP tool (`http_tool.py`) has 9 security/robustness findings from the L1 audit that need addressing:
+
+1. **Path traversal** — `http_download` can write to any writable path; restrict to allowed directory
+2. **Arbitrary file read** — `http_upload` can read any file; restrict to allowed directory
+3. **Unbounded memory** — `http_request` has no upper cap on `max_response_size`; clamp to 500KB
+4. **Full response in memory** — `response.text` loads entire body before truncating; use streaming
+5. **Partial file cleanup** — `http_download` only cleans up on `ToolError`, not other exceptions; use `try/finally`
+6. **Sync file I/O** — `http_upload` reads files synchronously in async context
+7. **Header injection** — `headers` dict passed without validation (httpx mitigates, but defense-in-depth)
+8. **JSON truncation** — Truncated JSON returns broken string instead of structured indicator
+9. **Form data types** — `http_request_form` doesn't coerce dict values to strings
+
+**Priority:** Medium — these are design decisions about how permissive the "escape hatch" tool should be. Not API correctness bugs, but important for production deployments.
+
+### L2 Contract Tests
+Add request-body assertions to existing unit tests to verify the exact JSON/form bodies sent to APIs (not just response parsing). Estimated ~900 additional assertions across the test suite. This catches wrong field names, missing wrapper keys, and incorrect nesting that mocked tests currently miss.
+
+---
+
 *Last updated: 2026-04-04*
