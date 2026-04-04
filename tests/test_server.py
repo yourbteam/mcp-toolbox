@@ -8,9 +8,9 @@ def test_server_name():
 
 
 def test_server_has_tools():
-    # 2+14+81+19+28+39+13+28+4+23+43+44+77+27+46+75+14+34+35+62+21+37 = 766
+    # 2+14+81+19+28+39+13+28+4+23+43+44+77+27+46+75+14+34+35+62+21+37+66 = 832
     tools = mcp._tool_manager._tools
-    assert len(tools) == 766
+    assert len(tools) == 832
     expected_tools = {
         # Example tools
         "hello", "add",
@@ -412,5 +412,44 @@ def test_server_has_tools():
         "gdrive_list_drives", "gdrive_get_drive",
         "gdrive_create_drive", "gdrive_update_drive",
         "gdrive_delete_drive",
+        # Zendesk tools (66)
+        "zendesk_create_ticket", "zendesk_get_ticket",
+        "zendesk_update_ticket", "zendesk_delete_ticket",
+        "zendesk_list_tickets", "zendesk_add_ticket_comment",
+        "zendesk_list_ticket_comments", "zendesk_add_ticket_tags",
+        "zendesk_remove_ticket_tags", "zendesk_set_ticket_tags",
+        "zendesk_merge_tickets", "zendesk_bulk_update_tickets",
+        "zendesk_apply_macro", "zendesk_list_ticket_audits",
+        "zendesk_list_ticket_collaborators", "zendesk_list_ticket_incidents",
+        "zendesk_create_user", "zendesk_get_user",
+        "zendesk_update_user", "zendesk_delete_user",
+        "zendesk_list_users", "zendesk_search_users",
+        "zendesk_merge_users", "zendesk_list_user_identities",
+        "zendesk_create_or_update_user", "zendesk_list_user_tickets",
+        "zendesk_create_organization", "zendesk_get_organization",
+        "zendesk_update_organization", "zendesk_delete_organization",
+        "zendesk_list_organizations", "zendesk_search_organizations",
+        "zendesk_create_group", "zendesk_get_group",
+        "zendesk_update_group", "zendesk_delete_group",
+        "zendesk_list_groups", "zendesk_list_group_memberships",
+        "zendesk_create_group_membership",
+        "zendesk_list_ticket_fields", "zendesk_get_ticket_field",
+        "zendesk_create_ticket_field", "zendesk_update_ticket_field",
+        "zendesk_delete_ticket_field",
+        "zendesk_list_ticket_forms", "zendesk_get_ticket_form",
+        "zendesk_list_views", "zendesk_get_view",
+        "zendesk_execute_view", "zendesk_get_view_count",
+        "zendesk_search", "zendesk_search_count",
+        "zendesk_list_satisfaction_ratings",
+        "zendesk_get_satisfaction_rating",
+        "zendesk_create_satisfaction_rating",
+        "zendesk_upload_attachment", "zendesk_delete_upload",
+        "zendesk_list_suspended_tickets",
+        "zendesk_get_suspended_ticket",
+        "zendesk_recover_suspended_ticket",
+        "zendesk_delete_suspended_ticket",
+        "zendesk_list_macros", "zendesk_get_macro",
+        "zendesk_create_macro", "zendesk_update_macro",
+        "zendesk_delete_macro",
     }
     assert set(tools.keys()) == expected_tools

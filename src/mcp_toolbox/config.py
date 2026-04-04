@@ -56,6 +56,18 @@ JIRA_BASE_URL: str | None = os.getenv("JIRA_BASE_URL")
 JIRA_EMAIL: str | None = os.getenv("JIRA_EMAIL")
 JIRA_API_TOKEN: str | None = os.getenv("JIRA_API_TOKEN")
 
+# Zendesk
+ZENDESK_SUBDOMAIN: str | None = os.getenv("ZENDESK_SUBDOMAIN")
+ZENDESK_EMAIL: str | None = os.getenv("ZENDESK_EMAIL")
+ZENDESK_API_TOKEN: str | None = os.getenv("ZENDESK_API_TOKEN")
+
+# Salesforce
+SF_CLIENT_ID: str | None = os.getenv("SF_CLIENT_ID")
+SF_CLIENT_SECRET: str | None = os.getenv("SF_CLIENT_SECRET")
+SF_REFRESH_TOKEN: str | None = os.getenv("SF_REFRESH_TOKEN")
+SF_INSTANCE_URL: str | None = os.getenv("SF_INSTANCE_URL")
+SF_API_VERSION: str = os.getenv("SF_API_VERSION", "v59.0")
+
 # Google Drive
 GDRIVE_DEFAULT_FOLDER_ID: str | None = os.getenv("GDRIVE_DEFAULT_FOLDER_ID")
 

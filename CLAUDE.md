@@ -51,7 +51,8 @@ src/mcp_toolbox/
     ├── gdocs_tool.py      # 35 Google Docs tools (documents, text, tables, formatting)
     ├── gmail_tool.py      # 62 Gmail tools (messages, threads, labels, drafts, settings)
     ├── notion_tool.py     # 21 Notion tools (pages, databases, blocks, search)
-    └── gdrive_tool.py     # 37 Google Drive tools (files, permissions, comments, drives)
+    ├── gdrive_tool.py     # 37 Google Drive tools (files, permissions, comments, drives)
+    └── zendesk_tool.py    # 66 Zendesk tools (tickets, users, orgs, groups, search)
 ```
 
 ## Integrations
@@ -199,6 +200,22 @@ src/mcp_toolbox/
 - **Config:** `STRIPE_API_KEY`
 - **HTTP:** Direct httpx with Bearer token, form-encoded requests (`data=` not `json=`)
 - **Note:** Uses `_flatten()` helper for Stripe bracket-notation nested params; pyright excluded
+
+### Zendesk (zendesk_tool.py) — 66 tools
+- **Tickets (16):** create, get, update, delete, list, comments, tags, merge, bulk update, macro, audits, collaborators, incidents
+- **Users (10):** create, get, update, delete, list, search, merge, identities, upsert, user tickets
+- **Organizations (6):** create, get, update, delete, list, search
+- **Groups (7):** create, get, update, delete, list, memberships, create membership
+- **Ticket Fields/Forms (7):** list/get/create/update/delete fields, list/get forms
+- **Views (4):** list, get, execute, count
+- **Search (2):** unified search, count
+- **Satisfaction Ratings (3):** list, get, create
+- **Attachments (2):** upload, delete
+- **Suspended Tickets (4):** list, get, recover, delete
+- **Macros (5):** list, get, create, update, delete
+- **Config:** `ZENDESK_SUBDOMAIN`, `ZENDESK_EMAIL`, `ZENDESK_API_TOKEN`
+- **Auth:** Basic auth (`email/token:api_token`), same pattern as Jira
+- **HTTP:** httpx with cursor pagination; Zendesk wrapper key unwrapping
 
 ### Google Drive (gdrive_tool.py) — 37 tools
 - **Files (10):** list, get, create, copy, update, delete, export, empty trash, download, stop channel
