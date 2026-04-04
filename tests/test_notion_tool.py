@@ -174,7 +174,7 @@ async def test_get_page_with_filter(server):
 @pytest.mark.asyncio
 @respx.mock
 async def test_update_page(server):
-    respx.patch(f"{BASE}/pages/page-1").mock(
+    route = respx.patch(f"{BASE}/pages/page-1").mock(
         return_value=httpx.Response(
             200, json={"id": "page-1", "archived": False}
         )
@@ -187,6 +187,9 @@ async def test_update_page(server):
         },
     ))
     assert r["status"] == "success"
+    req = route.calls[0].request
+    body = json.loads(req.content)
+    assert body["properties"] == {"Name": {"title": []}}
 
 
 @pytest.mark.asyncio
@@ -203,7 +206,7 @@ async def test_update_page_no_fields(server):
 @pytest.mark.asyncio
 @respx.mock
 async def test_archive_page(server):
-    respx.patch(f"{BASE}/pages/page-1").mock(
+    route = respx.patch(f"{BASE}/pages/page-1").mock(
         return_value=httpx.Response(
             200,
             json={"id": "page-1", "archived": True},
@@ -215,6 +218,9 @@ async def test_archive_page(server):
     ))
     assert r["status"] == "success"
     assert r["data"]["archived"] is True
+    req = route.calls[0].request
+    body = json.loads(req.content)
+    assert body == {"archived": True}
 
 
 @pytest.mark.asyncio
@@ -245,7 +251,7 @@ async def test_get_page_property(server):
 @pytest.mark.asyncio
 @respx.mock
 async def test_create_database(server):
-    respx.post(f"{BASE}/databases").mock(
+    route = respx.post(f"{BASE}/databases").mock(
         return_value=httpx.Response(
             200,
             json={"id": "db-1", "object": "database"},
@@ -270,6 +276,14 @@ async def test_create_database(server):
     ))
     assert r["status"] == "success"
     assert r["data"]["id"] == "db-1"
+    req = route.calls[0].request
+    body = json.loads(req.content)
+    assert body["parent"] == {
+        "type": "page_id", "page_id": "page-1",
+    }
+    assert "title" in body
+    assert body["properties"]["Name"] == {"title": {}}
+    assert body["properties"]["Status"]["select"]["options"][0]["name"] == "Done"
 
 
 @pytest.mark.asyncio
@@ -292,7 +306,7 @@ async def test_get_database(server):
 @pytest.mark.asyncio
 @respx.mock
 async def test_update_database(server):
-    respx.patch(f"{BASE}/databases/db-1").mock(
+    route = respx.patch(f"{BASE}/databases/db-1").mock(
         return_value=httpx.Response(
             200, json={"id": "db-1", "title": []}
         )
@@ -305,6 +319,9 @@ async def test_update_database(server):
         },
     ))
     assert r["status"] == "success"
+    req = route.calls[0].request
+    body = json.loads(req.content)
+    assert "title" in body
 
 
 @pytest.mark.asyncio
@@ -321,7 +338,7 @@ async def test_update_database_no_fields(server):
 @pytest.mark.asyncio
 @respx.mock
 async def test_query_database(server):
-    respx.post(f"{BASE}/databases/db-1/query").mock(
+    route = respx.post(f"{BASE}/databases/db-1/query").mock(
         return_value=httpx.Response(
             200,
             json={
@@ -338,6 +355,9 @@ async def test_query_database(server):
     assert r["status"] == "success"
     assert r["count"] == 2
     assert r["has_more"] is False
+    req = route.calls[0].request
+    body = json.loads(req.content)
+    assert body == {}
 
 
 @pytest.mark.asyncio
@@ -377,7 +397,7 @@ async def test_query_database_with_filter(server):
 @pytest.mark.asyncio
 @respx.mock
 async def test_archive_database(server):
-    respx.patch(f"{BASE}/databases/db-1").mock(
+    route = respx.patch(f"{BASE}/databases/db-1").mock(
         return_value=httpx.Response(
             200,
             json={"id": "db-1", "archived": True},
@@ -389,6 +409,9 @@ async def test_archive_database(server):
     ))
     assert r["status"] == "success"
     assert r["data"]["archived"] is True
+    req = route.calls[0].request
+    body = json.loads(req.content)
+    assert body == {"archived": True}
 
 
 # ================================================================
@@ -657,7 +680,7 @@ async def test_get_bot_user(server):
 @pytest.mark.asyncio
 @respx.mock
 async def test_search(server):
-    respx.post(f"{BASE}/search").mock(
+    route = respx.post(f"{BASE}/search").mock(
         return_value=httpx.Response(
             200,
             json={
@@ -675,12 +698,15 @@ async def test_search(server):
     ))
     assert r["status"] == "success"
     assert r["count"] == 1
+    req = route.calls[0].request
+    body = json.loads(req.content)
+    assert body["query"] == "meeting notes"
 
 
 @pytest.mark.asyncio
 @respx.mock
 async def test_search_with_filter(server):
-    respx.post(f"{BASE}/search").mock(
+    route = respx.post(f"{BASE}/search").mock(
         return_value=httpx.Response(
             200,
             json={
@@ -700,6 +726,16 @@ async def test_search_with_filter(server):
     ))
     assert r["count"] == 0
     assert r["has_more"] is False
+    req = route.calls[0].request
+    body = json.loads(req.content)
+    assert body["filter"] == {
+        "value": "database", "property": "object",
+    }
+    assert body["sort"] == {
+        "direction": "descending",
+        "timestamp": "last_edited_time",
+    }
+    assert body["page_size"] == 10
 
 
 # ================================================================
@@ -733,7 +769,7 @@ async def test_list_comments(server):
 @pytest.mark.asyncio
 @respx.mock
 async def test_create_comment_on_page(server):
-    respx.post(f"{BASE}/comments").mock(
+    route = respx.post(f"{BASE}/comments").mock(
         return_value=httpx.Response(
             200,
             json={
@@ -751,12 +787,16 @@ async def test_create_comment_on_page(server):
     ))
     assert r["status"] == "success"
     assert r["data"]["id"] == "cmt-2"
+    req = route.calls[0].request
+    body = json.loads(req.content)
+    assert body["parent"] == {"page_id": "page-1"}
+    assert "rich_text" in body
 
 
 @pytest.mark.asyncio
 @respx.mock
 async def test_create_comment_reply(server):
-    respx.post(f"{BASE}/comments").mock(
+    route = respx.post(f"{BASE}/comments").mock(
         return_value=httpx.Response(
             200,
             json={
@@ -773,6 +813,10 @@ async def test_create_comment_reply(server):
         },
     ))
     assert r["status"] == "success"
+    req = route.calls[0].request
+    body = json.loads(req.content)
+    assert body["discussion_id"] == "disc-1"
+    assert "rich_text" in body
 
 
 @pytest.mark.asyncio

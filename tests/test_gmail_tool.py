@@ -202,7 +202,7 @@ async def test_delete_message(server):
 @pytest.mark.asyncio
 @respx.mock
 async def test_trash_message(server):
-    respx.post(f"{BASE}/messages/m1/trash").mock(
+    route = respx.post(f"{BASE}/messages/m1/trash").mock(
         return_value=httpx.Response(200, json={
             "id": "m1", "labelIds": ["TRASH"],
         }),
@@ -210,12 +210,14 @@ async def test_trash_message(server):
     _ok(await server.call_tool(
         "gmail_trash_message", {"message_id": "m1"},
     ))
+    assert route.calls
+    assert route.calls[0].request.content in (b"", b"null")
 
 
 @pytest.mark.asyncio
 @respx.mock
 async def test_untrash_message(server):
-    respx.post(f"{BASE}/messages/m1/untrash").mock(
+    route = respx.post(f"{BASE}/messages/m1/untrash").mock(
         return_value=httpx.Response(200, json={
             "id": "m1", "labelIds": ["INBOX"],
         }),
@@ -223,6 +225,8 @@ async def test_untrash_message(server):
     _ok(await server.call_tool(
         "gmail_untrash_message", {"message_id": "m1"},
     ))
+    assert route.calls
+    assert route.calls[0].request.content in (b"", b"null")
 
 
 @pytest.mark.asyncio
@@ -262,7 +266,7 @@ async def test_batch_delete_messages(server):
 @pytest.mark.asyncio
 @respx.mock
 async def test_import_message(server):
-    respx.post(f"{BASE}/messages/import").mock(
+    route = respx.post(f"{BASE}/messages/import").mock(
         return_value=httpx.Response(200, json={
             "id": "m3",
         }),
@@ -270,12 +274,15 @@ async def test_import_message(server):
     _ok(await server.call_tool("gmail_import_message", {
         "raw": "cmF3IG1lc3NhZ2U=",
     }))
+    req = route.calls[0].request
+    body = json.loads(req.content)
+    assert body["raw"] == "cmF3IG1lc3NhZ2U="
 
 
 @pytest.mark.asyncio
 @respx.mock
 async def test_insert_message(server):
-    respx.post(f"{BASE}/messages").mock(
+    route = respx.post(f"{BASE}/messages").mock(
         return_value=httpx.Response(200, json={
             "id": "m4",
         }),
@@ -283,6 +290,9 @@ async def test_insert_message(server):
     _ok(await server.call_tool("gmail_insert_message", {
         "raw": "cmF3IG1lc3NhZ2U=",
     }))
+    req = route.calls[0].request
+    body = json.loads(req.content)
+    assert body["raw"] == "cmF3IG1lc3NhZ2U="
 
 
 # ================================================================
@@ -363,7 +373,7 @@ async def test_delete_thread(server):
 @pytest.mark.asyncio
 @respx.mock
 async def test_trash_thread(server):
-    respx.post(f"{BASE}/threads/t1/trash").mock(
+    route = respx.post(f"{BASE}/threads/t1/trash").mock(
         return_value=httpx.Response(200, json={
             "id": "t1",
         }),
@@ -371,12 +381,14 @@ async def test_trash_thread(server):
     _ok(await server.call_tool(
         "gmail_trash_thread", {"thread_id": "t1"},
     ))
+    assert route.calls
+    assert route.calls[0].request.content in (b"", b"null")
 
 
 @pytest.mark.asyncio
 @respx.mock
 async def test_untrash_thread(server):
-    respx.post(f"{BASE}/threads/t1/untrash").mock(
+    route = respx.post(f"{BASE}/threads/t1/untrash").mock(
         return_value=httpx.Response(200, json={
             "id": "t1",
         }),
@@ -384,6 +396,8 @@ async def test_untrash_thread(server):
     _ok(await server.call_tool(
         "gmail_untrash_thread", {"thread_id": "t1"},
     ))
+    assert route.calls
+    assert route.calls[0].request.content in (b"", b"null")
 
 
 # ================================================================
@@ -456,7 +470,7 @@ async def test_create_label_with_color(server):
 @pytest.mark.asyncio
 @respx.mock
 async def test_update_label(server):
-    respx.put(f"{BASE}/labels/Label_1").mock(
+    route = respx.put(f"{BASE}/labels/Label_1").mock(
         return_value=httpx.Response(200, json={
             "id": "Label_1", "name": "Updated",
         }),
@@ -464,12 +478,16 @@ async def test_update_label(server):
     _ok(await server.call_tool("gmail_update_label", {
         "label_id": "Label_1", "name": "Updated",
     }))
+    req = route.calls[0].request
+    body = json.loads(req.content)
+    assert body["id"] == "Label_1"
+    assert body["name"] == "Updated"
 
 
 @pytest.mark.asyncio
 @respx.mock
 async def test_patch_label(server):
-    respx.patch(f"{BASE}/labels/Label_1").mock(
+    route = respx.patch(f"{BASE}/labels/Label_1").mock(
         return_value=httpx.Response(200, json={
             "id": "Label_1", "name": "Patched",
         }),
@@ -477,6 +495,9 @@ async def test_patch_label(server):
     _ok(await server.call_tool("gmail_patch_label", {
         "label_id": "Label_1", "name": "Patched",
     }))
+    req = route.calls[0].request
+    body = json.loads(req.content)
+    assert body["name"] == "Patched"
 
 
 @pytest.mark.asyncio
@@ -533,7 +554,7 @@ async def test_get_draft(server):
 @pytest.mark.asyncio
 @respx.mock
 async def test_create_draft(server):
-    respx.post(f"{BASE}/drafts").mock(
+    route = respx.post(f"{BASE}/drafts").mock(
         return_value=httpx.Response(200, json={
             "id": "d2",
             "message": {"id": "m2"},
@@ -544,12 +565,16 @@ async def test_create_draft(server):
         "subject": "Draft",
         "body": "WIP",
     }))
+    req = route.calls[0].request
+    body = json.loads(req.content)
+    assert "message" in body
+    assert "raw" in body["message"]
 
 
 @pytest.mark.asyncio
 @respx.mock
 async def test_update_draft(server):
-    respx.put(f"{BASE}/drafts/d1").mock(
+    route = respx.put(f"{BASE}/drafts/d1").mock(
         return_value=httpx.Response(200, json={
             "id": "d1",
             "message": {"id": "m1"},
@@ -561,6 +586,10 @@ async def test_update_draft(server):
         "subject": "Updated draft",
         "body": "New body",
     }))
+    req = route.calls[0].request
+    body = json.loads(req.content)
+    assert "message" in body
+    assert "raw" in body["message"]
 
 
 @pytest.mark.asyncio
@@ -577,7 +606,7 @@ async def test_delete_draft(server):
 @pytest.mark.asyncio
 @respx.mock
 async def test_send_draft(server):
-    respx.post(f"{BASE}/drafts/send").mock(
+    route = respx.post(f"{BASE}/drafts/send").mock(
         return_value=httpx.Response(200, json={
             "id": "m5", "threadId": "t3",
         }),
@@ -585,6 +614,9 @@ async def test_send_draft(server):
     _ok(await server.call_tool(
         "gmail_send_draft", {"draft_id": "d1"},
     ))
+    req = route.calls[0].request
+    body = json.loads(req.content)
+    assert body["id"] == "d1"
 
 
 # ================================================================
@@ -629,7 +661,7 @@ async def test_get_vacation_settings(server):
 @pytest.mark.asyncio
 @respx.mock
 async def test_update_vacation_settings(server):
-    respx.put(f"{BASE}/settings/vacation").mock(
+    route = respx.put(f"{BASE}/settings/vacation").mock(
         return_value=httpx.Response(200, json={
             "enableAutoReply": True,
         }),
@@ -641,6 +673,11 @@ async def test_update_vacation_settings(server):
             "response_body_plain_text": "I am away.",
         },
     ))
+    req = route.calls[0].request
+    body = json.loads(req.content)
+    assert body["enableAutoReply"] is True
+    assert body["responseSubject"] == "OOO"
+    assert body["responseBodyPlainText"] == "I am away."
 
 
 @pytest.mark.asyncio
@@ -659,7 +696,7 @@ async def test_get_auto_forwarding(server):
 @pytest.mark.asyncio
 @respx.mock
 async def test_update_auto_forwarding(server):
-    respx.put(f"{BASE}/settings/autoForwarding").mock(
+    route = respx.put(f"{BASE}/settings/autoForwarding").mock(
         return_value=httpx.Response(200, json={
             "enabled": True,
         }),
@@ -671,6 +708,11 @@ async def test_update_auto_forwarding(server):
             "disposition": "archive",
         },
     ))
+    req = route.calls[0].request
+    body = json.loads(req.content)
+    assert body["enabled"] is True
+    assert body["emailAddress"] == "fwd@test.com"
+    assert body["disposition"] == "archive"
 
 
 @pytest.mark.asyncio
@@ -689,7 +731,7 @@ async def test_get_imap_settings(server):
 @pytest.mark.asyncio
 @respx.mock
 async def test_update_imap_settings(server):
-    respx.put(f"{BASE}/settings/imap").mock(
+    route = respx.put(f"{BASE}/settings/imap").mock(
         return_value=httpx.Response(200, json={
             "enabled": True,
         }),
@@ -700,6 +742,10 @@ async def test_update_imap_settings(server):
             "auto_expunge": True,
         },
     ))
+    req = route.calls[0].request
+    body = json.loads(req.content)
+    assert body["enabled"] is True
+    assert body["autoExpunge"] is True
 
 
 @pytest.mark.asyncio
@@ -718,7 +764,7 @@ async def test_get_pop_settings(server):
 @pytest.mark.asyncio
 @respx.mock
 async def test_update_pop_settings(server):
-    respx.put(f"{BASE}/settings/pop").mock(
+    route = respx.put(f"{BASE}/settings/pop").mock(
         return_value=httpx.Response(200, json={
             "accessWindow": "allMail",
         }),
@@ -728,6 +774,9 @@ async def test_update_pop_settings(server):
             "access_window": "allMail",
         },
     ))
+    req = route.calls[0].request
+    body = json.loads(req.content)
+    assert body["accessWindow"] == "allMail"
 
 
 @pytest.mark.asyncio
@@ -746,7 +795,7 @@ async def test_get_language_settings(server):
 @pytest.mark.asyncio
 @respx.mock
 async def test_update_language_settings(server):
-    respx.put(f"{BASE}/settings/language").mock(
+    route = respx.put(f"{BASE}/settings/language").mock(
         return_value=httpx.Response(200, json={
             "displayLanguage": "fr",
         }),
@@ -756,6 +805,9 @@ async def test_update_language_settings(server):
             "display_language": "fr",
         },
     ))
+    req = route.calls[0].request
+    body = json.loads(req.content)
+    assert body["displayLanguage"] == "fr"
 
 
 @pytest.mark.asyncio
@@ -828,7 +880,7 @@ async def test_create_send_as(server):
 @pytest.mark.asyncio
 @respx.mock
 async def test_create_send_as_with_smtp(server):
-    respx.post(f"{BASE}/settings/sendAs").mock(
+    route = respx.post(f"{BASE}/settings/sendAs").mock(
         return_value=httpx.Response(200, json={
             "sendAsEmail": "ext@other.com",
         }),
@@ -841,12 +893,18 @@ async def test_create_send_as_with_smtp(server):
         "smtp_password": "secret",
         "smtp_security_mode": "starttls",
     }))
+    req = route.calls[0].request
+    body = json.loads(req.content)
+    assert body["sendAsEmail"] == "ext@other.com"
+    assert body["smtpMsa"]["host"] == "smtp.other.com"
+    assert body["smtpMsa"]["port"] == 587
+    assert body["smtpMsa"]["securityMode"] == "starttls"
 
 
 @pytest.mark.asyncio
 @respx.mock
 async def test_update_send_as(server):
-    respx.put(
+    route = respx.put(
         f"{BASE}/settings/sendAs/alias@test.com",
     ).mock(
         return_value=httpx.Response(200, json={
@@ -857,12 +915,16 @@ async def test_update_send_as(server):
         "send_as_email": "alias@test.com",
         "display_name": "Updated Alias",
     }))
+    req = route.calls[0].request
+    body = json.loads(req.content)
+    assert body["sendAsEmail"] == "alias@test.com"
+    assert body["displayName"] == "Updated Alias"
 
 
 @pytest.mark.asyncio
 @respx.mock
 async def test_patch_send_as(server):
-    respx.patch(
+    route = respx.patch(
         f"{BASE}/settings/sendAs/alias@test.com",
     ).mock(
         return_value=httpx.Response(200, json={
@@ -873,6 +935,9 @@ async def test_patch_send_as(server):
         "send_as_email": "alias@test.com",
         "display_name": "Patched",
     }))
+    req = route.calls[0].request
+    body = json.loads(req.content)
+    assert body["displayName"] == "Patched"
 
 
 @pytest.mark.asyncio
@@ -899,7 +964,7 @@ async def test_delete_send_as(server):
 @pytest.mark.asyncio
 @respx.mock
 async def test_verify_send_as(server):
-    respx.post(
+    route = respx.post(
         f"{BASE}/settings/sendAs/alias@test.com/verify",
     ).mock(
         return_value=httpx.Response(204),
@@ -907,6 +972,7 @@ async def test_verify_send_as(server):
     _ok(await server.call_tool("gmail_verify_send_as", {
         "send_as_email": "alias@test.com",
     }))
+    assert route.calls
 
 
 # ================================================================

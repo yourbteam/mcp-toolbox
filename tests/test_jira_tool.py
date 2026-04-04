@@ -189,13 +189,15 @@ async def test_delete_comment(server):
 async def test_add_attachment(server, tmp_path):
     f = tmp_path / "doc.txt"
     f.write_text("hi")
-    respx.post(f"{API}/issue/P-1/attachments").mock(
+    route = respx.post(f"{API}/issue/P-1/attachments").mock(
         return_value=httpx.Response(200, json=[{"id": "a1"}]),
     )
     result = await server.call_tool("jira_add_attachment", {
         "issue_key": "P-1", "file_path": str(f),
     })
     assert _r(result)["status"] == "success"
+    req = route.calls[0].request
+    assert "multipart" in req.headers.get("content-type", "")
 
 @pytest.mark.asyncio
 @respx.mock

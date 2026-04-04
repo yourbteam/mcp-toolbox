@@ -381,9 +381,10 @@ async def test_snooze_reminder(server):
 @pytest.mark.asyncio
 @respx.mock
 async def test_dismiss_reminder(server):
-    respx.post(f"{GRAPH}/users/{U}/events/e1/dismissReminder").mock(
+    route = respx.post(f"{GRAPH}/users/{U}/events/e1/dismissReminder").mock(
         return_value=httpx.Response(200, json={})
     )
     assert _r(await server.call_tool("calendar_dismiss_reminder", {
         "event_id": "e1",
     }))["status"] == "success"
+    assert route.calls[0].request.method == "POST"

@@ -253,7 +253,7 @@ async def test_add_checklist_item(server):
 @pytest.mark.asyncio
 @respx.mock
 async def test_add_tag(server):
-    respx.post(f"{CLICKUP_BASE}/task/task_abc/tag/urgent").mock(
+    route = respx.post(f"{CLICKUP_BASE}/task/task_abc/tag/urgent").mock(
         return_value=httpx.Response(200, json={})
     )
     result = await server.call_tool("clickup_add_tag", {
@@ -262,6 +262,9 @@ async def test_add_tag(server):
     data = _get_result_data(result)
     assert data["status"] == "success"
     assert data["action"] == "added"
+    req = route.calls[0].request
+    body = json.loads(req.content)
+    assert body == {}
 
 
 @pytest.mark.asyncio

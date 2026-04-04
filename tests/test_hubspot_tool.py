@@ -172,10 +172,12 @@ async def test_list_companies(server):
 @pytest.mark.asyncio
 @respx.mock
 async def test_search_companies(server):
-    respx.post(f"{HB}/crm/v3/objects/companies/search").mock(
+    route = respx.post(f"{HB}/crm/v3/objects/companies/search").mock(
         return_value=httpx.Response(200, json={"results": []})
     )
     assert _r(await server.call_tool("hubspot_search_companies", {}))["count"] == 0
+    body = json.loads(route.calls[0].request.content)
+    assert body["limit"] == 10
 
 # --- Deals ---
 
@@ -229,10 +231,12 @@ async def test_list_deals(server):
 @pytest.mark.asyncio
 @respx.mock
 async def test_search_deals(server):
-    respx.post(f"{HB}/crm/v3/objects/deals/search").mock(
+    route = respx.post(f"{HB}/crm/v3/objects/deals/search").mock(
         return_value=httpx.Response(200, json={"results": []})
     )
     assert _r(await server.call_tool("hubspot_search_deals", {}))["count"] == 0
+    body = json.loads(route.calls[0].request.content)
+    assert body["limit"] == 10
 
 # --- Tickets ---
 
@@ -287,10 +291,12 @@ async def test_list_tickets(server):
 @pytest.mark.asyncio
 @respx.mock
 async def test_search_tickets(server):
-    respx.post(f"{HB}/crm/v3/objects/tickets/search").mock(
+    route = respx.post(f"{HB}/crm/v3/objects/tickets/search").mock(
         return_value=httpx.Response(200, json={"results": []})
     )
     assert _r(await server.call_tool("hubspot_search_tickets", {}))["count"] == 0
+    body = json.loads(route.calls[0].request.content)
+    assert body["limit"] == 10
 
 # --- Notes ---
 
@@ -345,10 +351,12 @@ async def test_delete_note(server):
 @pytest.mark.asyncio
 @respx.mock
 async def test_search_notes(server):
-    respx.post(f"{HB}/crm/v3/objects/notes/search").mock(
+    route = respx.post(f"{HB}/crm/v3/objects/notes/search").mock(
         return_value=httpx.Response(200, json={"results": []})
     )
     assert _r(await server.call_tool("hubspot_search_notes", {}))["count"] == 0
+    body = json.loads(route.calls[0].request.content)
+    assert body["limit"] == 10
 
 # --- Associations ---
 

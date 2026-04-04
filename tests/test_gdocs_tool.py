@@ -212,7 +212,7 @@ async def test_get_document_with_view_mode(server):
 @pytest.mark.asyncio
 @respx.mock
 async def test_batch_update(server):
-    respx.post(
+    route = respx.post(
         f"{BASE}/{DID}:batchUpdate",
     ).mock(return_value=BATCH_OK)
     _ok(await server.call_tool(
@@ -225,6 +225,9 @@ async def test_batch_update(server):
             ],
         },
     ))
+    body = json.loads(route.calls[0].request.content)
+    assert "requests" in body
+    assert "insertText" in body["requests"][0]
 
 
 # ==========================================
@@ -254,7 +257,7 @@ async def test_insert_text(server):
 @pytest.mark.asyncio
 @respx.mock
 async def test_insert_text_with_segment(server):
-    respx.post(
+    route = respx.post(
         f"{BASE}/{DID}:batchUpdate",
     ).mock(return_value=BATCH_OK)
     _ok(await server.call_tool(
@@ -264,6 +267,13 @@ async def test_insert_text_with_segment(server):
             "segment_id": "kix.header1",
         },
     ))
+    body = json.loads(route.calls[0].request.content)
+    req0 = body["requests"][0]
+    assert "insertText" in req0
+    assert req0["insertText"]["text"] == "Header text"
+    loc = req0["insertText"]["location"]
+    assert loc["index"] == 1
+    assert loc["segmentId"] == "kix.header1"
 
 
 @pytest.mark.asyncio
@@ -313,7 +323,7 @@ async def test_replace_all_text(server):
 @pytest.mark.asyncio
 @respx.mock
 async def test_update_text_style(server):
-    respx.post(
+    route = respx.post(
         f"{BASE}/{DID}:batchUpdate",
     ).mock(return_value=BATCH_OK)
     _ok(await server.call_tool(
@@ -324,12 +334,20 @@ async def test_update_text_style(server):
             "italic": True,
         },
     ))
+    body = json.loads(route.calls[0].request.content)
+    req0 = body["requests"][0]
+    assert "updateTextStyle" in req0
+    ts = req0["updateTextStyle"]
+    assert ts["textStyle"]["bold"] is True
+    assert ts["textStyle"]["italic"] is True
+    assert ts["range"]["startIndex"] == 1
+    assert ts["range"]["endIndex"] == 5
 
 
 @pytest.mark.asyncio
 @respx.mock
 async def test_update_text_style_font(server):
-    respx.post(
+    route = respx.post(
         f"{BASE}/{DID}:batchUpdate",
     ).mock(return_value=BATCH_OK)
     _ok(await server.call_tool(
@@ -340,12 +358,18 @@ async def test_update_text_style_font(server):
             "font_size_pt": 14.0,
         },
     ))
+    body = json.loads(route.calls[0].request.content)
+    req0 = body["requests"][0]
+    assert "updateTextStyle" in req0
+    ts = req0["updateTextStyle"]["textStyle"]
+    assert ts["weightedFontFamily"]["fontFamily"] == "Arial"
+    assert ts["fontSize"]["magnitude"] == 14.0
 
 
 @pytest.mark.asyncio
 @respx.mock
 async def test_update_text_style_colors(server):
-    respx.post(
+    route = respx.post(
         f"{BASE}/{DID}:batchUpdate",
     ).mock(return_value=BATCH_OK)
     _ok(await server.call_tool(
@@ -356,12 +380,19 @@ async def test_update_text_style_colors(server):
             "background_color_blue": 0.5,
         },
     ))
+    body = json.loads(route.calls[0].request.content)
+    req0 = body["requests"][0]
+    ts = req0["updateTextStyle"]["textStyle"]
+    fg = ts["foregroundColor"]["color"]["rgbColor"]
+    assert fg["red"] == 1.0
+    bg = ts["backgroundColor"]["color"]["rgbColor"]
+    assert bg["blue"] == 0.5
 
 
 @pytest.mark.asyncio
 @respx.mock
 async def test_update_text_style_link(server):
-    respx.post(
+    route = respx.post(
         f"{BASE}/{DID}:batchUpdate",
     ).mock(return_value=BATCH_OK)
     _ok(await server.call_tool(
@@ -371,6 +402,10 @@ async def test_update_text_style_link(server):
             "link_url": "https://example.com",
         },
     ))
+    body = json.loads(route.calls[0].request.content)
+    req0 = body["requests"][0]
+    ts = req0["updateTextStyle"]["textStyle"]
+    assert ts["link"]["url"] == "https://example.com"
 
 
 @pytest.mark.asyncio
@@ -389,7 +424,7 @@ async def test_update_text_style_no_fields(server):
 @pytest.mark.asyncio
 @respx.mock
 async def test_update_paragraph_style(server):
-    respx.post(
+    route = respx.post(
         f"{BASE}/{DID}:batchUpdate",
     ).mock(return_value=BATCH_OK)
     _ok(await server.call_tool(
@@ -399,6 +434,13 @@ async def test_update_paragraph_style(server):
             "alignment": "CENTER",
         },
     ))
+    body = json.loads(route.calls[0].request.content)
+    req0 = body["requests"][0]
+    assert "updateParagraphStyle" in req0
+    ps = req0["updateParagraphStyle"]
+    assert ps["paragraphStyle"]["alignment"] == "CENTER"
+    assert ps["range"]["startIndex"] == 1
+    assert ps["range"]["endIndex"] == 10
 
 
 @pytest.mark.asyncio
@@ -406,7 +448,7 @@ async def test_update_paragraph_style(server):
 async def test_update_paragraph_style_heading(
     server,
 ):
-    respx.post(
+    route = respx.post(
         f"{BASE}/{DID}:batchUpdate",
     ).mock(return_value=BATCH_OK)
     _ok(await server.call_tool(
@@ -417,6 +459,11 @@ async def test_update_paragraph_style_heading(
             "line_spacing": 150.0,
         },
     ))
+    body = json.loads(route.calls[0].request.content)
+    req0 = body["requests"][0]
+    ps = req0["updateParagraphStyle"]["paragraphStyle"]
+    assert ps["namedStyleType"] == "HEADING_1"
+    assert ps["lineSpacing"] == 150.0
 
 
 @pytest.mark.asyncio
@@ -462,7 +509,7 @@ async def test_insert_table(server):
 @pytest.mark.asyncio
 @respx.mock
 async def test_insert_table_row(server):
-    respx.post(
+    route = respx.post(
         f"{BASE}/{DID}:batchUpdate",
     ).mock(return_value=BATCH_OK)
     _ok(await server.call_tool(
@@ -472,12 +519,19 @@ async def test_insert_table_row(server):
             "column_index": 0,
         },
     ))
+    body = json.loads(route.calls[0].request.content)
+    req0 = body["requests"][0]
+    assert "insertTableRow" in req0
+    loc = req0["insertTableRow"]["tableCellLocation"]
+    assert loc["tableStartLocation"]["index"] == 5
+    assert loc["rowIndex"] == 0
+    assert loc["columnIndex"] == 0
 
 
 @pytest.mark.asyncio
 @respx.mock
 async def test_insert_table_column(server):
-    respx.post(
+    route = respx.post(
         f"{BASE}/{DID}:batchUpdate",
     ).mock(return_value=BATCH_OK)
     _ok(await server.call_tool(
@@ -487,12 +541,17 @@ async def test_insert_table_column(server):
             "column_index": 0,
         },
     ))
+    body = json.loads(route.calls[0].request.content)
+    req0 = body["requests"][0]
+    assert "insertTableColumn" in req0
+    loc = req0["insertTableColumn"]["tableCellLocation"]
+    assert loc["tableStartLocation"]["index"] == 5
 
 
 @pytest.mark.asyncio
 @respx.mock
 async def test_delete_table_row(server):
-    respx.post(
+    route = respx.post(
         f"{BASE}/{DID}:batchUpdate",
     ).mock(return_value=BATCH_OK)
     _ok(await server.call_tool(
@@ -502,12 +561,17 @@ async def test_delete_table_row(server):
             "column_index": 0,
         },
     ))
+    body = json.loads(route.calls[0].request.content)
+    req0 = body["requests"][0]
+    assert "deleteTableRow" in req0
+    loc = req0["deleteTableRow"]["tableCellLocation"]
+    assert loc["rowIndex"] == 1
 
 
 @pytest.mark.asyncio
 @respx.mock
 async def test_delete_table_column(server):
-    respx.post(
+    route = respx.post(
         f"{BASE}/{DID}:batchUpdate",
     ).mock(return_value=BATCH_OK)
     _ok(await server.call_tool(
@@ -517,12 +581,17 @@ async def test_delete_table_column(server):
             "column_index": 1,
         },
     ))
+    body = json.loads(route.calls[0].request.content)
+    req0 = body["requests"][0]
+    assert "deleteTableColumn" in req0
+    loc = req0["deleteTableColumn"]["tableCellLocation"]
+    assert loc["columnIndex"] == 1
 
 
 @pytest.mark.asyncio
 @respx.mock
 async def test_insert_inline_image(server):
-    respx.post(
+    route = respx.post(
         f"{BASE}/{DID}:batchUpdate",
     ).mock(return_value=BATCH_OK)
     _ok(await server.call_tool(
@@ -531,12 +600,18 @@ async def test_insert_inline_image(server):
             "index": 1,
         },
     ))
+    body = json.loads(route.calls[0].request.content)
+    req0 = body["requests"][0]
+    assert "insertInlineImage" in req0
+    img = req0["insertInlineImage"]
+    assert img["uri"] == "https://example.com/img.png"
+    assert img["location"]["index"] == 1
 
 
 @pytest.mark.asyncio
 @respx.mock
 async def test_insert_inline_image_sized(server):
-    respx.post(
+    route = respx.post(
         f"{BASE}/{DID}:batchUpdate",
     ).mock(return_value=BATCH_OK)
     _ok(await server.call_tool(
@@ -547,6 +622,11 @@ async def test_insert_inline_image_sized(server):
             "height_pt": 150.0,
         },
     ))
+    body = json.loads(route.calls[0].request.content)
+    req0 = body["requests"][0]
+    img = req0["insertInlineImage"]
+    assert img["objectSize"]["width"]["magnitude"] == 200.0
+    assert img["objectSize"]["height"]["magnitude"] == 150.0
 
 
 @pytest.mark.asyncio
@@ -576,7 +656,7 @@ async def test_insert_page_break(server):
 async def test_update_table_column_properties(
     server,
 ):
-    respx.post(
+    route = respx.post(
         f"{BASE}/{DID}:batchUpdate",
     ).mock(return_value=BATCH_OK)
     _ok(await server.call_tool(
@@ -586,12 +666,18 @@ async def test_update_table_column_properties(
             "width_pt": 100.0,
         },
     ))
+    body = json.loads(route.calls[0].request.content)
+    req0 = body["requests"][0]
+    assert "updateTableColumnProperties" in req0
+    tcp = req0["updateTableColumnProperties"]
+    assert tcp["columnIndices"] == [0, 1]
+    assert tcp["tableColumnProperties"]["width"]["magnitude"] == 100.0
 
 
 @pytest.mark.asyncio
 @respx.mock
 async def test_update_table_cell_style(server):
-    respx.post(
+    route = respx.post(
         f"{BASE}/{DID}:batchUpdate",
     ).mock(return_value=BATCH_OK)
     _ok(await server.call_tool(
@@ -605,6 +691,13 @@ async def test_update_table_cell_style(server):
             "padding_top_pt": 4.0,
         },
     ))
+    body = json.loads(route.calls[0].request.content)
+    req0 = body["requests"][0]
+    assert "updateTableCellStyle" in req0
+    tcs = req0["updateTableCellStyle"]
+    bg = tcs["tableCellStyle"]["backgroundColor"]["color"]["rgbColor"]
+    assert bg["red"] == 0.9
+    assert tcs["tableCellStyle"]["paddingTop"]["magnitude"] == 4.0
 
 
 @pytest.mark.asyncio
@@ -628,7 +721,7 @@ async def test_update_table_cell_style_no_fields(
 @pytest.mark.asyncio
 @respx.mock
 async def test_update_table_row_style(server):
-    respx.post(
+    route = respx.post(
         f"{BASE}/{DID}:batchUpdate",
     ).mock(return_value=BATCH_OK)
     _ok(await server.call_tool(
@@ -638,12 +731,18 @@ async def test_update_table_row_style(server):
             "min_row_height_pt": 36.0,
         },
     ))
+    body = json.loads(route.calls[0].request.content)
+    req0 = body["requests"][0]
+    assert "updateTableRowStyle" in req0
+    trs = req0["updateTableRowStyle"]
+    assert trs["rowIndex"] == 0
+    assert trs["tableRowStyle"]["minRowHeight"]["magnitude"] == 36.0
 
 
 @pytest.mark.asyncio
 @respx.mock
 async def test_merge_table_cells(server):
-    respx.post(
+    route = respx.post(
         f"{BASE}/{DID}:batchUpdate",
     ).mock(return_value=BATCH_OK)
     _ok(await server.call_tool(
@@ -655,12 +754,18 @@ async def test_merge_table_cells(server):
             "column_span": 2,
         },
     ))
+    body = json.loads(route.calls[0].request.content)
+    req0 = body["requests"][0]
+    assert "mergeTableCells" in req0
+    tr = req0["mergeTableCells"]["tableRange"]
+    assert tr["rowSpan"] == 2
+    assert tr["columnSpan"] == 2
 
 
 @pytest.mark.asyncio
 @respx.mock
 async def test_unmerge_table_cells(server):
-    respx.post(
+    route = respx.post(
         f"{BASE}/{DID}:batchUpdate",
     ).mock(return_value=BATCH_OK)
     _ok(await server.call_tool(
@@ -672,12 +777,18 @@ async def test_unmerge_table_cells(server):
             "column_span": 2,
         },
     ))
+    body = json.loads(route.calls[0].request.content)
+    req0 = body["requests"][0]
+    assert "unmergeTableCells" in req0
+    tr = req0["unmergeTableCells"]["tableRange"]
+    assert tr["rowSpan"] == 2
+    assert tr["columnSpan"] == 2
 
 
 @pytest.mark.asyncio
 @respx.mock
 async def test_pin_table_header_rows(server):
-    respx.post(
+    route = respx.post(
         f"{BASE}/{DID}:batchUpdate",
     ).mock(return_value=BATCH_OK)
     _ok(await server.call_tool(
@@ -686,6 +797,10 @@ async def test_pin_table_header_rows(server):
             "pinned_header_row_count": 1,
         },
     ))
+    body = json.loads(route.calls[0].request.content)
+    req0 = body["requests"][0]
+    assert "pinTableHeaderRows" in req0
+    assert req0["pinTableHeaderRows"]["pinnedHeaderRowsCount"] == 1
 
 
 # ==========================================
@@ -715,7 +830,7 @@ async def test_create_named_range(server):
 @pytest.mark.asyncio
 @respx.mock
 async def test_delete_named_range_by_id(server):
-    respx.post(
+    route = respx.post(
         f"{BASE}/{DID}:batchUpdate",
     ).mock(return_value=BATCH_OK)
     _ok(await server.call_tool(
@@ -723,12 +838,16 @@ async def test_delete_named_range_by_id(server):
             "named_range_id": "nr123",
         },
     ))
+    body = json.loads(route.calls[0].request.content)
+    req0 = body["requests"][0]
+    assert "deleteNamedRange" in req0
+    assert req0["deleteNamedRange"]["namedRangeId"] == "nr123"
 
 
 @pytest.mark.asyncio
 @respx.mock
 async def test_delete_named_range_by_name(server):
-    respx.post(
+    route = respx.post(
         f"{BASE}/{DID}:batchUpdate",
     ).mock(return_value=BATCH_OK)
     _ok(await server.call_tool(
@@ -736,6 +855,10 @@ async def test_delete_named_range_by_name(server):
             "name": "my_range",
         },
     ))
+    body = json.loads(route.calls[0].request.content)
+    req0 = body["requests"][0]
+    assert "deleteNamedRange" in req0
+    assert req0["deleteNamedRange"]["name"] == "my_range"
 
 
 @pytest.mark.asyncio
@@ -779,7 +902,7 @@ async def test_create_paragraph_bullets(server):
 @pytest.mark.asyncio
 @respx.mock
 async def test_delete_paragraph_bullets(server):
-    respx.post(
+    route = respx.post(
         f"{BASE}/{DID}:batchUpdate",
     ).mock(return_value=BATCH_OK)
     _ok(await server.call_tool(
@@ -788,6 +911,12 @@ async def test_delete_paragraph_bullets(server):
             "end_index": 20,
         },
     ))
+    body = json.loads(route.calls[0].request.content)
+    req0 = body["requests"][0]
+    assert "deleteParagraphBullets" in req0
+    rng = req0["deleteParagraphBullets"]["range"]
+    assert rng["startIndex"] == 1
+    assert rng["endIndex"] == 20
 
 
 # ==========================================
@@ -798,7 +927,7 @@ async def test_delete_paragraph_bullets(server):
 @pytest.mark.asyncio
 @respx.mock
 async def test_insert_section_break(server):
-    respx.post(
+    route = respx.post(
         f"{BASE}/{DID}:batchUpdate",
     ).mock(return_value=BATCH_OK)
     _ok(await server.call_tool(
@@ -806,6 +935,11 @@ async def test_insert_section_break(server):
             "index": 10,
         },
     ))
+    body = json.loads(route.calls[0].request.content)
+    req0 = body["requests"][0]
+    assert "insertSectionBreak" in req0
+    assert req0["insertSectionBreak"]["location"]["index"] == 10
+    assert req0["insertSectionBreak"]["sectionType"] == "CONTINUOUS"
 
 
 @pytest.mark.asyncio
@@ -813,7 +947,7 @@ async def test_insert_section_break(server):
 async def test_insert_section_break_next_page(
     server,
 ):
-    respx.post(
+    route = respx.post(
         f"{BASE}/{DID}:batchUpdate",
     ).mock(return_value=BATCH_OK)
     _ok(await server.call_tool(
@@ -822,12 +956,15 @@ async def test_insert_section_break_next_page(
             "section_type": "NEXT_PAGE",
         },
     ))
+    body = json.loads(route.calls[0].request.content)
+    req0 = body["requests"][0]
+    assert req0["insertSectionBreak"]["sectionType"] == "NEXT_PAGE"
 
 
 @pytest.mark.asyncio
 @respx.mock
 async def test_update_document_style(server):
-    respx.post(
+    route = respx.post(
         f"{BASE}/{DID}:batchUpdate",
     ).mock(return_value=BATCH_OK)
     _ok(await server.call_tool(
@@ -836,6 +973,12 @@ async def test_update_document_style(server):
             "margin_bottom_pt": 72.0,
         },
     ))
+    body = json.loads(route.calls[0].request.content)
+    req0 = body["requests"][0]
+    assert "updateDocumentStyle" in req0
+    ds = req0["updateDocumentStyle"]["documentStyle"]
+    assert ds["marginTop"]["magnitude"] == 72.0
+    assert ds["marginBottom"]["magnitude"] == 72.0
 
 
 @pytest.mark.asyncio
@@ -843,7 +986,7 @@ async def test_update_document_style(server):
 async def test_update_document_style_page_size(
     server,
 ):
-    respx.post(
+    route = respx.post(
         f"{BASE}/{DID}:batchUpdate",
     ).mock(return_value=BATCH_OK)
     _ok(await server.call_tool(
@@ -852,6 +995,11 @@ async def test_update_document_style_page_size(
             "page_height_pt": 792.0,
         },
     ))
+    body = json.loads(route.calls[0].request.content)
+    req0 = body["requests"][0]
+    ds = req0["updateDocumentStyle"]["documentStyle"]
+    assert ds["pageSize"]["width"]["magnitude"] == 612.0
+    assert ds["pageSize"]["height"]["magnitude"] == 792.0
 
 
 @pytest.mark.asyncio
@@ -869,7 +1017,7 @@ async def test_update_document_style_no_fields(
 @pytest.mark.asyncio
 @respx.mock
 async def test_update_section_style(server):
-    respx.post(
+    route = respx.post(
         f"{BASE}/{DID}:batchUpdate",
     ).mock(return_value=BATCH_OK)
     _ok(await server.call_tool(
@@ -879,6 +1027,12 @@ async def test_update_section_style(server):
             "column_count": 2,
         },
     ))
+    body = json.loads(route.calls[0].request.content)
+    req0 = body["requests"][0]
+    assert "updateSectionStyle" in req0
+    ss = req0["updateSectionStyle"]
+    assert len(ss["sectionStyle"]["columnProperties"]) == 2
+    assert ss["range"]["startIndex"] == 1
 
 
 @pytest.mark.asyncio
@@ -921,7 +1075,7 @@ async def test_create_header(server):
 @pytest.mark.asyncio
 @respx.mock
 async def test_create_footer(server):
-    respx.post(
+    route = respx.post(
         f"{BASE}/{DID}:batchUpdate",
     ).mock(return_value=BATCH_OK)
     _ok(await server.call_tool(
@@ -929,12 +1083,16 @@ async def test_create_footer(server):
             "section_break_index": 0,
         },
     ))
+    body = json.loads(route.calls[0].request.content)
+    req0 = body["requests"][0]
+    assert "createFooter" in req0
+    assert req0["createFooter"]["type"] == "DEFAULT"
 
 
 @pytest.mark.asyncio
 @respx.mock
 async def test_delete_header(server):
-    respx.post(
+    route = respx.post(
         f"{BASE}/{DID}:batchUpdate",
     ).mock(return_value=BATCH_OK)
     _ok(await server.call_tool(
@@ -942,12 +1100,16 @@ async def test_delete_header(server):
             "header_id": "kix.hdr1",
         },
     ))
+    body = json.loads(route.calls[0].request.content)
+    req0 = body["requests"][0]
+    assert "deleteHeader" in req0
+    assert req0["deleteHeader"]["headerId"] == "kix.hdr1"
 
 
 @pytest.mark.asyncio
 @respx.mock
 async def test_delete_footer(server):
-    respx.post(
+    route = respx.post(
         f"{BASE}/{DID}:batchUpdate",
     ).mock(return_value=BATCH_OK)
     _ok(await server.call_tool(
@@ -955,12 +1117,16 @@ async def test_delete_footer(server):
             "footer_id": "kix.ftr1",
         },
     ))
+    body = json.loads(route.calls[0].request.content)
+    req0 = body["requests"][0]
+    assert "deleteFooter" in req0
+    assert req0["deleteFooter"]["footerId"] == "kix.ftr1"
 
 
 @pytest.mark.asyncio
 @respx.mock
 async def test_create_footnote(server):
-    respx.post(
+    route = respx.post(
         f"{BASE}/{DID}:batchUpdate",
     ).mock(return_value=BATCH_OK)
     _ok(await server.call_tool(
@@ -968,6 +1134,10 @@ async def test_create_footnote(server):
             "index": 5,
         },
     ))
+    body = json.loads(route.calls[0].request.content)
+    req0 = body["requests"][0]
+    assert "createFootnote" in req0
+    assert req0["createFootnote"]["location"]["index"] == 5
 
 
 # ==========================================
@@ -980,7 +1150,7 @@ async def test_create_footnote(server):
 async def test_replace_named_range_content_by_id(
     server,
 ):
-    respx.post(
+    route = respx.post(
         f"{BASE}/{DID}:batchUpdate",
     ).mock(return_value=BATCH_OK)
     _ok(await server.call_tool(
@@ -989,6 +1159,12 @@ async def test_replace_named_range_content_by_id(
             "named_range_id": "nr123",
         },
     ))
+    body = json.loads(route.calls[0].request.content)
+    req0 = body["requests"][0]
+    assert "replaceNamedRangeContent" in req0
+    rnr = req0["replaceNamedRangeContent"]
+    assert rnr["text"] == "new content"
+    assert rnr["namedRangeId"] == "nr123"
 
 
 @pytest.mark.asyncio
@@ -996,7 +1172,7 @@ async def test_replace_named_range_content_by_id(
 async def test_replace_named_range_content_by_name(
     server,
 ):
-    respx.post(
+    route = respx.post(
         f"{BASE}/{DID}:batchUpdate",
     ).mock(return_value=BATCH_OK)
     _ok(await server.call_tool(
@@ -1005,6 +1181,11 @@ async def test_replace_named_range_content_by_name(
             "name": "my_range",
         },
     ))
+    body = json.loads(route.calls[0].request.content)
+    req0 = body["requests"][0]
+    rnr = req0["replaceNamedRangeContent"]
+    assert rnr["text"] == "new content"
+    assert rnr["name"] == "my_range"
 
 
 @pytest.mark.asyncio
@@ -1044,7 +1225,7 @@ async def test_replace_image(server):
 @pytest.mark.asyncio
 @respx.mock
 async def test_replace_image_size_to_fit(server):
-    respx.post(
+    route = respx.post(
         f"{BASE}/{DID}:batchUpdate",
     ).mock(return_value=BATCH_OK)
     _ok(await server.call_tool(
@@ -1054,3 +1235,6 @@ async def test_replace_image_size_to_fit(server):
             "image_replace_method": "SIZE_TO_FIT",
         },
     ))
+    body = json.loads(route.calls[0].request.content)
+    req0 = body["requests"][0]
+    assert req0["replaceImage"]["imageReplaceMethod"] == "SIZE_TO_FIT"

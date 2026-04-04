@@ -164,7 +164,7 @@ async def test_get_repo(server):
 @pytest.mark.asyncio
 @respx.mock
 async def test_create_repo(server):
-    respx.post(f"{BASE}/user/repos").mock(
+    route = respx.post(f"{BASE}/user/repos").mock(
         return_value=httpx.Response(
             201, json={"id": 1, "name": "new"},
         ),
@@ -172,12 +172,15 @@ async def test_create_repo(server):
     _ok(await server.call_tool(
         "github_create_repo", {"name": "new"},
     ))
+    req = route.calls[0].request
+    body = json.loads(req.content)
+    assert body["name"] == "new"
 
 
 @pytest.mark.asyncio
 @respx.mock
 async def test_create_repo_in_org(server):
-    respx.post(f"{BASE}/orgs/myorg/repos").mock(
+    route = respx.post(f"{BASE}/orgs/myorg/repos").mock(
         return_value=httpx.Response(
             201, json={"id": 2},
         ),
@@ -186,12 +189,15 @@ async def test_create_repo_in_org(server):
         "github_create_repo",
         {"name": "r", "org": "myorg"},
     ))
+    req = route.calls[0].request
+    body = json.loads(req.content)
+    assert body["name"] == "r"
 
 
 @pytest.mark.asyncio
 @respx.mock
 async def test_update_repo(server):
-    respx.patch(f"{BASE}/repos/owner/repo").mock(
+    route = respx.patch(f"{BASE}/repos/owner/repo").mock(
         return_value=httpx.Response(
             200, json={"id": 1},
         ),
@@ -200,6 +206,9 @@ async def test_update_repo(server):
         "github_update_repo",
         {"description": "updated"},
     ))
+    req = route.calls[0].request
+    body = json.loads(req.content)
+    assert body["description"] == "updated"
 
 
 @pytest.mark.asyncio
@@ -289,7 +298,7 @@ async def test_get_issue(server):
 @pytest.mark.asyncio
 @respx.mock
 async def test_update_issue(server):
-    respx.patch(
+    route = respx.patch(
         f"{BASE}/repos/owner/repo/issues/1"
     ).mock(
         return_value=httpx.Response(
@@ -300,6 +309,9 @@ async def test_update_issue(server):
         "github_update_issue",
         {"issue_number": 1, "state": "closed"},
     ))
+    req = route.calls[0].request
+    body = json.loads(req.content)
+    assert body["state"] == "closed"
 
 
 @pytest.mark.asyncio
@@ -321,7 +333,7 @@ async def test_list_issues(server):
 @pytest.mark.asyncio
 @respx.mock
 async def test_add_issue_labels(server):
-    respx.post(
+    route = respx.post(
         f"{BASE}/repos/owner/repo/issues/1/labels"
     ).mock(
         return_value=httpx.Response(
@@ -332,6 +344,9 @@ async def test_add_issue_labels(server):
         "github_add_issue_labels",
         {"issue_number": 1, "labels": ["bug"]},
     ))
+    req = route.calls[0].request
+    body = json.loads(req.content)
+    assert body["labels"] == ["bug"]
 
 
 @pytest.mark.asyncio
@@ -354,7 +369,7 @@ async def test_remove_issue_label(server):
 @pytest.mark.asyncio
 @respx.mock
 async def test_add_issue_assignees(server):
-    respx.post(
+    route = respx.post(
         f"{BASE}/repos/owner/repo"
         "/issues/1/assignees"
     ).mock(
@@ -366,6 +381,9 @@ async def test_add_issue_assignees(server):
         "github_add_issue_assignees",
         {"issue_number": 1, "assignees": ["user1"]},
     ))
+    req = route.calls[0].request
+    body = json.loads(req.content)
+    assert body["assignees"] == ["user1"]
 
 
 @pytest.mark.asyncio
@@ -409,7 +427,7 @@ async def test_create_issue_comment(server):
 @pytest.mark.asyncio
 @respx.mock
 async def test_update_issue_comment(server):
-    respx.patch(
+    route = respx.patch(
         f"{BASE}/repos/owner/repo"
         "/issues/comments/10"
     ).mock(
@@ -421,6 +439,9 @@ async def test_update_issue_comment(server):
         "github_update_issue_comment",
         {"comment_id": 10, "body": "Updated"},
     ))
+    req = route.calls[0].request
+    body = json.loads(req.content)
+    assert body["body"] == "Updated"
 
 
 @pytest.mark.asyncio
@@ -441,7 +462,7 @@ async def test_delete_issue_comment(server):
 @pytest.mark.asyncio
 @respx.mock
 async def test_lock_issue(server):
-    respx.put(
+    route = respx.put(
         f"{BASE}/repos/owner/repo/issues/1/lock"
     ).mock(
         return_value=httpx.Response(204),
@@ -449,6 +470,7 @@ async def test_lock_issue(server):
     _ok(await server.call_tool(
         "github_lock_issue", {"issue_number": 1},
     ))
+    assert route.calls
 
 
 @pytest.mark.asyncio
@@ -526,7 +548,7 @@ async def test_create_pull(server):
 @pytest.mark.asyncio
 @respx.mock
 async def test_update_pull(server):
-    respx.patch(
+    route = respx.patch(
         f"{BASE}/repos/owner/repo/pulls/1"
     ).mock(
         return_value=httpx.Response(
@@ -537,12 +559,15 @@ async def test_update_pull(server):
         "github_update_pull",
         {"pull_number": 1, "title": "Updated"},
     ))
+    req = route.calls[0].request
+    body = json.loads(req.content)
+    assert body["title"] == "Updated"
 
 
 @pytest.mark.asyncio
 @respx.mock
 async def test_merge_pull(server):
-    respx.put(
+    route = respx.put(
         f"{BASE}/repos/owner/repo/pulls/1/merge"
     ).mock(
         return_value=httpx.Response(
@@ -552,6 +577,7 @@ async def test_merge_pull(server):
     _ok(await server.call_tool(
         "github_merge_pull", {"pull_number": 1},
     ))
+    assert route.calls
 
 
 @pytest.mark.asyncio
@@ -574,7 +600,7 @@ async def test_list_pull_reviews(server):
 @pytest.mark.asyncio
 @respx.mock
 async def test_create_pull_review(server):
-    respx.post(
+    route = respx.post(
         f"{BASE}/repos/owner/repo/pulls/1/reviews"
     ).mock(
         return_value=httpx.Response(
@@ -585,6 +611,9 @@ async def test_create_pull_review(server):
         "github_create_pull_review",
         {"pull_number": 1, "event": "APPROVE"},
     ))
+    req = route.calls[0].request
+    body = json.loads(req.content)
+    assert body["event"] == "APPROVE"
 
 
 @pytest.mark.asyncio
@@ -815,7 +844,7 @@ async def test_create_release(server):
 @pytest.mark.asyncio
 @respx.mock
 async def test_update_release(server):
-    respx.patch(
+    route = respx.patch(
         f"{BASE}/repos/owner/repo/releases/1"
     ).mock(
         return_value=httpx.Response(
@@ -826,6 +855,9 @@ async def test_update_release(server):
         "github_update_release",
         {"release_id": 1, "name": "v1.0.1"},
     ))
+    req = route.calls[0].request
+    body = json.loads(req.content)
+    assert body["name"] == "v1.0.1"
 
 
 @pytest.mark.asyncio
@@ -941,7 +973,7 @@ async def test_get_workflow_run(server):
 @pytest.mark.asyncio
 @respx.mock
 async def test_trigger_workflow(server):
-    respx.post(
+    route = respx.post(
         f"{BASE}/repos/owner/repo"
         "/actions/workflows/ci.yml/dispatches"
     ).mock(
@@ -951,12 +983,15 @@ async def test_trigger_workflow(server):
         "github_trigger_workflow",
         {"workflow_id": "ci.yml", "ref": "main"},
     ))
+    req = route.calls[0].request
+    body = json.loads(req.content)
+    assert body["ref"] == "main"
 
 
 @pytest.mark.asyncio
 @respx.mock
 async def test_cancel_workflow_run(server):
-    respx.post(
+    route = respx.post(
         f"{BASE}/repos/owner/repo"
         "/actions/runs/100/cancel"
     ).mock(
@@ -968,6 +1003,7 @@ async def test_cancel_workflow_run(server):
         "github_cancel_workflow_run",
         {"run_id": 100},
     ))
+    assert route.calls
 
 
 @pytest.mark.asyncio
@@ -1015,7 +1051,7 @@ async def test_list_labels(server):
 @pytest.mark.asyncio
 @respx.mock
 async def test_create_label(server):
-    respx.post(
+    route = respx.post(
         f"{BASE}/repos/owner/repo/labels"
     ).mock(
         return_value=httpx.Response(
@@ -1026,12 +1062,16 @@ async def test_create_label(server):
         "github_create_label",
         {"name": "bug", "color": "ff0000"},
     ))
+    req = route.calls[0].request
+    body = json.loads(req.content)
+    assert body["name"] == "bug"
+    assert body["color"] == "ff0000"
 
 
 @pytest.mark.asyncio
 @respx.mock
 async def test_update_label(server):
-    respx.patch(
+    route = respx.patch(
         f"{BASE}/repos/owner/repo/labels/bug"
     ).mock(
         return_value=httpx.Response(
@@ -1042,6 +1082,9 @@ async def test_update_label(server):
         "github_update_label",
         {"label_name": "bug", "new_name": "bugfix"},
     ))
+    req = route.calls[0].request
+    body = json.loads(req.content)
+    assert body["new_name"] == "bugfix"
 
 
 @pytest.mark.asyncio
@@ -1080,7 +1123,7 @@ async def test_list_milestones(server):
 @pytest.mark.asyncio
 @respx.mock
 async def test_create_milestone(server):
-    respx.post(
+    route = respx.post(
         f"{BASE}/repos/owner/repo/milestones"
     ).mock(
         return_value=httpx.Response(
@@ -1091,12 +1134,15 @@ async def test_create_milestone(server):
         "github_create_milestone",
         {"title": "v1"},
     ))
+    req = route.calls[0].request
+    body = json.loads(req.content)
+    assert body["title"] == "v1"
 
 
 @pytest.mark.asyncio
 @respx.mock
 async def test_update_milestone(server):
-    respx.patch(
+    route = respx.patch(
         f"{BASE}/repos/owner/repo/milestones/1"
     ).mock(
         return_value=httpx.Response(
@@ -1107,6 +1153,9 @@ async def test_update_milestone(server):
         "github_update_milestone",
         {"milestone_number": 1, "title": "v2"},
     ))
+    req = route.calls[0].request
+    body = json.loads(req.content)
+    assert body["title"] == "v2"
 
 
 @pytest.mark.asyncio
@@ -1273,7 +1322,7 @@ async def test_list_gists_for_user(server):
 @pytest.mark.asyncio
 @respx.mock
 async def test_create_gist(server):
-    respx.post(f"{BASE}/gists").mock(
+    route = respx.post(f"{BASE}/gists").mock(
         return_value=httpx.Response(
             201, json={"id": "abc"},
         ),
@@ -1282,6 +1331,10 @@ async def test_create_gist(server):
         "github_create_gist",
         {"files": {"a.txt": {"content": "hi"}}},
     ))
+    req = route.calls[0].request
+    body = json.loads(req.content)
+    assert "files" in body
+    assert body["files"]["a.txt"]["content"] == "hi"
 
 
 @pytest.mark.asyncio
@@ -1300,7 +1353,7 @@ async def test_get_gist(server):
 @pytest.mark.asyncio
 @respx.mock
 async def test_update_gist(server):
-    respx.patch(f"{BASE}/gists/abc").mock(
+    route = respx.patch(f"{BASE}/gists/abc").mock(
         return_value=httpx.Response(
             200, json={"id": "abc"},
         ),
@@ -1309,6 +1362,9 @@ async def test_update_gist(server):
         "github_update_gist",
         {"gist_id": "abc", "description": "new"},
     ))
+    req = route.calls[0].request
+    body = json.loads(req.content)
+    assert body["description"] == "new"
 
 
 @pytest.mark.asyncio
@@ -1356,7 +1412,7 @@ async def test_list_starred_repos_for_user(server):
 @pytest.mark.asyncio
 @respx.mock
 async def test_star_repo(server):
-    respx.put(
+    route = respx.put(
         f"{BASE}/user/starred/octocat/hello"
     ).mock(
         return_value=httpx.Response(204),
@@ -1365,6 +1421,7 @@ async def test_star_repo(server):
         "github_star_repo",
         {"owner": "octocat", "repo": "hello"},
     ))
+    assert route.calls
 
 
 @pytest.mark.asyncio
@@ -1401,7 +1458,7 @@ async def test_list_notifications(server):
 @pytest.mark.asyncio
 @respx.mock
 async def test_mark_notifications_read(server):
-    respx.put(f"{BASE}/notifications").mock(
+    route = respx.put(f"{BASE}/notifications").mock(
         return_value=httpx.Response(
             202, json={},
         ),
@@ -1409,3 +1466,4 @@ async def test_mark_notifications_read(server):
     _ok(await server.call_tool(
         "github_mark_notifications_read", {},
     ))
+    assert route.calls

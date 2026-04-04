@@ -148,11 +148,12 @@ async def test_delete_secret(server):
 @pytest.mark.asyncio
 @respx.mock
 async def test_recover_secret(server):
-    respx.post(f"{VAULT_BASE}/deletedsecrets/my-secret/recover").mock(
+    route = respx.post(f"{VAULT_BASE}/deletedsecrets/my-secret/recover").mock(
         return_value=httpx.Response(200, json={"id": "..."})
     )
     result = await server.call_tool("kv_recover_secret", {"name": "my-secret"})
     assert _get_result_data(result)["status"] == "success"
+    assert route.calls[0].request.method == "POST"
 
 
 @pytest.mark.asyncio
@@ -178,11 +179,12 @@ async def test_list_deleted_secrets(server):
 @pytest.mark.asyncio
 @respx.mock
 async def test_backup_secret(server):
-    respx.post(f"{VAULT_BASE}/secrets/my-secret/backup").mock(
+    route = respx.post(f"{VAULT_BASE}/secrets/my-secret/backup").mock(
         return_value=httpx.Response(200, json={"value": "backup-blob"})
     )
     result = await server.call_tool("kv_backup_secret", {"name": "my-secret"})
     assert _get_result_data(result)["status"] == "success"
+    assert route.calls[0].request.method == "POST"
 
 
 @pytest.mark.asyncio
@@ -272,11 +274,12 @@ async def test_delete_key(server):
 @pytest.mark.asyncio
 @respx.mock
 async def test_recover_key(server):
-    respx.post(f"{VAULT_BASE}/deletedkeys/my-key/recover").mock(
+    route = respx.post(f"{VAULT_BASE}/deletedkeys/my-key/recover").mock(
         return_value=httpx.Response(200, json={"key": {"kid": "..."}})
     )
     result = await server.call_tool("kv_recover_key", {"name": "my-key"})
     assert _get_result_data(result)["status"] == "success"
+    assert route.calls[0].request.method == "POST"
 
 
 @pytest.mark.asyncio
@@ -302,11 +305,12 @@ async def test_list_deleted_keys(server):
 @pytest.mark.asyncio
 @respx.mock
 async def test_rotate_key(server):
-    respx.post(f"{VAULT_BASE}/keys/my-key/rotate").mock(
+    route = respx.post(f"{VAULT_BASE}/keys/my-key/rotate").mock(
         return_value=httpx.Response(200, json={"key": {"kid": "..."}})
     )
     result = await server.call_tool("kv_rotate_key", {"name": "my-key"})
     assert _get_result_data(result)["status"] == "success"
+    assert route.calls[0].request.method == "POST"
 
 
 @pytest.mark.asyncio
@@ -410,11 +414,12 @@ async def test_unwrap_key(server):
 @pytest.mark.asyncio
 @respx.mock
 async def test_backup_key(server):
-    respx.post(f"{VAULT_BASE}/keys/my-key/backup").mock(
+    route = respx.post(f"{VAULT_BASE}/keys/my-key/backup").mock(
         return_value=httpx.Response(200, json={"value": "backup-blob"})
     )
     result = await server.call_tool("kv_backup_key", {"name": "my-key"})
     assert _get_result_data(result)["status"] == "success"
+    assert route.calls[0].request.method == "POST"
 
 
 @pytest.mark.asyncio
@@ -524,11 +529,12 @@ async def test_delete_certificate(server):
 @pytest.mark.asyncio
 @respx.mock
 async def test_recover_certificate(server):
-    respx.post(f"{VAULT_BASE}/deletedcertificates/my-cert/recover").mock(
+    route = respx.post(f"{VAULT_BASE}/deletedcertificates/my-cert/recover").mock(
         return_value=httpx.Response(200, json={"id": "..."})
     )
     result = await server.call_tool("kv_recover_certificate", {"name": "my-cert"})
     assert _get_result_data(result)["status"] == "success"
+    assert route.calls[0].request.method == "POST"
 
 
 @pytest.mark.asyncio

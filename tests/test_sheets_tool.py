@@ -93,12 +93,14 @@ async def test_api_error(server):
 @pytest.mark.asyncio
 @respx.mock
 async def test_create_spreadsheet(server):
-    respx.post(f"{BASE}/").mock(
+    route = respx.post(f"{BASE}/").mock(
         return_value=httpx.Response(200, json={"spreadsheetId": "new1"}),
     )
     _ok(await server.call_tool(
         "sheets_create_spreadsheet", {"title": "Test"},
     ))
+    body = json.loads(route.calls[0].request.content)
+    assert body["properties"]["title"] == "Test"
 
 
 @pytest.mark.asyncio
@@ -225,12 +227,13 @@ async def test_append_values(server):
 @pytest.mark.asyncio
 @respx.mock
 async def test_clear_values(server):
-    respx.post(f"{BASE}/{SID}/values/Sheet1!A1:B2:clear").mock(
+    route = respx.post(f"{BASE}/{SID}/values/Sheet1!A1:B2:clear").mock(
         return_value=httpx.Response(200, json={"clearedRange": "Sheet1!A1:B2"}),
     )
     _ok(await server.call_tool(
         "sheets_clear_values", {"range": "Sheet1!A1:B2"},
     ))
+    assert route.calls
 
 
 @pytest.mark.asyncio
@@ -261,12 +264,14 @@ async def test_batch_update_values(server):
 @pytest.mark.asyncio
 @respx.mock
 async def test_batch_clear_values(server):
-    respx.post(f"{BASE}/{SID}/values:batchClear").mock(
+    route = respx.post(f"{BASE}/{SID}/values:batchClear").mock(
         return_value=httpx.Response(200, json={"clearedRanges": []}),
     )
     _ok(await server.call_tool(
         "sheets_batch_clear_values", {"ranges": ["A1:B2"]},
     ))
+    body = json.loads(route.calls[0].request.content)
+    assert body["ranges"] == ["A1:B2"]
 
 
 # --- Tier 4: Formatting ---
@@ -299,13 +304,17 @@ async def test_format_cells_no_props(server):
 @pytest.mark.asyncio
 @respx.mock
 async def test_update_borders(server):
-    respx.post(f"{BASE}/{SID}:batchUpdate").mock(
+    route = respx.post(f"{BASE}/{SID}:batchUpdate").mock(
         return_value=httpx.Response(200, json={"replies": []}),
     )
     _ok(await server.call_tool("sheets_update_borders", {
         "sheet_id": 0, "start_row": 0, "end_row": 5,
         "start_column": 0, "end_column": 5, "top_style": "SOLID",
     }))
+    body = json.loads(route.calls[0].request.content)
+    borders = body["requests"][0]["updateBorders"]
+    assert borders["range"]["sheetId"] == 0
+    assert borders["top"]["style"] == "SOLID"
 
 
 @pytest.mark.asyncio
@@ -338,25 +347,35 @@ async def test_merge_cells(server):
 @pytest.mark.asyncio
 @respx.mock
 async def test_unmerge_cells(server):
-    respx.post(f"{BASE}/{SID}:batchUpdate").mock(
+    route = respx.post(f"{BASE}/{SID}:batchUpdate").mock(
         return_value=httpx.Response(200, json={"replies": []}),
     )
     _ok(await server.call_tool("sheets_unmerge_cells", {
         "sheet_id": 0, "start_row": 0, "end_row": 2,
         "start_column": 0, "end_column": 3,
     }))
+    body = json.loads(route.calls[0].request.content)
+    unmerge = body["requests"][0]["unmergeCells"]
+    assert unmerge["range"]["sheetId"] == 0
+    assert unmerge["range"]["endColumnIndex"] == 3
 
 
 @pytest.mark.asyncio
 @respx.mock
 async def test_auto_resize(server):
-    respx.post(f"{BASE}/{SID}:batchUpdate").mock(
+    route = respx.post(f"{BASE}/{SID}:batchUpdate").mock(
         return_value=httpx.Response(200, json={"replies": []}),
     )
     _ok(await server.call_tool("sheets_auto_resize", {
         "sheet_id": 0, "dimension": "COLUMNS",
         "start_index": 0, "end_index": 5,
     }))
+    body = json.loads(route.calls[0].request.content)
+    dims = body["requests"][0]["autoResizeDimensions"]["dimensions"]
+    assert dims["sheetId"] == 0
+    assert dims["dimension"] == "COLUMNS"
+    assert dims["startIndex"] == 0
+    assert dims["endIndex"] == 5
 
 
 # --- Tier 5: Named Ranges ---
@@ -364,7 +383,7 @@ async def test_auto_resize(server):
 @pytest.mark.asyncio
 @respx.mock
 async def test_add_named_range(server):
-    respx.post(f"{BASE}/{SID}:batchUpdate").mock(
+    route = respx.post(f"{BASE}/{SID}:batchUpdate").mock(
         return_value=httpx.Response(200, json={"replies": [{}]}),
     )
     _ok(await server.call_tool("sheets_add_named_range", {
@@ -372,17 +391,26 @@ async def test_add_named_range(server):
         "start_row": 0, "end_row": 10,
         "start_column": 0, "end_column": 4,
     }))
+    body = json.loads(route.calls[0].request.content)
+    nr = body["requests"][0]["addNamedRange"]["namedRange"]
+    assert nr["name"] == "MyRange"
+    assert nr["range"]["sheetId"] == 0
 
 
 @pytest.mark.asyncio
 @respx.mock
 async def test_update_named_range(server):
-    respx.post(f"{BASE}/{SID}:batchUpdate").mock(
+    route = respx.post(f"{BASE}/{SID}:batchUpdate").mock(
         return_value=httpx.Response(200, json={"replies": []}),
     )
     _ok(await server.call_tool("sheets_update_named_range", {
         "named_range_id": "nr1", "name": "Renamed",
     }))
+    body = json.loads(route.calls[0].request.content)
+    upd = body["requests"][0]["updateNamedRange"]
+    assert upd["namedRange"]["namedRangeId"] == "nr1"
+    assert upd["namedRange"]["name"] == "Renamed"
+    assert "name" in upd["fields"]
 
 
 @pytest.mark.asyncio
@@ -396,12 +424,14 @@ async def test_update_named_range_no_fields(server):
 @pytest.mark.asyncio
 @respx.mock
 async def test_delete_named_range(server):
-    respx.post(f"{BASE}/{SID}:batchUpdate").mock(
+    route = respx.post(f"{BASE}/{SID}:batchUpdate").mock(
         return_value=httpx.Response(200, json={"replies": []}),
     )
     _ok(await server.call_tool(
         "sheets_delete_named_range", {"named_range_id": "nr1"},
     ))
+    body = json.loads(route.calls[0].request.content)
+    assert body["requests"][0]["deleteNamedRange"]["namedRangeId"] == "nr1"
 
 
 # --- Tier 6: Filters ---
@@ -409,24 +439,30 @@ async def test_delete_named_range(server):
 @pytest.mark.asyncio
 @respx.mock
 async def test_set_basic_filter(server):
-    respx.post(f"{BASE}/{SID}:batchUpdate").mock(
+    route = respx.post(f"{BASE}/{SID}:batchUpdate").mock(
         return_value=httpx.Response(200, json={"replies": []}),
     )
     _ok(await server.call_tool("sheets_set_basic_filter", {
         "sheet_id": 0, "start_row": 0, "end_row": 100,
         "start_column": 0, "end_column": 5,
     }))
+    body = json.loads(route.calls[0].request.content)
+    filt = body["requests"][0]["setBasicFilter"]["filter"]
+    assert filt["range"]["sheetId"] == 0
+    assert filt["range"]["endRowIndex"] == 100
 
 
 @pytest.mark.asyncio
 @respx.mock
 async def test_clear_basic_filter(server):
-    respx.post(f"{BASE}/{SID}:batchUpdate").mock(
+    route = respx.post(f"{BASE}/{SID}:batchUpdate").mock(
         return_value=httpx.Response(200, json={"replies": []}),
     )
     _ok(await server.call_tool(
         "sheets_clear_basic_filter", {"sheet_id": 0},
     ))
+    body = json.loads(route.calls[0].request.content)
+    assert body["requests"][0]["clearBasicFilter"]["sheetId"] == 0
 
 
 # --- Tier 7: Charts ---
@@ -434,7 +470,7 @@ async def test_clear_basic_filter(server):
 @pytest.mark.asyncio
 @respx.mock
 async def test_add_chart(server):
-    respx.post(f"{BASE}/{SID}:batchUpdate").mock(
+    route = respx.post(f"{BASE}/{SID}:batchUpdate").mock(
         return_value=httpx.Response(200, json={"replies": [{}]}),
     )
     _ok(await server.call_tool("sheets_add_chart", {
@@ -442,6 +478,10 @@ async def test_add_chart(server):
         "source_start_row": 0, "source_end_row": 10,
         "source_start_column": 0, "source_end_column": 3,
     }))
+    body = json.loads(route.calls[0].request.content)
+    chart = body["requests"][0]["addChart"]["chart"]
+    assert chart["spec"]["basicChart"]["chartType"] == "LINE"
+    assert len(chart["spec"]["basicChart"]["series"]) == 2
 
 
 @pytest.mark.asyncio
@@ -459,24 +499,30 @@ async def test_add_chart_too_few_columns(server):
 @pytest.mark.asyncio
 @respx.mock
 async def test_protect_range(server):
-    respx.post(f"{BASE}/{SID}:batchUpdate").mock(
+    route = respx.post(f"{BASE}/{SID}:batchUpdate").mock(
         return_value=httpx.Response(200, json={"replies": [{}]}),
     )
     _ok(await server.call_tool("sheets_protect_range", {
         "sheet_id": 0, "start_row": 0, "end_row": 1,
         "start_column": 0, "end_column": 10,
     }))
+    body = json.loads(route.calls[0].request.content)
+    pr = body["requests"][0]["addProtectedRange"]["protectedRange"]
+    assert pr["range"]["sheetId"] == 0
+    assert pr["warningOnly"] is False
 
 
 @pytest.mark.asyncio
 @respx.mock
 async def test_unprotect_range(server):
-    respx.post(f"{BASE}/{SID}:batchUpdate").mock(
+    route = respx.post(f"{BASE}/{SID}:batchUpdate").mock(
         return_value=httpx.Response(200, json={"replies": []}),
     )
     _ok(await server.call_tool(
         "sheets_unprotect_range", {"protected_range_id": 123},
     ))
+    body = json.loads(route.calls[0].request.content)
+    assert body["requests"][0]["deleteProtectedRange"]["protectedRangeId"] == 123
 
 
 # --- Default spreadsheet ID ---

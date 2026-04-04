@@ -269,7 +269,9 @@ async def test_move_task(server):
 @pytest.mark.asyncio
 @respx.mock
 async def test_clear_tasks(server):
-    respx.post(f"{BASE}/lists/@default/clear").mock(
+    route = respx.post(f"{BASE}/lists/@default/clear").mock(
         return_value=httpx.Response(204),
     )
     _ok(await server.call_tool("gtasks_clear_tasks", {}))
+    assert len(route.calls) == 1
+    assert route.calls[0].request.method == "POST"

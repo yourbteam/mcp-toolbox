@@ -182,7 +182,7 @@ async def test_create_file_folder(server):
 @pytest.mark.asyncio
 @respx.mock
 async def test_create_file_with_content(server):
-    respx.post(url__startswith=UPLOAD_BASE).mock(
+    route = respx.post(url__startswith=UPLOAD_BASE).mock(
         return_value=httpx.Response(200, json={
             "id": "f3", "name": "hello.txt",
         }),
@@ -195,6 +195,8 @@ async def test_create_file_with_content(server):
         },
     ))
     assert r["file"]["id"] == "f3"
+    req = route.calls[0].request
+    assert b"Hello, world!" in req.content
 
 
 @pytest.mark.asyncio
@@ -242,7 +244,7 @@ async def test_update_file_metadata(server):
 @pytest.mark.asyncio
 @respx.mock
 async def test_update_file_with_content(server):
-    respx.patch(url__startswith=UPLOAD_BASE).mock(
+    route = respx.patch(url__startswith=UPLOAD_BASE).mock(
         return_value=httpx.Response(200, json={
             "id": "f1", "name": "updated.txt",
         }),
@@ -254,6 +256,8 @@ async def test_update_file_with_content(server):
         },
     ))
     assert r["file"]["id"] == "f1"
+    req = route.calls[0].request
+    assert b"Updated content" in req.content
 
 
 @pytest.mark.asyncio
@@ -559,7 +563,7 @@ async def test_create_comment(server):
 @pytest.mark.asyncio
 @respx.mock
 async def test_update_comment(server):
-    respx.patch(
+    route = respx.patch(
         f"{BASE}/files/f1/comments/c1",
     ).mock(
         return_value=httpx.Response(200, json={
@@ -574,6 +578,9 @@ async def test_update_comment(server):
         },
     ))
     assert r["comment"]["content"] == "Updated"
+    req = route.calls[0].request
+    body = json.loads(req.content)
+    assert body["content"] == "Updated"
 
 
 @pytest.mark.asyncio
@@ -663,7 +670,7 @@ async def test_create_reply(server):
 @pytest.mark.asyncio
 @respx.mock
 async def test_create_reply_with_action(server):
-    respx.post(
+    route = respx.post(
         f"{BASE}/files/f1/comments/c1/replies",
     ).mock(
         return_value=httpx.Response(200, json={
@@ -681,12 +688,16 @@ async def test_create_reply_with_action(server):
         },
     ))
     assert r["reply"]["action"] == "resolve"
+    req = route.calls[0].request
+    body = json.loads(req.content)
+    assert body["content"] == "Done"
+    assert body["action"] == "resolve"
 
 
 @pytest.mark.asyncio
 @respx.mock
 async def test_update_reply(server):
-    respx.patch(
+    route = respx.patch(
         f"{BASE}/files/f1/comments/c1/replies/r1",
     ).mock(
         return_value=httpx.Response(200, json={
@@ -702,6 +713,9 @@ async def test_update_reply(server):
         },
     ))
     assert r["reply"]["content"] == "Edited reply"
+    req = route.calls[0].request
+    body = json.loads(req.content)
+    assert body["content"] == "Edited reply"
 
 
 @pytest.mark.asyncio
@@ -767,7 +781,7 @@ async def test_get_revision(server):
 @pytest.mark.asyncio
 @respx.mock
 async def test_update_revision(server):
-    respx.patch(
+    route = respx.patch(
         f"{BASE}/files/f1/revisions/rev1",
     ).mock(
         return_value=httpx.Response(200, json={
@@ -782,6 +796,9 @@ async def test_update_revision(server):
         },
     ))
     assert r["revision"]["keepForever"] is True
+    req = route.calls[0].request
+    body = json.loads(req.content)
+    assert body["keepForever"] is True
 
 
 @pytest.mark.asyncio
@@ -919,7 +936,7 @@ async def test_create_drive(server):
 @pytest.mark.asyncio
 @respx.mock
 async def test_update_drive(server):
-    respx.patch(f"{BASE}/drives/d1").mock(
+    route = respx.patch(f"{BASE}/drives/d1").mock(
         return_value=httpx.Response(200, json={
             "id": "d1", "name": "Renamed Drive",
         }),
@@ -931,6 +948,9 @@ async def test_update_drive(server):
         },
     ))
     assert r["drive"]["name"] == "Renamed Drive"
+    req = route.calls[0].request
+    body = json.loads(req.content)
+    assert body["name"] == "Renamed Drive"
 
 
 @pytest.mark.asyncio

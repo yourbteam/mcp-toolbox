@@ -193,7 +193,7 @@ async def test_list_accounts(server):
 @pytest.mark.asyncio
 @respx.mock
 async def test_upsert_account(server):
-    respx.patch(
+    route = respx.patch(
         f"{BASE}/sobjects/Account/ExtId__c/ext1"
     ).mock(
         return_value=httpx.Response(
@@ -207,6 +207,9 @@ async def test_upsert_account(server):
             "name": "Upserted",
         },
     ))
+    req = route.calls[0].request
+    body = json.loads(req.content)
+    assert body["Name"] == "Upserted"
 
 
 # ===================================================
@@ -246,13 +249,16 @@ async def test_get_contact(server):
 @pytest.mark.asyncio
 @respx.mock
 async def test_update_contact(server):
-    respx.patch(f"{BASE}/sobjects/Contact/003xx").mock(
+    route = respx.patch(f"{BASE}/sobjects/Contact/003xx").mock(
         return_value=httpx.Response(204),
     )
     _ok(await server.call_tool(
         "sf_update_contact",
         {"contact_id": "003xx", "email": "a@b.com"},
     ))
+    req = route.calls[0].request
+    body = json.loads(req.content)
+    assert body["Email"] == "a@b.com"
 
 
 @pytest.mark.asyncio
@@ -280,7 +286,7 @@ async def test_list_contacts(server):
 @pytest.mark.asyncio
 @respx.mock
 async def test_upsert_contact(server):
-    respx.patch(
+    route = respx.patch(
         f"{BASE}/sobjects/Contact/ExtId__c/ext2"
     ).mock(
         return_value=httpx.Response(204),
@@ -292,6 +298,9 @@ async def test_upsert_contact(server):
             "last_name": "Jones",
         },
     ))
+    req = route.calls[0].request
+    body = json.loads(req.content)
+    assert body["LastName"] == "Jones"
 
 
 # ===================================================
@@ -340,7 +349,7 @@ async def test_get_opportunity(server):
 @pytest.mark.asyncio
 @respx.mock
 async def test_update_opportunity(server):
-    respx.patch(
+    route = respx.patch(
         f"{BASE}/sobjects/Opportunity/006xx"
     ).mock(
         return_value=httpx.Response(204),
@@ -351,6 +360,9 @@ async def test_update_opportunity(server):
             "stage_name": "Closed Won",
         },
     ))
+    req = route.calls[0].request
+    body = json.loads(req.content)
+    assert body["StageName"] == "Closed Won"
 
 
 @pytest.mark.asyncio
@@ -385,7 +397,7 @@ async def test_list_opportunities(server):
 @pytest.mark.asyncio
 @respx.mock
 async def test_upsert_opportunity(server):
-    respx.patch(
+    route = respx.patch(
         f"{BASE}/sobjects/Opportunity/ExtId__c/ext3"
     ).mock(
         return_value=httpx.Response(
@@ -399,6 +411,9 @@ async def test_upsert_opportunity(server):
             "name": "Upserted Opp",
         },
     ))
+    req = route.calls[0].request
+    body = json.loads(req.content)
+    assert body["Name"] == "Upserted Opp"
 
 
 # ===================================================
@@ -409,7 +424,7 @@ async def test_upsert_opportunity(server):
 @pytest.mark.asyncio
 @respx.mock
 async def test_create_lead(server):
-    respx.post(f"{BASE}/sobjects/Lead/").mock(
+    route = respx.post(f"{BASE}/sobjects/Lead/").mock(
         return_value=httpx.Response(
             201, json={"id": "00Qxx", "success": True},
         ),
@@ -420,6 +435,10 @@ async def test_create_lead(server):
             "company": "Acme",
         },
     ))
+    req = route.calls[0].request
+    body = json.loads(req.content)
+    assert body["LastName"] == "Doe"
+    assert body["Company"] == "Acme"
 
 
 @pytest.mark.asyncio
@@ -438,7 +457,7 @@ async def test_get_lead(server):
 @pytest.mark.asyncio
 @respx.mock
 async def test_update_lead(server):
-    respx.patch(f"{BASE}/sobjects/Lead/00Qxx").mock(
+    route = respx.patch(f"{BASE}/sobjects/Lead/00Qxx").mock(
         return_value=httpx.Response(204),
     )
     _ok(await server.call_tool(
@@ -447,6 +466,9 @@ async def test_update_lead(server):
             "status": "Working",
         },
     ))
+    req = route.calls[0].request
+    body = json.loads(req.content)
+    assert body["Status"] == "Working"
 
 
 @pytest.mark.asyncio
@@ -474,7 +496,7 @@ async def test_list_leads(server):
 @pytest.mark.asyncio
 @respx.mock
 async def test_convert_lead(server):
-    respx.post(
+    route = respx.post(
         f"{BASE}/actions/standard/convertLead"
     ).mock(
         return_value=httpx.Response(200, json=[{
@@ -489,6 +511,11 @@ async def test_convert_lead(server):
             "converted_status": "Qualified",
         },
     ))
+    req = route.calls[0].request
+    body = json.loads(req.content)
+    assert "inputs" in body
+    assert body["inputs"][0]["leadId"] == "00Qxx"
+    assert body["inputs"][0]["convertedStatus"] == "Qualified"
 
 
 # ===================================================
@@ -499,7 +526,7 @@ async def test_convert_lead(server):
 @pytest.mark.asyncio
 @respx.mock
 async def test_create_case(server):
-    respx.post(f"{BASE}/sobjects/Case/").mock(
+    route = respx.post(f"{BASE}/sobjects/Case/").mock(
         return_value=httpx.Response(
             201, json={"id": "500xx", "success": True},
         ),
@@ -510,6 +537,10 @@ async def test_create_case(server):
             "status": "New",
         },
     ))
+    req = route.calls[0].request
+    body = json.loads(req.content)
+    assert body["Subject"] == "Bug report"
+    assert body["Status"] == "New"
 
 
 @pytest.mark.asyncio
@@ -528,7 +559,7 @@ async def test_get_case(server):
 @pytest.mark.asyncio
 @respx.mock
 async def test_update_case(server):
-    respx.patch(f"{BASE}/sobjects/Case/500xx").mock(
+    route = respx.patch(f"{BASE}/sobjects/Case/500xx").mock(
         return_value=httpx.Response(204),
     )
     _ok(await server.call_tool(
@@ -537,6 +568,9 @@ async def test_update_case(server):
             "status": "Closed",
         },
     ))
+    req = route.calls[0].request
+    body = json.loads(req.content)
+    assert body["Status"] == "Closed"
 
 
 @pytest.mark.asyncio
@@ -564,7 +598,7 @@ async def test_list_cases(server):
 @pytest.mark.asyncio
 @respx.mock
 async def test_add_case_comment(server):
-    respx.post(f"{BASE}/sobjects/CaseComment/").mock(
+    route = respx.post(f"{BASE}/sobjects/CaseComment/").mock(
         return_value=httpx.Response(
             201,
             json={"id": "00axx", "success": True},
@@ -576,6 +610,10 @@ async def test_add_case_comment(server):
             "body": "Fixed now",
         },
     ))
+    req = route.calls[0].request
+    body = json.loads(req.content)
+    assert body["ParentId"] == "500xx"
+    assert body["CommentBody"] == "Fixed now"
 
 
 # ===================================================
@@ -586,7 +624,7 @@ async def test_add_case_comment(server):
 @pytest.mark.asyncio
 @respx.mock
 async def test_create_task(server):
-    respx.post(f"{BASE}/sobjects/Task/").mock(
+    route = respx.post(f"{BASE}/sobjects/Task/").mock(
         return_value=httpx.Response(
             201, json={"id": "00Txx", "success": True},
         ),
@@ -594,6 +632,9 @@ async def test_create_task(server):
     _ok(await server.call_tool(
         "sf_create_task", {"subject": "Follow up"},
     ))
+    req = route.calls[0].request
+    body = json.loads(req.content)
+    assert body["Subject"] == "Follow up"
 
 
 @pytest.mark.asyncio
@@ -612,7 +653,7 @@ async def test_get_task(server):
 @pytest.mark.asyncio
 @respx.mock
 async def test_update_task(server):
-    respx.patch(f"{BASE}/sobjects/Task/00Txx").mock(
+    route = respx.patch(f"{BASE}/sobjects/Task/00Txx").mock(
         return_value=httpx.Response(204),
     )
     _ok(await server.call_tool(
@@ -621,6 +662,9 @@ async def test_update_task(server):
             "status": "Completed",
         },
     ))
+    req = route.calls[0].request
+    body = json.loads(req.content)
+    assert body["Status"] == "Completed"
 
 
 @pytest.mark.asyncio
@@ -653,7 +697,7 @@ async def test_list_tasks(server):
 @pytest.mark.asyncio
 @respx.mock
 async def test_create_event(server):
-    respx.post(f"{BASE}/sobjects/Event/").mock(
+    route = respx.post(f"{BASE}/sobjects/Event/").mock(
         return_value=httpx.Response(
             201, json={"id": "00Uxx", "success": True},
         ),
@@ -664,6 +708,10 @@ async def test_create_event(server):
             "end_date_time": "2026-05-01T10:00:00Z",
         },
     ))
+    req = route.calls[0].request
+    body = json.loads(req.content)
+    assert body["StartDateTime"] == "2026-05-01T09:00:00Z"
+    assert body["EndDateTime"] == "2026-05-01T10:00:00Z"
 
 
 @pytest.mark.asyncio
@@ -682,7 +730,7 @@ async def test_get_event(server):
 @pytest.mark.asyncio
 @respx.mock
 async def test_update_event(server):
-    respx.patch(f"{BASE}/sobjects/Event/00Uxx").mock(
+    route = respx.patch(f"{BASE}/sobjects/Event/00Uxx").mock(
         return_value=httpx.Response(204),
     )
     _ok(await server.call_tool(
@@ -691,6 +739,9 @@ async def test_update_event(server):
             "subject": "Updated Meeting",
         },
     ))
+    req = route.calls[0].request
+    body = json.loads(req.content)
+    assert body["Subject"] == "Updated Meeting"
 
 
 @pytest.mark.asyncio
@@ -938,7 +989,7 @@ async def test_get_record(server):
 @pytest.mark.asyncio
 @respx.mock
 async def test_update_record(server):
-    respx.patch(
+    route = respx.patch(
         f"{BASE}/sobjects/CustomObj__c/a00xx"
     ).mock(
         return_value=httpx.Response(204),
@@ -950,6 +1001,9 @@ async def test_update_record(server):
             "fields": {"Name": "Updated"},
         },
     ))
+    req = route.calls[0].request
+    body = json.loads(req.content)
+    assert body["Name"] == "Updated"
 
 
 @pytest.mark.asyncio
@@ -971,7 +1025,7 @@ async def test_delete_record(server):
 @pytest.mark.asyncio
 @respx.mock
 async def test_upsert_record(server):
-    respx.patch(
+    route = respx.patch(
         f"{BASE}/sobjects/CustomObj__c/ExtId__c/val1"
     ).mock(
         return_value=httpx.Response(
@@ -986,6 +1040,9 @@ async def test_upsert_record(server):
             "fields": {"Name": "Upserted"},
         },
     ))
+    req = route.calls[0].request
+    body = json.loads(req.content)
+    assert body["Name"] == "Upserted"
 
 
 # ===================================================
@@ -1018,7 +1075,7 @@ async def test_bulk_create_job(server):
 @pytest.mark.asyncio
 @respx.mock
 async def test_bulk_upload_data(server):
-    respx.put(
+    route = respx.put(
         f"{BASE}/jobs/ingest/750xx/batches"
     ).mock(
         return_value=httpx.Response(201),
@@ -1029,12 +1086,14 @@ async def test_bulk_upload_data(server):
             "csv_data": "Name\nAcme\nGlobex",
         },
     ))
+    req = route.calls[0].request
+    assert req.content.decode() == "Name\nAcme\nGlobex"
 
 
 @pytest.mark.asyncio
 @respx.mock
 async def test_bulk_close_job(server):
-    respx.patch(f"{BASE}/jobs/ingest/750xx").mock(
+    route = respx.patch(f"{BASE}/jobs/ingest/750xx").mock(
         return_value=httpx.Response(200, json={
             "id": "750xx", "state": "UploadComplete",
         }),
@@ -1042,6 +1101,9 @@ async def test_bulk_close_job(server):
     _ok(await server.call_tool(
         "sf_bulk_close_job", {"job_id": "750xx"},
     ))
+    req = route.calls[0].request
+    body = json.loads(req.content)
+    assert body["state"] == "UploadComplete"
 
 
 @pytest.mark.asyncio
@@ -1157,7 +1219,7 @@ async def test_list_reports(server):
 @pytest.mark.asyncio
 @respx.mock
 async def test_run_report(server):
-    respx.post(
+    route = respx.post(
         f"{BASE}/analytics/reports/00Oxx"
     ).mock(
         return_value=httpx.Response(200, json={
@@ -1168,6 +1230,7 @@ async def test_run_report(server):
     _ok(await server.call_tool(
         "sf_run_report", {"report_id": "00Oxx"},
     ))
+    assert route.calls
 
 
 @pytest.mark.asyncio
@@ -1346,7 +1409,7 @@ async def test_list_events_with_date_range(server):
 @pytest.mark.asyncio
 @respx.mock
 async def test_bulk_create_job_upsert(server):
-    respx.post(f"{BASE}/jobs/ingest/").mock(
+    route = respx.post(f"{BASE}/jobs/ingest/").mock(
         return_value=httpx.Response(201, json={
             "id": "750yy", "state": "Open",
         }),
@@ -1358,12 +1421,17 @@ async def test_bulk_create_job_upsert(server):
             "external_id_field": "Email",
         },
     ))
+    req = route.calls[0].request
+    body = json.loads(req.content)
+    assert body["object"] == "Contact"
+    assert body["operation"] == "upsert"
+    assert body["externalIdFieldName"] == "Email"
 
 
 @pytest.mark.asyncio
 @respx.mock
 async def test_run_report_with_filters(server):
-    respx.post(
+    route = respx.post(
         f"{BASE}/analytics/reports/00Oxx"
     ).mock(
         return_value=httpx.Response(200, json={
@@ -1384,12 +1452,13 @@ async def test_run_report_with_filters(server):
             ],
         },
     ))
+    assert route.calls
 
 
 @pytest.mark.asyncio
 @respx.mock
 async def test_upsert_record_returns_204(server):
-    respx.patch(
+    route = respx.patch(
         f"{BASE}/sobjects/Account/ExtId__c/exist1"
     ).mock(
         return_value=httpx.Response(204),
@@ -1402,6 +1471,9 @@ async def test_upsert_record_returns_204(server):
         },
     ))
     assert r["status_code"] == 204
+    req = route.calls[0].request
+    body = json.loads(req.content)
+    assert body["Name"] == "Existing"
 
 
 @pytest.mark.asyncio

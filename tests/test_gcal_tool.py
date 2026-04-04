@@ -117,7 +117,7 @@ async def test_get_calendar_list_entry(server):
 @pytest.mark.asyncio
 @respx.mock
 async def test_insert_calendar_list_entry(server):
-    respx.post(f"{BASE}/users/me/calendarList").mock(
+    route = respx.post(f"{BASE}/users/me/calendarList").mock(
         return_value=httpx.Response(
             200, json={"id": "c2"},
         ),
@@ -126,12 +126,14 @@ async def test_insert_calendar_list_entry(server):
         "gcal_insert_calendar_list_entry",
         {"calendar_id": "c2"},
     ))
+    body = json.loads(route.calls[0].request.content)
+    assert body["id"] == "c2"
 
 
 @pytest.mark.asyncio
 @respx.mock
 async def test_update_calendar_list_entry(server):
-    respx.patch(
+    route = respx.patch(
         f"{BASE}/users/me/calendarList/c1",
     ).mock(
         return_value=httpx.Response(
@@ -142,6 +144,8 @@ async def test_update_calendar_list_entry(server):
         "gcal_update_calendar_list_entry",
         {"calendar_id": "c1", "color_id": "3"},
     ))
+    body = json.loads(route.calls[0].request.content)
+    assert body["colorId"] == "3"
 
 
 @pytest.mark.asyncio
@@ -190,7 +194,7 @@ async def test_create_calendar(server):
 @pytest.mark.asyncio
 @respx.mock
 async def test_update_calendar(server):
-    respx.patch(f"{BASE}/calendars/cal1").mock(
+    route = respx.patch(f"{BASE}/calendars/cal1").mock(
         return_value=httpx.Response(
             200, json={"id": "cal1"},
         ),
@@ -199,6 +203,8 @@ async def test_update_calendar(server):
         "gcal_update_calendar",
         {"summary": "Updated Cal"},
     ))
+    body = json.loads(route.calls[0].request.content)
+    assert body["summary"] == "Updated Cal"
 
 
 @pytest.mark.asyncio
@@ -215,12 +221,13 @@ async def test_delete_calendar(server):
 @pytest.mark.asyncio
 @respx.mock
 async def test_clear_calendar(server):
-    respx.post(f"{BASE}/calendars/cal1/clear").mock(
+    route = respx.post(f"{BASE}/calendars/cal1/clear").mock(
         return_value=httpx.Response(204),
     )
     _ok(await server.call_tool(
         "gcal_clear_calendar", {},
     ))
+    assert route.calls
 
 
 # --- Events (9 tools) ---
@@ -283,7 +290,7 @@ async def test_create_event(server):
 @pytest.mark.asyncio
 @respx.mock
 async def test_update_event(server):
-    respx.patch(
+    route = respx.patch(
         f"{BASE}/calendars/cal1/events/e1",
     ).mock(
         return_value=httpx.Response(
@@ -296,6 +303,8 @@ async def test_update_event(server):
             "summary": "Updated Lunch",
         },
     ))
+    body = json.loads(route.calls[0].request.content)
+    assert body["summary"] == "Updated Lunch"
 
 
 @pytest.mark.asyncio
@@ -314,7 +323,7 @@ async def test_delete_event(server):
 @pytest.mark.asyncio
 @respx.mock
 async def test_quick_add_event(server):
-    respx.post(
+    route = respx.post(
         f"{BASE}/calendars/cal1/events/quickAdd",
     ).mock(
         return_value=httpx.Response(
@@ -325,12 +334,13 @@ async def test_quick_add_event(server):
         "gcal_quick_add_event",
         {"text": "Lunch tomorrow at noon"},
     ))
+    assert route.calls
 
 
 @pytest.mark.asyncio
 @respx.mock
 async def test_move_event(server):
-    respx.post(
+    route = respx.post(
         f"{BASE}/calendars/cal1/events/e1/move",
     ).mock(
         return_value=httpx.Response(
@@ -343,6 +353,7 @@ async def test_move_event(server):
             "destination_calendar_id": "cal2",
         },
     ))
+    assert route.calls
 
 
 @pytest.mark.asyncio
@@ -411,12 +422,18 @@ async def test_add_attendees(server):
             200, json={"id": "e1"},
         ),
     )
-    _ok(await server.call_tool(
+    result = await server.call_tool(
         "gcal_add_attendees", {
             "event_id": "e1",
             "attendee_emails": ["b@test.com"],
         },
-    ))
+    )
+    _ok(result)
+    patch_req = respx.calls[1].request
+    body = json.loads(patch_req.content)
+    emails = [a["email"] for a in body["attendees"]]
+    assert "a@test.com" in emails
+    assert "b@test.com" in emails
 
 
 @pytest.mark.asyncio
@@ -440,12 +457,18 @@ async def test_remove_attendees(server):
             200, json={"id": "e1"},
         ),
     )
-    _ok(await server.call_tool(
+    result = await server.call_tool(
         "gcal_remove_attendees", {
             "event_id": "e1",
             "attendee_emails": ["b@test.com"],
         },
-    ))
+    )
+    _ok(result)
+    patch_req = respx.calls[1].request
+    body = json.loads(patch_req.content)
+    emails = [a["email"] for a in body["attendees"]]
+    assert "a@test.com" in emails
+    assert "b@test.com" not in emails
 
 
 @pytest.mark.asyncio
@@ -471,13 +494,19 @@ async def test_set_attendee_response(server):
             200, json={"id": "e1"},
         ),
     )
-    _ok(await server.call_tool(
+    result = await server.call_tool(
         "gcal_set_attendee_response", {
             "event_id": "e1",
             "attendee_email": "a@test.com",
             "response_status": "accepted",
         },
-    ))
+    )
+    _ok(result)
+    patch_req = respx.calls[1].request
+    body = json.loads(patch_req.content)
+    a = body["attendees"][0]
+    assert a["email"] == "a@test.com"
+    assert a["responseStatus"] == "accepted"
 
 
 @pytest.mark.asyncio
@@ -592,7 +621,7 @@ async def test_insert_acl_rule(server):
 @pytest.mark.asyncio
 @respx.mock
 async def test_update_acl_rule(server):
-    respx.patch(
+    route = respx.patch(
         f"{BASE}/calendars/cal1/acl/user:b@test.com",
     ).mock(
         return_value=httpx.Response(200, json={
@@ -605,6 +634,8 @@ async def test_update_acl_rule(server):
             "role": "writer",
         },
     ))
+    body = json.loads(route.calls[0].request.content)
+    assert body["role"] == "writer"
 
 
 @pytest.mark.asyncio
@@ -710,7 +741,7 @@ async def test_watch_events(server):
 @pytest.mark.asyncio
 @respx.mock
 async def test_watch_calendar_list(server):
-    respx.post(
+    route = respx.post(
         f"{BASE}/users/me/calendarList/watch",
     ).mock(
         return_value=httpx.Response(200, json={
@@ -725,6 +756,10 @@ async def test_watch_calendar_list(server):
             "address": "https://example.com/hook2",
         },
     ))
+    body = json.loads(route.calls[0].request.content)
+    assert body["id"] == "ch2"
+    assert body["type"] == "web_hook"
+    assert body["address"] == "https://example.com/hook2"
 
 
 @pytest.mark.asyncio

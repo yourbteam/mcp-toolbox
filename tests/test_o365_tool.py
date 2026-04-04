@@ -288,11 +288,12 @@ async def test_add_draft_attachment(server, tmp_path):
 @pytest.mark.asyncio
 @respx.mock
 async def test_send_draft(server):
-    respx.post(f"{GRAPH_BASE}/users/user@example.com/messages/draft_1/send").mock(
+    route = respx.post(f"{GRAPH_BASE}/users/user@example.com/messages/draft_1/send").mock(
         return_value=httpx.Response(202)
     )
     result = await server.call_tool("o365_send_draft", {"message_id": "draft_1"})
     assert _get_result_data(result)["status"] == "success"
+    assert route.calls[0].request.method == "POST"
 
 
 @pytest.mark.asyncio

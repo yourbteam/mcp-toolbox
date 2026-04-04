@@ -232,7 +232,7 @@ async def test_get_ticket_with_include(server):
 @pytest.mark.asyncio
 @respx.mock
 async def test_update_ticket(server):
-    respx.put(f"{BASE}/tickets/1.json").mock(
+    route = respx.put(f"{BASE}/tickets/1.json").mock(
         return_value=httpx.Response(
             200,
             json={"ticket": {"id": 1, "status": "solved"}},
@@ -243,6 +243,10 @@ async def test_update_ticket(server):
         {"ticket_id": 1, "status": "solved"},
     ))
     assert r["status"] == "success"
+    req = route.calls[0].request
+    body = json.loads(req.content)
+    assert "ticket" in body
+    assert body["ticket"]["status"] == "solved"
 
 
 @pytest.mark.asyncio
@@ -368,7 +372,7 @@ async def test_add_ticket_comment(server):
 @pytest.mark.asyncio
 @respx.mock
 async def test_add_ticket_comment_internal(server):
-    respx.put(f"{BASE}/tickets/1.json").mock(
+    route = respx.put(f"{BASE}/tickets/1.json").mock(
         return_value=httpx.Response(
             200,
             json={"ticket": {"id": 1}},
@@ -385,6 +389,13 @@ async def test_add_ticket_comment_internal(server):
         },
     ))
     assert r["status"] == "success"
+    req = route.calls[0].request
+    body = json.loads(req.content)
+    comment = body["ticket"]["comment"]
+    assert comment["body"] == "Internal"
+    assert comment["public"] is False
+    assert comment["author_id"] == 5
+    assert comment["html_body"] == "<b>Bold</b>"
 
 
 @pytest.mark.asyncio
@@ -469,7 +480,7 @@ async def test_set_ticket_tags(server):
 @pytest.mark.asyncio
 @respx.mock
 async def test_merge_tickets(server):
-    respx.post(f"{BASE}/tickets/1/merge.json").mock(
+    route = respx.post(f"{BASE}/tickets/1/merge.json").mock(
         return_value=httpx.Response(
             200, json={"job_status": {"id": "abc"}},
         ),
@@ -482,12 +493,15 @@ async def test_merge_tickets(server):
         },
     ))
     assert r["status"] == "success"
+    req = route.calls[0].request
+    body = json.loads(req.content)
+    assert body["ids"] == [2, 3]
 
 
 @pytest.mark.asyncio
 @respx.mock
 async def test_merge_tickets_with_comments(server):
-    respx.post(f"{BASE}/tickets/1/merge.json").mock(
+    route = respx.post(f"{BASE}/tickets/1/merge.json").mock(
         return_value=httpx.Response(
             200, json={"job_status": {"id": "abc"}},
         ),
@@ -504,12 +518,19 @@ async def test_merge_tickets_with_comments(server):
         },
     ))
     assert r["status"] == "success"
+    req = route.calls[0].request
+    body = json.loads(req.content)
+    assert body["ids"] == [2]
+    assert body["target_comment"] == "Merged"
+    assert body["source_comment"] == "See #1"
+    assert body["target_comment_is_public"] is False
+    assert body["source_comment_is_public"] is False
 
 
 @pytest.mark.asyncio
 @respx.mock
 async def test_bulk_update_tickets(server):
-    respx.put(url__startswith=f"{BASE}/tickets/update_many.json").mock(
+    route = respx.put(url__startswith=f"{BASE}/tickets/update_many.json").mock(
         return_value=httpx.Response(
             200,
             json={"job_status": {"id": "j1"}},
@@ -523,6 +544,10 @@ async def test_bulk_update_tickets(server):
         },
     ))
     assert r["status"] == "success"
+    req = route.calls[0].request
+    body = json.loads(req.content)
+    assert "ticket" in body
+    assert body["ticket"]["status"] == "solved"
 
 
 @pytest.mark.asyncio
@@ -637,7 +662,7 @@ async def test_create_user(server):
 @pytest.mark.asyncio
 @respx.mock
 async def test_create_user_full_params(server):
-    respx.post(f"{BASE}/users.json").mock(
+    route = respx.post(f"{BASE}/users.json").mock(
         return_value=httpx.Response(
             201,
             json={"user": {"id": 2}},
@@ -658,6 +683,14 @@ async def test_create_user_full_params(server):
         },
     ))
     assert r["status"] == "success"
+    req = route.calls[0].request
+    body = json.loads(req.content)
+    u = body["user"]
+    assert u["role"] == "agent"
+    assert u["organization_id"] == 5
+    assert u["tags"] == ["vip"]
+    assert u["user_fields"] == {"tier": "gold"}
+    assert u["verified"] is True
 
 
 @pytest.mark.asyncio
@@ -678,7 +711,7 @@ async def test_get_user(server):
 @pytest.mark.asyncio
 @respx.mock
 async def test_update_user(server):
-    respx.put(f"{BASE}/users/1.json").mock(
+    route = respx.put(f"{BASE}/users/1.json").mock(
         return_value=httpx.Response(
             200,
             json={"user": {"id": 1, "name": "New"}},
@@ -689,6 +722,10 @@ async def test_update_user(server):
         {"user_id": 1, "name": "New"},
     ))
     assert r["status"] == "success"
+    req = route.calls[0].request
+    body = json.loads(req.content)
+    assert "user" in body
+    assert body["user"]["name"] == "New"
 
 
 @pytest.mark.asyncio
@@ -771,7 +808,7 @@ async def test_search_users(server):
 @pytest.mark.asyncio
 @respx.mock
 async def test_merge_users(server):
-    respx.put(f"{BASE}/users/2/merge.json").mock(
+    route = respx.put(f"{BASE}/users/2/merge.json").mock(
         return_value=httpx.Response(
             200,
             json={"user": {"id": 1}},
@@ -782,6 +819,9 @@ async def test_merge_users(server):
         {"user_id": 2, "target_user_id": 1},
     ))
     assert r["status"] == "success"
+    req = route.calls[0].request
+    body = json.loads(req.content)
+    assert body["user"]["id"] == 1
 
 
 @pytest.mark.asyncio
@@ -809,7 +849,7 @@ async def test_list_user_identities(server):
 @pytest.mark.asyncio
 @respx.mock
 async def test_create_or_update_user(server):
-    respx.post(
+    route = respx.post(
         f"{BASE}/users/create_or_update.json"
     ).mock(
         return_value=httpx.Response(
@@ -822,6 +862,11 @@ async def test_create_or_update_user(server):
         {"name": "Jo", "email": "jo@e.com"},
     ))
     assert r["status"] == "success"
+    req = route.calls[0].request
+    body = json.loads(req.content)
+    assert "user" in body
+    assert body["user"]["name"] == "Jo"
+    assert body["user"]["email"] == "jo@e.com"
 
 
 @pytest.mark.asyncio
@@ -857,7 +902,7 @@ async def test_list_user_tickets(server):
 @pytest.mark.asyncio
 @respx.mock
 async def test_create_organization(server):
-    respx.post(f"{BASE}/organizations.json").mock(
+    route = respx.post(f"{BASE}/organizations.json").mock(
         return_value=httpx.Response(
             201,
             json={
@@ -871,12 +916,16 @@ async def test_create_organization(server):
     ))
     assert r["status"] == "success"
     assert r["data"]["name"] == "Acme"
+    req = route.calls[0].request
+    body = json.loads(req.content)
+    assert "organization" in body
+    assert body["organization"]["name"] == "Acme"
 
 
 @pytest.mark.asyncio
 @respx.mock
 async def test_create_organization_full(server):
-    respx.post(f"{BASE}/organizations.json").mock(
+    route = respx.post(f"{BASE}/organizations.json").mock(
         return_value=httpx.Response(
             201,
             json={"organization": {"id": 2}},
@@ -896,6 +945,14 @@ async def test_create_organization_full(server):
         },
     ))
     assert r["status"] == "success"
+    req = route.calls[0].request
+    body = json.loads(req.content)
+    org = body["organization"]
+    assert org["name"] == "Acme"
+    assert org["details"] == "Corp"
+    assert org["domain_names"] == ["acme.com"]
+    assert org["tags"] == ["enterprise"]
+    assert org["group_id"] == 5
 
 
 @pytest.mark.asyncio
@@ -919,7 +976,7 @@ async def test_get_organization(server):
 @pytest.mark.asyncio
 @respx.mock
 async def test_update_organization(server):
-    respx.put(
+    route = respx.put(
         f"{BASE}/organizations/1.json"
     ).mock(
         return_value=httpx.Response(
@@ -936,6 +993,10 @@ async def test_update_organization(server):
         {"organization_id": 1, "name": "New"},
     ))
     assert r["status"] == "success"
+    req = route.calls[0].request
+    body = json.loads(req.content)
+    assert "organization" in body
+    assert body["organization"]["name"] == "New"
 
 
 @pytest.mark.asyncio
@@ -1014,7 +1075,7 @@ async def test_search_organizations(server):
 @pytest.mark.asyncio
 @respx.mock
 async def test_create_group(server):
-    respx.post(f"{BASE}/groups.json").mock(
+    route = respx.post(f"{BASE}/groups.json").mock(
         return_value=httpx.Response(
             201,
             json={
@@ -1027,6 +1088,10 @@ async def test_create_group(server):
         {"name": "Support"},
     ))
     assert r["status"] == "success"
+    req = route.calls[0].request
+    body = json.loads(req.content)
+    assert "group" in body
+    assert body["group"]["name"] == "Support"
 
 
 @pytest.mark.asyncio
@@ -1047,7 +1112,7 @@ async def test_get_group(server):
 @pytest.mark.asyncio
 @respx.mock
 async def test_update_group(server):
-    respx.put(f"{BASE}/groups/1.json").mock(
+    route = respx.put(f"{BASE}/groups/1.json").mock(
         return_value=httpx.Response(
             200,
             json={
@@ -1060,6 +1125,10 @@ async def test_update_group(server):
         {"group_id": 1, "name": "Sales"},
     ))
     assert r["status"] == "success"
+    req = route.calls[0].request
+    body = json.loads(req.content)
+    assert "group" in body
+    assert body["group"]["name"] == "Sales"
 
 
 @pytest.mark.asyncio
@@ -1134,7 +1203,7 @@ async def test_list_group_memberships(server):
 @pytest.mark.asyncio
 @respx.mock
 async def test_create_group_membership(server):
-    respx.post(
+    route = respx.post(
         f"{BASE}/group_memberships.json"
     ).mock(
         return_value=httpx.Response(
@@ -1153,6 +1222,11 @@ async def test_create_group_membership(server):
         {"group_id": 1, "user_id": 5},
     ))
     assert r["status"] == "success"
+    req = route.calls[0].request
+    body = json.loads(req.content)
+    assert "group_membership" in body
+    assert body["group_membership"]["user_id"] == 5
+    assert body["group_membership"]["group_id"] == 1
 
 
 # =========================================================
@@ -1202,7 +1276,7 @@ async def test_get_ticket_field(server):
 @pytest.mark.asyncio
 @respx.mock
 async def test_create_ticket_field(server):
-    respx.post(f"{BASE}/ticket_fields.json").mock(
+    route = respx.post(f"{BASE}/ticket_fields.json").mock(
         return_value=httpx.Response(
             201,
             json={"ticket_field": {"id": 99}},
@@ -1213,12 +1287,17 @@ async def test_create_ticket_field(server):
         {"type": "text", "title": "Priority Level"},
     ))
     assert r["status"] == "success"
+    req = route.calls[0].request
+    body = json.loads(req.content)
+    assert "ticket_field" in body
+    assert body["ticket_field"]["type"] == "text"
+    assert body["ticket_field"]["title"] == "Priority Level"
 
 
 @pytest.mark.asyncio
 @respx.mock
 async def test_create_ticket_field_dropdown(server):
-    respx.post(f"{BASE}/ticket_fields.json").mock(
+    route = respx.post(f"{BASE}/ticket_fields.json").mock(
         return_value=httpx.Response(
             201,
             json={"ticket_field": {"id": 100}},
@@ -1240,12 +1319,19 @@ async def test_create_ticket_field_dropdown(server):
         },
     ))
     assert r["status"] == "success"
+    req = route.calls[0].request
+    body = json.loads(req.content)
+    tf = body["ticket_field"]
+    assert tf["type"] == "tagger"
+    assert tf["required"] is True
+    assert tf["tag"] == "cat"
+    assert tf["custom_field_options"] == [{"name": "A", "value": "a"}]
 
 
 @pytest.mark.asyncio
 @respx.mock
 async def test_update_ticket_field(server):
-    respx.put(
+    route = respx.put(
         f"{BASE}/ticket_fields/1.json"
     ).mock(
         return_value=httpx.Response(
@@ -1258,6 +1344,10 @@ async def test_update_ticket_field(server):
         {"ticket_field_id": 1, "title": "New Title"},
     ))
     assert r["status"] == "success"
+    req = route.calls[0].request
+    body = json.loads(req.content)
+    assert "ticket_field" in body
+    assert body["ticket_field"]["title"] == "New Title"
 
 
 @pytest.mark.asyncio
@@ -1568,7 +1658,7 @@ async def test_get_satisfaction_rating(server):
 @pytest.mark.asyncio
 @respx.mock
 async def test_create_satisfaction_rating(server):
-    respx.post(
+    route = respx.post(
         f"{BASE}/tickets/1/satisfaction_rating.json"
     ).mock(
         return_value=httpx.Response(
@@ -1585,6 +1675,10 @@ async def test_create_satisfaction_rating(server):
         {"ticket_id": 1, "score": "good"},
     ))
     assert r["status"] == "success"
+    req = route.calls[0].request
+    body = json.loads(req.content)
+    assert "satisfaction_rating" in body
+    assert body["satisfaction_rating"]["score"] == "good"
 
 
 @pytest.mark.asyncio
@@ -1592,7 +1686,7 @@ async def test_create_satisfaction_rating(server):
 async def test_create_satisfaction_rating_comment(
     server,
 ):
-    respx.post(
+    route = respx.post(
         f"{BASE}/tickets/1/satisfaction_rating.json"
     ).mock(
         return_value=httpx.Response(
@@ -1613,6 +1707,11 @@ async def test_create_satisfaction_rating_comment(
         },
     ))
     assert r["status"] == "success"
+    req = route.calls[0].request
+    body = json.loads(req.content)
+    sr = body["satisfaction_rating"]
+    assert sr["score"] == "bad"
+    assert sr["comment"] == "Slow response"
 
 
 # =========================================================
@@ -1719,7 +1818,7 @@ async def test_get_suspended_ticket(server):
 @pytest.mark.asyncio
 @respx.mock
 async def test_recover_suspended_ticket(server):
-    respx.put(
+    route = respx.put(
         f"{BASE}/suspended_tickets/1/recover.json"
     ).mock(
         return_value=httpx.Response(
@@ -1732,6 +1831,7 @@ async def test_recover_suspended_ticket(server):
         {"suspended_ticket_id": 1},
     ))
     assert r["status"] == "success"
+    assert route.calls
 
 
 @pytest.mark.asyncio
@@ -1820,7 +1920,7 @@ async def test_get_macro(server):
 @pytest.mark.asyncio
 @respx.mock
 async def test_create_macro(server):
-    respx.post(f"{BASE}/macros.json").mock(
+    route = respx.post(f"{BASE}/macros.json").mock(
         return_value=httpx.Response(
             201,
             json={"macro": {"id": 1}},
@@ -1836,12 +1936,17 @@ async def test_create_macro(server):
         },
     ))
     assert r["status"] == "success"
+    req = route.calls[0].request
+    body = json.loads(req.content)
+    assert "macro" in body
+    assert body["macro"]["title"] == "Close & Tag"
+    assert body["macro"]["actions"][0]["field"] == "status"
 
 
 @pytest.mark.asyncio
 @respx.mock
 async def test_create_macro_full_params(server):
-    respx.post(f"{BASE}/macros.json").mock(
+    route = respx.post(f"{BASE}/macros.json").mock(
         return_value=httpx.Response(
             201,
             json={"macro": {"id": 2}},
@@ -1865,12 +1970,19 @@ async def test_create_macro_full_params(server):
         },
     ))
     assert r["status"] == "success"
+    req = route.calls[0].request
+    body = json.loads(req.content)
+    m = body["macro"]
+    assert m["title"] == "Escalate"
+    assert m["description"] == "Escalate to urgent"
+    assert m["active"] is True
+    assert m["restriction"]["type"] == "Group"
 
 
 @pytest.mark.asyncio
 @respx.mock
 async def test_update_macro(server):
-    respx.put(f"{BASE}/macros/1.json").mock(
+    route = respx.put(f"{BASE}/macros/1.json").mock(
         return_value=httpx.Response(
             200,
             json={"macro": {"id": 1}},
@@ -1881,6 +1993,10 @@ async def test_update_macro(server):
         {"macro_id": 1, "title": "New Title"},
     ))
     assert r["status"] == "success"
+    req = route.calls[0].request
+    body = json.loads(req.content)
+    assert "macro" in body
+    assert body["macro"]["title"] == "New Title"
 
 
 @pytest.mark.asyncio
