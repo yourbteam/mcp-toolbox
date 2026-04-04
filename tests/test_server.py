@@ -8,9 +8,9 @@ def test_server_name():
 
 
 def test_server_has_tools():
-    # 2+14+81+19+28+39+13+28+4+23+43+44+77+27+46+75 = 563
+    # 2+14+81+19+28+39+13+28+4+23+43+44+77+27+46+75+14 = 577
     tools = mcp._tool_manager._tools
-    assert len(tools) == 563
+    assert len(tools) == 577
     expected_tools = {
         # Example tools
         "hello", "add",
@@ -292,5 +292,12 @@ def test_server_has_tools():
         "github_list_starred_repos", "github_star_repo",
         "github_unstar_repo",
         "github_list_notifications", "github_mark_notifications_read",
+        # Google Tasks tools (14)
+        "gtasks_list_tasklists", "gtasks_get_tasklist",
+        "gtasks_insert_tasklist", "gtasks_update_tasklist",
+        "gtasks_patch_tasklist", "gtasks_delete_tasklist",
+        "gtasks_list_tasks", "gtasks_get_task", "gtasks_insert_task",
+        "gtasks_update_task", "gtasks_patch_task", "gtasks_delete_task",
+        "gtasks_move_task", "gtasks_clear_tasks",
     }
     assert set(tools.keys()) == expected_tools

@@ -45,7 +45,8 @@ src/mcp_toolbox/
     ├── stripe_tool.py     # 77 Stripe tools (customers, payments, invoices, subscriptions)
     ├── sheets_tool.py     # 27 Google Sheets tools (spreadsheets, values, formatting, charts)
     ├── quickbooks_tool.py # 46 QuickBooks tools (customers, invoices, payments, reports)
-    └── github_tool.py     # 75 GitHub tools (repos, issues, PRs, actions, search)
+    ├── github_tool.py     # 75 GitHub tools (repos, issues, PRs, actions, search)
+    └── gtasks_tool.py     # 14 Google Tasks tools (task lists, tasks, ordering)
 ```
 
 ## Integrations
@@ -193,6 +194,14 @@ src/mcp_toolbox/
 - **Config:** `STRIPE_API_KEY`
 - **HTTP:** Direct httpx with Bearer token, form-encoded requests (`data=` not `json=`)
 - **Note:** Uses `_flatten()` helper for Stripe bracket-notation nested params; pyright excluded
+
+### Google Tasks (gtasks_tool.py) — 14 tools
+- **Task Lists (6):** list, get, insert, update, patch, delete
+- **Tasks (6):** list, get, insert, update, patch, delete
+- **Ordering (2):** move (reorder/re-parent), clear (hide completed)
+- **Config:** `GOOGLE_SERVICE_ACCOUNT_JSON` (reuse), `GTASKS_DELEGATED_USER`
+- **Auth:** Service account with domain-wide delegation via `with_subject()`
+- **HTTP:** httpx with auto-refresh Bearer token; @default task list fallback
 
 ### GitHub (github_tool.py) — 75 tools
 - **Repositories (7):** list, get, create, update, delete, topics, languages
