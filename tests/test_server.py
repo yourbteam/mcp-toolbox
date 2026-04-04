@@ -8,9 +8,9 @@ def test_server_name():
 
 
 def test_server_has_tools():
-    # 2+14+81+19+28+39+13+28+4+23+43+44+77+27 = 442
+    # 2+14+81+19+28+39+13+28+4+23+43+44+77+27+46 = 488
     tools = mcp._tool_manager._tools
-    assert len(tools) == 442
+    assert len(tools) == 488
     expected_tools = {
         # Example tools
         "hello", "add",
@@ -234,5 +234,26 @@ def test_server_has_tools():
         "sheets_set_basic_filter", "sheets_clear_basic_filter",
         "sheets_add_chart",
         "sheets_protect_range", "sheets_unprotect_range",
+        # QuickBooks tools (46)
+        "qb_create_customer", "qb_get_customer", "qb_update_customer",
+        "qb_query_customers", "qb_delete_customer",
+        "qb_create_invoice", "qb_get_invoice", "qb_update_invoice",
+        "qb_query_invoices", "qb_send_invoice",
+        "qb_void_invoice", "qb_delete_invoice",
+        "qb_create_payment", "qb_get_payment", "qb_query_payments",
+        "qb_void_payment", "qb_delete_payment",
+        "qb_create_item", "qb_get_item", "qb_update_item", "qb_query_items",
+        "qb_get_account", "qb_query_accounts",
+        "qb_create_bill", "qb_get_bill", "qb_update_bill", "qb_query_bills",
+        "qb_create_vendor", "qb_get_vendor", "qb_update_vendor",
+        "qb_query_vendors",
+        "qb_create_estimate", "qb_get_estimate", "qb_update_estimate",
+        "qb_query_estimates", "qb_send_estimate",
+        "qb_create_credit_memo", "qb_get_credit_memo",
+        "qb_query_credit_memos",
+        "qb_create_purchase", "qb_get_purchase", "qb_query_purchases",
+        "qb_report_profit_and_loss", "qb_report_balance_sheet",
+        "qb_report_accounts_receivable_aging",
+        "qb_get_company_info",
     }
     assert set(tools.keys()) == expected_tools

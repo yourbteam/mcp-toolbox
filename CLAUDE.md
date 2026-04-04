@@ -43,7 +43,8 @@ src/mcp_toolbox/
     ├── hubspot_tool.py    # 43 HubSpot CRM tools (contacts, companies, deals, tickets)
     ├── jira_tool.py       # 44 Jira tools (issues, boards, sprints, worklogs)
     ├── stripe_tool.py     # 77 Stripe tools (customers, payments, invoices, subscriptions)
-    └── sheets_tool.py     # 27 Google Sheets tools (spreadsheets, values, formatting, charts)
+    ├── sheets_tool.py     # 27 Google Sheets tools (spreadsheets, values, formatting, charts)
+    └── quickbooks_tool.py # 46 QuickBooks tools (customers, invoices, payments, reports)
 ```
 
 ## Integrations
@@ -191,6 +192,24 @@ src/mcp_toolbox/
 - **Config:** `STRIPE_API_KEY`
 - **HTTP:** Direct httpx with Bearer token, form-encoded requests (`data=` not `json=`)
 - **Note:** Uses `_flatten()` helper for Stripe bracket-notation nested params; pyright excluded
+
+### QuickBooks Online (quickbooks_tool.py) — 46 tools
+- **Customers (5):** create, get, update, query, delete (soft)
+- **Invoices (7):** create, get, update, query, send, void, delete
+- **Payments (5):** create, get, query, void, delete
+- **Items (4):** create, get, update, query
+- **Accounts (2):** get, query (chart of accounts)
+- **Bills (4):** create, get, update, query
+- **Vendors (4):** create, get, update, query
+- **Estimates (5):** create, get, update, query, send
+- **Credit Memos (3):** create, get, query
+- **Purchases (3):** create, get, query
+- **Reports (3):** profit & loss, balance sheet, AR aging
+- **Company (1):** get company info
+- **Config:** `QB_CLIENT_ID`, `QB_CLIENT_SECRET`, `QB_REFRESH_TOKEN`, `QB_REALM_ID`, `QB_ENVIRONMENT`
+- **Auth:** OAuth 2.0 with automatic token refresh; rolling refresh tokens (in-memory rotation)
+- **HTTP:** httpx with per-request Bearer token; `?minorversion=75` on all requests
+- **Note:** SyncToken required for updates (optimistic concurrency); sparse updates; SQL-like query language
 
 ### Google Sheets (sheets_tool.py) — 27 tools
 - **Spreadsheets (3):** create, get metadata, batch update (raw requests)

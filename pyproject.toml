@@ -42,7 +42,7 @@ select = ["E", "F", "I", "N", "W"]
 [tool.pyright]
 pythonVersion = "3.10"
 typeCheckingMode = "basic"
-exclude = ["src/mcp_toolbox/tools/sendgrid_tool.py", "src/mcp_toolbox/tools/o365_tool.py", "src/mcp_toolbox/tools/teams_tool.py", "src/mcp_toolbox/tools/keyvault_tool.py", "src/mcp_toolbox/tools/aws_ssm_tool.py", "src/mcp_toolbox/tools/slack_tool.py", "src/mcp_toolbox/tools/calendar_tool.py", "src/mcp_toolbox/tools/stripe_tool.py", "src/mcp_toolbox/tools/sheets_tool.py"]
+exclude = ["src/mcp_toolbox/tools/sendgrid_tool.py", "src/mcp_toolbox/tools/o365_tool.py", "src/mcp_toolbox/tools/teams_tool.py", "src/mcp_toolbox/tools/keyvault_tool.py", "src/mcp_toolbox/tools/aws_ssm_tool.py", "src/mcp_toolbox/tools/slack_tool.py", "src/mcp_toolbox/tools/calendar_tool.py", "src/mcp_toolbox/tools/stripe_tool.py", "src/mcp_toolbox/tools/sheets_tool.py", "src/mcp_toolbox/tools/quickbooks_tool.py"]
 
 [tool.pytest.ini_options]
 asyncio_mode = "auto"

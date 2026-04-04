@@ -56,6 +56,13 @@ JIRA_BASE_URL: str | None = os.getenv("JIRA_BASE_URL")
 JIRA_EMAIL: str | None = os.getenv("JIRA_EMAIL")
 JIRA_API_TOKEN: str | None = os.getenv("JIRA_API_TOKEN")
 
+# QuickBooks Online
+QB_CLIENT_ID: str | None = os.getenv("QB_CLIENT_ID")
+QB_CLIENT_SECRET: str | None = os.getenv("QB_CLIENT_SECRET")
+QB_REFRESH_TOKEN: str | None = os.getenv("QB_REFRESH_TOKEN")
+QB_REALM_ID: str | None = os.getenv("QB_REALM_ID")
+QB_ENVIRONMENT: str = os.getenv("QB_ENVIRONMENT", "production")
+
 # Google Sheets
 GOOGLE_SERVICE_ACCOUNT_JSON: str | None = os.getenv("GOOGLE_SERVICE_ACCOUNT_JSON")
 GOOGLE_SHEETS_DEFAULT_SPREADSHEET_ID: str | None = os.getenv(
