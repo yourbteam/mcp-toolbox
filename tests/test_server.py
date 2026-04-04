@@ -8,9 +8,9 @@ def test_server_name():
 
 
 def test_server_has_tools():
-    # 2+14+81+19+28+39+13+28+4+23+43+44+77+27+46 = 488
+    # 2+14+81+19+28+39+13+28+4+23+43+44+77+27+46+75 = 563
     tools = mcp._tool_manager._tools
-    assert len(tools) == 488
+    assert len(tools) == 563
     expected_tools = {
         # Example tools
         "hello", "add",
@@ -255,5 +255,42 @@ def test_server_has_tools():
         "qb_report_profit_and_loss", "qb_report_balance_sheet",
         "qb_report_accounts_receivable_aging",
         "qb_get_company_info",
+        # GitHub tools (75)
+        "github_list_repos", "github_get_repo", "github_create_repo",
+        "github_update_repo", "github_delete_repo",
+        "github_list_repo_topics", "github_list_repo_languages",
+        "github_create_issue", "github_get_issue", "github_update_issue",
+        "github_list_issues", "github_add_issue_labels",
+        "github_remove_issue_label", "github_add_issue_assignees",
+        "github_list_issue_comments", "github_create_issue_comment",
+        "github_update_issue_comment", "github_delete_issue_comment",
+        "github_lock_issue", "github_unlock_issue",
+        "github_list_pulls", "github_get_pull", "github_create_pull",
+        "github_update_pull", "github_merge_pull",
+        "github_list_pull_reviews", "github_create_pull_review",
+        "github_list_pull_review_comments", "github_list_pull_files",
+        "github_list_branches", "github_get_branch",
+        "github_create_branch", "github_delete_branch",
+        "github_get_branch_protection",
+        "github_list_commits", "github_get_commit", "github_compare_commits",
+        "github_list_releases", "github_get_release",
+        "github_create_release", "github_update_release",
+        "github_delete_release", "github_list_release_assets",
+        "github_list_workflows", "github_list_workflow_runs",
+        "github_get_workflow_run", "github_trigger_workflow",
+        "github_cancel_workflow_run", "github_download_workflow_run_logs",
+        "github_list_labels", "github_create_label",
+        "github_update_label", "github_delete_label",
+        "github_list_milestones", "github_create_milestone",
+        "github_update_milestone", "github_delete_milestone",
+        "github_list_orgs", "github_get_org",
+        "github_get_authenticated_user", "github_get_user",
+        "github_search_repos", "github_search_issues",
+        "github_search_code", "github_search_users",
+        "github_list_gists", "github_create_gist",
+        "github_get_gist", "github_update_gist", "github_delete_gist",
+        "github_list_starred_repos", "github_star_repo",
+        "github_unstar_repo",
+        "github_list_notifications", "github_mark_notifications_read",
     }
     assert set(tools.keys()) == expected_tools

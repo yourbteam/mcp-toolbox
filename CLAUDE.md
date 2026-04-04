@@ -44,7 +44,8 @@ src/mcp_toolbox/
     ├── jira_tool.py       # 44 Jira tools (issues, boards, sprints, worklogs)
     ├── stripe_tool.py     # 77 Stripe tools (customers, payments, invoices, subscriptions)
     ├── sheets_tool.py     # 27 Google Sheets tools (spreadsheets, values, formatting, charts)
-    └── quickbooks_tool.py # 46 QuickBooks tools (customers, invoices, payments, reports)
+    ├── quickbooks_tool.py # 46 QuickBooks tools (customers, invoices, payments, reports)
+    └── github_tool.py     # 75 GitHub tools (repos, issues, PRs, actions, search)
 ```
 
 ## Integrations
@@ -192,6 +193,26 @@ src/mcp_toolbox/
 - **Config:** `STRIPE_API_KEY`
 - **HTTP:** Direct httpx with Bearer token, form-encoded requests (`data=` not `json=`)
 - **Note:** Uses `_flatten()` helper for Stripe bracket-notation nested params; pyright excluded
+
+### GitHub (github_tool.py) — 75 tools
+- **Repositories (7):** list, get, create, update, delete, topics, languages
+- **Issues (13):** create, get, update, list, labels, assignees, comments CRUD, lock/unlock
+- **Pull Requests (9):** list, get, create, update, merge, reviews, review comments, files
+- **Branches (5):** list, get, create, delete, protection
+- **Commits (3):** list, get, compare
+- **Releases (6):** list, get, create, update, delete, list assets
+- **Actions (6):** list workflows, list/get runs, trigger, cancel, download logs
+- **Labels (4):** list, create, update, delete
+- **Milestones (4):** list, create, update, delete
+- **Organizations (2):** list, get
+- **Users (2):** get authenticated, get by username
+- **Search (4):** repos, issues, code, users
+- **Gists (5):** list, create, get, update, delete
+- **Stars (3):** list starred, star, unstar
+- **Notifications (2):** list, mark read
+- **Config:** `GITHUB_TOKEN`, `GITHUB_DEFAULT_OWNER`, `GITHUB_DEFAULT_REPO` (optional defaults)
+- **Auth:** Personal Access Token as Bearer header
+- **HTTP:** httpx with `X-GitHub-Api-Version: 2022-11-28`; page/per_page pagination
 
 ### QuickBooks Online (quickbooks_tool.py) — 46 tools
 - **Customers (5):** create, get, update, query, delete (soft)

@@ -56,6 +56,11 @@ JIRA_BASE_URL: str | None = os.getenv("JIRA_BASE_URL")
 JIRA_EMAIL: str | None = os.getenv("JIRA_EMAIL")
 JIRA_API_TOKEN: str | None = os.getenv("JIRA_API_TOKEN")
 
+# GitHub
+GITHUB_TOKEN: str | None = os.getenv("GITHUB_TOKEN")
+GITHUB_DEFAULT_OWNER: str | None = os.getenv("GITHUB_DEFAULT_OWNER")
+GITHUB_DEFAULT_REPO: str | None = os.getenv("GITHUB_DEFAULT_REPO")
+
 # QuickBooks Online
 QB_CLIENT_ID: str | None = os.getenv("QB_CLIENT_ID")
 QB_CLIENT_SECRET: str | None = os.getenv("QB_CLIENT_SECRET")

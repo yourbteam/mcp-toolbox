@@ -7,6 +7,7 @@ from mcp_toolbox.tools import (
     calendar_tool,
     clickup_tool,
     example_tool,
+    github_tool,
     http_tool,
     hubspot_tool,
     jira_tool,
@@ -38,3 +39,4 @@ def register_all_tools(mcp: FastMCP) -> None:
     stripe_tool.register_tools(mcp)
     sheets_tool.register_tools(mcp)
     quickbooks_tool.register_tools(mcp)
+    github_tool.register_tools(mcp)
