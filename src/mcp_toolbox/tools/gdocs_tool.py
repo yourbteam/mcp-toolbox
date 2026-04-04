@@ -456,6 +456,10 @@ def register_tools(mcp: FastMCP) -> None:  # noqa: C901
         if small_caps is not None:
             style["smallCaps"] = small_caps
             fields.append("smallCaps")
+        if superscript is not None and subscript is not None:
+            raise ToolError(
+                "Cannot set both superscript and subscript."
+            )
         if superscript is not None:
             style["baselineOffset"] = (
                 "SUPERSCRIPT" if superscript else "NONE"
