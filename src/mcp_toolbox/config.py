@@ -106,3 +106,7 @@ GOOGLE_SHEETS_DEFAULT_SPREADSHEET_ID: str | None = os.getenv(
 
 # Stripe
 STRIPE_API_KEY: str | None = os.getenv("STRIPE_API_KEY")
+
+# Asana
+ASANA_ACCESS_TOKEN: str | None = os.getenv("ASANA_ACCESS_TOKEN")
+ASANA_DEFAULT_WORKSPACE_ID: str | None = os.getenv("ASANA_DEFAULT_WORKSPACE_ID")

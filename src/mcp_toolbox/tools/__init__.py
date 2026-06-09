@@ -3,6 +3,7 @@
 from mcp.server.fastmcp import FastMCP
 
 from mcp_toolbox.tools import (
+    asana_tool,
     aws_ssm_tool,
     calendar_tool,
     clickup_tool,
@@ -33,6 +34,7 @@ from mcp_toolbox.tools import (
 def register_all_tools(mcp: FastMCP) -> None:
     """Register all tool modules with the MCP server."""
     example_tool.register_tools(mcp)
+    asana_tool.register_tools(mcp)
     sendgrid_tool.register_tools(mcp)
     clickup_tool.register_tools(mcp)
     o365_tool.register_tools(mcp)

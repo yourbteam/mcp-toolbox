@@ -31,6 +31,7 @@ src/mcp_toolbox/
 └── tools/                 # One file per integration
     ├── __init__.py        # register_all_tools() hub
     ├── example_tool.py    # hello + add (scaffolding validation)
+    ├── asana_tool.py      # 67 Asana tools (workspaces, projects, tasks, sections, stories, tags, custom fields, webhooks)
     ├── sendgrid_tool.py   # 14 SendGrid tools (email, management, contacts)
     ├── clickup_tool.py    # 81 ClickUp tools (full API v2 coverage)
     ├── o365_tool.py       # 19 O365 tools (send, read, drafts, folders)
@@ -364,6 +365,23 @@ src/mcp_toolbox/
 - **Config:** `GOOGLE_SERVICE_ACCOUNT_JSON`, `GOOGLE_SHEETS_DEFAULT_SPREADSHEET_ID` (optional)
 - **Auth:** Google service account via `google-auth[requests]`, auto-refresh Bearer token
 - **HTTP:** httpx with per-request token refresh; all batchUpdate ops via shared `_batch_update()` helper
+
+### Asana (asana_tool.py) — 67 tools
+- **Workspaces, Users & Jobs (6):** list/get workspaces, get_me, list users, get user, get_job (poll async duplicate jobs)
+- **Teams (4):** list, get, add/remove user
+- **Projects (7):** create, get, update, delete, list, duplicate (async Job), task_counts
+- **Sections (6):** create, get, update, delete, list, add task to section
+- **Tasks — Core (13):** create, get, update, delete, list (exactly-one scope), search (paid), duplicate (async Job), add/remove project, add/remove followers, add dependencies/dependents
+- **Subtasks (3):** create, list, set parent (null detaches)
+- **Stories/Comments (5):** create, get, list, update, delete
+- **Tags (7):** create, get, update, delete, list, add/remove on task
+- **Attachments (4):** list, get, upload (multipart), delete
+- **Custom Fields (4):** list, get, create (`resource_subtype`), set value on task (enum/multi_enum/text/number)
+- **Status Updates (4):** create, get, list, delete (project/portfolio/goal)
+- **Webhooks (4):** create, get, list (workspace required), delete
+- **Config:** `ASANA_ACCESS_TOKEN`, `ASANA_DEFAULT_WORKSPACE_ID` (optional default)
+- **Auth:** Personal Access Token as Bearer header
+- **HTTP:** Direct httpx; `{"data": {...}}` request/response envelope; offset pagination (`next_offset`); GIDs are strings; fully typed (pyright enabled)
 
 ## Tool Module Convention
 Each integration file in `tools/` must:

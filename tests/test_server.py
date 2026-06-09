@@ -8,9 +8,9 @@ def test_server_name():
 
 
 def test_server_has_tools():
-    # 2+14+81+19+28+39+13+28+4+23+43+44+77+27+46+75+14+34+35+62+21+37+66+66 = 898
+    # 2+14+81+19+28+39+13+28+4+23+43+44+77+27+46+75+14+34+35+62+21+37+66+66+67 = 965
     tools = mcp._tool_manager._tools
-    assert len(tools) == 898
+    assert len(tools) == 965
     expected_tools = {
         # Example tools
         "hello", "add",
@@ -479,5 +479,36 @@ def test_server_has_tools():
         "sf_list_reports", "sf_run_report", "sf_describe_report",
         "sf_get_limits", "sf_get_user", "sf_get_current_user",
         "sf_get_api_versions",
+        # Asana tools (67)
+        "asana_list_workspaces", "asana_get_workspace", "asana_get_me",
+        "asana_list_users", "asana_get_user", "asana_get_job",
+        "asana_list_teams", "asana_get_team", "asana_add_user_to_team",
+        "asana_remove_user_from_team",
+        "asana_create_project", "asana_get_project", "asana_update_project",
+        "asana_delete_project", "asana_list_projects",
+        "asana_duplicate_project", "asana_get_project_task_counts",
+        "asana_create_section", "asana_get_section", "asana_update_section",
+        "asana_delete_section", "asana_list_sections",
+        "asana_add_task_to_section",
+        "asana_create_task", "asana_get_task", "asana_update_task",
+        "asana_delete_task", "asana_list_tasks", "asana_search_tasks",
+        "asana_duplicate_task", "asana_add_task_to_project",
+        "asana_remove_task_from_project", "asana_add_task_followers",
+        "asana_remove_task_followers", "asana_add_task_dependencies",
+        "asana_add_task_dependents",
+        "asana_create_subtask", "asana_list_subtasks", "asana_set_task_parent",
+        "asana_create_story", "asana_get_story", "asana_list_stories",
+        "asana_update_story", "asana_delete_story",
+        "asana_create_tag", "asana_get_tag", "asana_update_tag",
+        "asana_delete_tag", "asana_list_tags", "asana_add_tag_to_task",
+        "asana_remove_tag_from_task",
+        "asana_list_attachments", "asana_get_attachment",
+        "asana_upload_attachment", "asana_delete_attachment",
+        "asana_list_custom_fields", "asana_get_custom_field",
+        "asana_create_custom_field", "asana_set_task_custom_field",
+        "asana_create_status_update", "asana_get_status_update",
+        "asana_list_status_updates", "asana_delete_status_update",
+        "asana_create_webhook", "asana_get_webhook",
+        "asana_list_webhooks", "asana_delete_webhook",
     }
     assert set(tools.keys()) == expected_tools
