@@ -749,6 +749,17 @@ async def test_set_task_custom_field_number(server):
     assert _body(route) == {"data": {"custom_fields": {"cf1": 42}}}
 
 
+@pytest.mark.asyncio
+@respx.mock
+async def test_set_task_custom_field_clear(server):
+    # value=None sends explicit null to clear the field (not dropped by _clean).
+    route = respx.put(f"{BASE}/tasks/k1").mock(return_value=_data({"gid": "k1"}))
+    await server.call_tool("asana_set_task_custom_field",
+                           {"task_gid": "k1", "custom_field_gid": "cf1",
+                            "value": None})
+    assert _body(route) == {"data": {"custom_fields": {"cf1": None}}}
+
+
 # ---------------- Tier 11: Status Updates ----------------
 
 @pytest.mark.asyncio
